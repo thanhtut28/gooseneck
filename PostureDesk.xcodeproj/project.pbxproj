@@ -1,0 +1,668 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		026AA2747157D0DAB6C59437 /* SensorTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDDF5AE443183053158DACE /* SensorTypes.swift */; };
+		02FBCBA368BD69F235B44CDA /* SensorTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDDF5AE443183053158DACE /* SensorTypes.swift */; };
+		047E766BB9E7DCF11E64B6A6 /* SessionSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 453DE6CAD8C13EE51CFDD9BC /* SessionSummaryCard.swift */; };
+		1322E94FF74AF82798BD6A4A /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E3940C8AAC3FC3B2DF55B18 /* HistoryView.swift */; };
+		2D770CFA135A8487117346A9 /* KalmanFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA8C6F5CB3B72557AF10925E /* KalmanFilter.swift */; };
+		305EBB1D567C4EFAAA666329 /* FFTAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C561A93C6DBDA226D3980FBB /* FFTAnalyzer.swift */; };
+		3372CC49D5A071BE38E5B605 /* MetricCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A465749C589A45E02D9A8E /* MetricCard.swift */; };
+		386A4CDBD292FD5046D14728 /* SensorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF1516AA6B3B6072A5F3FC1 /* SensorManager.swift */; };
+		41B2EF808D66EBDB440A5AB9 /* SurfaceClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016931B6B21F81CF17CB44C8 /* SurfaceClassifier.swift */; };
+		431AA969AE94CA5EF39E5DFF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ACBC481C43A1AE8D3C8ADE21 /* Assets.xcassets */; };
+		4463EBF048D19B14E2220784 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4CAE4C0808663A0C1C4FCE5 /* DesignSystem.swift */; };
+		49FA155970A4DFAD2FE37EAC /* CircularProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBE3D02A3075A2BB40EB8F6B /* CircularProgressRing.swift */; };
+		4C588E7C8E49871055E13541 /* DaemonInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54E81A95C50F8296570AA256 /* DaemonInstaller.swift */; };
+		4E2D093994EDD0AEA99275AF /* MenuBarPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 895F44C77430F7C3BDEA22D5 /* MenuBarPopover.swift */; };
+		55D8998E61BA743A8A535CF3 /* MahonyAHRS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00AB3FF4E3170752DD8B8C85 /* MahonyAHRS.swift */; };
+		58D37DAAC4FBDFEF616EC32C /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BB8C3B602F4E750A13369B2 /* DashboardView.swift */; };
+		5AA407A64BD1B548BFF15E0E /* SensorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF1516AA6B3B6072A5F3FC1 /* SensorManager.swift */; };
+		63986293222761C36770EAB9 /* BreakTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74FFD3F9647A6223FA8ECC64 /* BreakTracker.swift */; };
+		645230FEAAE6516498AD7B1B /* PostureSensorProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AF12F9D790EEDA102C1CEE /* PostureSensorProtocol.swift */; };
+		64BF872AAEF688100A38210D /* PostureAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546AAC870FED4E3AD3AC3D9D /* PostureAnalyzer.swift */; };
+		6589F321CDE174E42D2AD9D7 /* BandpassFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6DBB5C5371B76557958F87C /* BandpassFilter.swift */; };
+		67698A3DA4B9C74E02D6D2D0 /* PostureViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFBE673483793FDDB47F87C6 /* PostureViewModel.swift */; };
+		708B9D8EA2705355EFEE094C /* SignalProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142E177E1330C4FCF6903930 /* SignalProcessor.swift */; };
+		70A4D75D7FAA3D56FDBE8988 /* PostureDeskApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67BEDD355D7FD0F72E61047 /* PostureDeskApp.swift */; };
+		72D2F2A8557B1644796AE8BB /* FFTAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C561A93C6DBDA226D3980FBB /* FFTAnalyzer.swift */; };
+		78E283A736CF8A420A779906 /* XPCServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FFB27A67BEABC90D766D49F /* XPCServer.swift */; };
+		8F73D202A434896F96F436AE /* IOKitHIDConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4FFE70371E44C4CFB78F9F /* IOKitHIDConstants.swift */; };
+		8FB6573A782F32A25CC22F94 /* PostureSensorProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AF12F9D790EEDA102C1CEE /* PostureSensorProtocol.swift */; };
+		9CC0B46379E8FAFBDCCCBFD9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E3F1B5A7F7965EC0011C63 /* main.swift */; };
+		AB3F319079DAED1BA973C5AF /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DFFEE6129FD0094F57D06B /* LicenseManager.swift */; };
+		AC33E961CBF3C86052213AA5 /* PostureDriftCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 401979E11918A92D280247D7 /* PostureDriftCard.swift */; };
+		B58C8ADE3559CDD287B2844F /* MahonyAHRS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00AB3FF4E3170752DD8B8C85 /* MahonyAHRS.swift */; };
+		C78897F32B468E47C5707DBB /* SensorSnapshot+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AB50BB34662CD441ADEFC21 /* SensorSnapshot+Extensions.swift */; };
+		D3D3041A6CE87110A3D3D22F /* IOKitHIDConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4FFE70371E44C4CFB78F9F /* IOKitHIDConstants.swift */; };
+		D525C60D95BA5E794C099B3D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3CACAFCCA254EE5CA21AA2 /* SettingsView.swift */; };
+		D581869D45445D90D1DC6F7E /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C01EAA955CB82110787C9E /* OnboardingView.swift */; };
+		D60322F3D8C691DB70C15294 /* DirectSensorClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19B170B3F3731A442C92558D /* DirectSensorClient.swift */; };
+		DDA79FFD626629548F8A0579 /* KalmanFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA8C6F5CB3B72557AF10925E /* KalmanFilter.swift */; };
+		DDD9A7A1451D74C8746A4697 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DCB37AEFC41B5AE9037926C /* NotificationManager.swift */; };
+		E2056C8B55D72D8F9F2AC823 /* BandpassFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6DBB5C5371B76557958F87C /* BandpassFilter.swift */; };
+		E357338F472D4996063A0696 /* MainWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4226DE834B02EF28C67ADEE /* MainWindow.swift */; };
+		E4754014B7BF54FF32ECF33F /* PostureFigure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18835C83085F4C3923AE3CEF /* PostureFigure.swift */; };
+		E5941DB6F93F35ECB036BBC7 /* FatigueMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 072036368E55AD73866829D8 /* FatigueMonitor.swift */; };
+		EAC0D8E9F9D64BDDF2008BAC /* SensorXPCClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B631AC8AA9DB4702B781F809 /* SensorXPCClient.swift */; };
+		EF8847612A43AF3183937EF9 /* TypingIntensityCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C913BA00823EA299493176 /* TypingIntensityCard.swift */; };
+		F29DF027450E50EE477506C2 /* SessionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED5463ECC359257DD667D02 /* SessionRow.swift */; };
+		FF1C5F9482BD64AEC8FB4972 /* SignalProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142E177E1330C4FCF6903930 /* SignalProcessor.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		CF08D6F62FF5E1303906D8F4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 107CE9DF9DF902D882FBC815 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EA222DD92DA2C0689B5904E0;
+			remoteInfo = PostureSensorDaemon;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		00AB3FF4E3170752DD8B8C85 /* MahonyAHRS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MahonyAHRS.swift; sourceTree = "<group>"; };
+		016931B6B21F81CF17CB44C8 /* SurfaceClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfaceClassifier.swift; sourceTree = "<group>"; };
+		01E3F1B5A7F7965EC0011C63 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		072036368E55AD73866829D8 /* FatigueMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FatigueMonitor.swift; sourceTree = "<group>"; };
+		0EDDF5AE443183053158DACE /* SensorTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorTypes.swift; sourceTree = "<group>"; };
+		13D238E86ED0844496207D90 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		142E177E1330C4FCF6903930 /* SignalProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalProcessor.swift; sourceTree = "<group>"; };
+		18835C83085F4C3923AE3CEF /* PostureFigure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureFigure.swift; sourceTree = "<group>"; };
+		19B170B3F3731A442C92558D /* DirectSensorClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectSensorClient.swift; sourceTree = "<group>"; };
+		1BB8C3B602F4E750A13369B2 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		26AF12F9D790EEDA102C1CEE /* PostureSensorProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureSensorProtocol.swift; sourceTree = "<group>"; };
+		3ED5463ECC359257DD667D02 /* SessionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRow.swift; sourceTree = "<group>"; };
+		401979E11918A92D280247D7 /* PostureDriftCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureDriftCard.swift; sourceTree = "<group>"; };
+		453DE6CAD8C13EE51CFDD9BC /* SessionSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSummaryCard.swift; sourceTree = "<group>"; };
+		4AB50BB34662CD441ADEFC21 /* SensorSnapshot+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SensorSnapshot+Extensions.swift"; sourceTree = "<group>"; };
+		4CF1516AA6B3B6072A5F3FC1 /* SensorManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorManager.swift; sourceTree = "<group>"; };
+		4E3940C8AAC3FC3B2DF55B18 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		546AAC870FED4E3AD3AC3D9D /* PostureAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureAnalyzer.swift; sourceTree = "<group>"; };
+		54E81A95C50F8296570AA256 /* DaemonInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonInstaller.swift; sourceTree = "<group>"; };
+		74FFD3F9647A6223FA8ECC64 /* BreakTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakTracker.swift; sourceTree = "<group>"; };
+		795212645E176CCE9D924303 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		7B4FFE70371E44C4CFB78F9F /* IOKitHIDConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOKitHIDConstants.swift; sourceTree = "<group>"; };
+		895F44C77430F7C3BDEA22D5 /* MenuBarPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPopover.swift; sourceTree = "<group>"; };
+		8FFB27A67BEABC90D766D49F /* XPCServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCServer.swift; sourceTree = "<group>"; };
+		9DCB37AEFC41B5AE9037926C /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		ACBC481C43A1AE8D3C8ADE21 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B631AC8AA9DB4702B781F809 /* SensorXPCClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorXPCClient.swift; sourceTree = "<group>"; };
+		B8A465749C589A45E02D9A8E /* MetricCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCard.swift; sourceTree = "<group>"; };
+		B8DFFEE6129FD0094F57D06B /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
+		BA8C6F5CB3B72557AF10925E /* KalmanFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KalmanFilter.swift; sourceTree = "<group>"; };
+		BBE3D02A3075A2BB40EB8F6B /* CircularProgressRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularProgressRing.swift; sourceTree = "<group>"; };
+		BD1BBFC6564F295D0CCB31A3 /* PostureDesk.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PostureDesk.entitlements; sourceTree = "<group>"; };
+		C561A93C6DBDA226D3980FBB /* FFTAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FFTAnalyzer.swift; sourceTree = "<group>"; };
+		C67BEDD355D7FD0F72E61047 /* PostureDeskApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureDeskApp.swift; sourceTree = "<group>"; };
+		C6DBB5C5371B76557958F87C /* BandpassFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BandpassFilter.swift; sourceTree = "<group>"; };
+		CC3CACAFCCA254EE5CA21AA2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		D0C913BA00823EA299493176 /* TypingIntensityCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingIntensityCard.swift; sourceTree = "<group>"; };
+		D4CAE4C0808663A0C1C4FCE5 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		E28D8AB4BC98AACDF5ABDE7D /* PostureDesk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PostureDesk.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E9C01EAA955CB82110787C9E /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		ED8A416BC3D0D78C1BD91CEA /* PostureSensorDaemon */ = {isa = PBXFileReference; includeInIndex = 0; path = PostureSensorDaemon; sourceTree = BUILT_PRODUCTS_DIR; };
+		EFBE673483793FDDB47F87C6 /* PostureViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureViewModel.swift; sourceTree = "<group>"; };
+		F4226DE834B02EF28C67ADEE /* MainWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindow.swift; sourceTree = "<group>"; };
+		F9C5572DDC88FB083F52E48B /* PostureSensorDaemon.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PostureSensorDaemon.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		124BBF58E1EE427360426F1A /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				EFBE673483793FDDB47F87C6 /* PostureViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		36B18483D0D673EA944F46F4 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				74FFD3F9647A6223FA8ECC64 /* BreakTracker.swift */,
+				54E81A95C50F8296570AA256 /* DaemonInstaller.swift */,
+				19B170B3F3731A442C92558D /* DirectSensorClient.swift */,
+				072036368E55AD73866829D8 /* FatigueMonitor.swift */,
+				B8DFFEE6129FD0094F57D06B /* LicenseManager.swift */,
+				9DCB37AEFC41B5AE9037926C /* NotificationManager.swift */,
+				546AAC870FED4E3AD3AC3D9D /* PostureAnalyzer.swift */,
+				B631AC8AA9DB4702B781F809 /* SensorXPCClient.swift */,
+				016931B6B21F81CF17CB44C8 /* SurfaceClassifier.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		44A442F2B52D711AF1CD192F /* PostureDesk */ = {
+			isa = PBXGroup;
+			children = (
+				13D238E86ED0844496207D90 /* Info.plist */,
+				BD1BBFC6564F295D0CCB31A3 /* PostureDesk.entitlements */,
+				C67BEDD355D7FD0F72E61047 /* PostureDeskApp.swift */,
+				BE3A88EC7B4F4E4ADED1087B /* Models */,
+				994ECDF152BDCFB9BA4A8956 /* Resources */,
+				36B18483D0D673EA944F46F4 /* Services */,
+				124BBF58E1EE427360426F1A /* ViewModels */,
+				C982076CA4F6AE8D3A4C1468 /* Views */,
+			);
+			path = PostureDesk;
+			sourceTree = "<group>";
+		};
+		4C24E25031217B5F49043A46 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				CC3CACAFCCA254EE5CA21AA2 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		994ECDF152BDCFB9BA4A8956 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				ACBC481C43A1AE8D3C8ADE21 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		A69BD292601A84BF5896EC46 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				BBE3D02A3075A2BB40EB8F6B /* CircularProgressRing.swift */,
+				1BB8C3B602F4E750A13369B2 /* DashboardView.swift */,
+				B8A465749C589A45E02D9A8E /* MetricCard.swift */,
+				401979E11918A92D280247D7 /* PostureDriftCard.swift */,
+				18835C83085F4C3923AE3CEF /* PostureFigure.swift */,
+				453DE6CAD8C13EE51CFDD9BC /* SessionSummaryCard.swift */,
+				D0C913BA00823EA299493176 /* TypingIntensityCard.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		BE3A88EC7B4F4E4ADED1087B /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				4AB50BB34662CD441ADEFC21 /* SensorSnapshot+Extensions.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		C3FF4B6E3E344D373EA37BF0 = {
+			isa = PBXGroup;
+			children = (
+				44A442F2B52D711AF1CD192F /* PostureDesk */,
+				ECD0881D2402AE05361A3BDE /* PostureSensorDaemon */,
+				E741DA02182E21B4EA4A1DC5 /* Shared */,
+				EB6A7C5C91692E17EE840708 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C982076CA4F6AE8D3A4C1468 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				D4CAE4C0808663A0C1C4FCE5 /* DesignSystem.swift */,
+				F4226DE834B02EF28C67ADEE /* MainWindow.swift */,
+				895F44C77430F7C3BDEA22D5 /* MenuBarPopover.swift */,
+				E9C01EAA955CB82110787C9E /* OnboardingView.swift */,
+				A69BD292601A84BF5896EC46 /* Dashboard */,
+				D2936B9C32C33C3ECEC2198E /* History */,
+				4C24E25031217B5F49043A46 /* Settings */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		D2936B9C32C33C3ECEC2198E /* History */ = {
+			isa = PBXGroup;
+			children = (
+				4E3940C8AAC3FC3B2DF55B18 /* HistoryView.swift */,
+				3ED5463ECC359257DD667D02 /* SessionRow.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
+		E1B70F2DFE1EA92A6E28C783 /* Filters */ = {
+			isa = PBXGroup;
+			children = (
+				C6DBB5C5371B76557958F87C /* BandpassFilter.swift */,
+				C561A93C6DBDA226D3980FBB /* FFTAnalyzer.swift */,
+				BA8C6F5CB3B72557AF10925E /* KalmanFilter.swift */,
+				00AB3FF4E3170752DD8B8C85 /* MahonyAHRS.swift */,
+			);
+			path = Filters;
+			sourceTree = "<group>";
+		};
+		E741DA02182E21B4EA4A1DC5 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				26AF12F9D790EEDA102C1CEE /* PostureSensorProtocol.swift */,
+				0EDDF5AE443183053158DACE /* SensorTypes.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		EB6A7C5C91692E17EE840708 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E28D8AB4BC98AACDF5ABDE7D /* PostureDesk.app */,
+				ED8A416BC3D0D78C1BD91CEA /* PostureSensorDaemon */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		ECD0881D2402AE05361A3BDE /* PostureSensorDaemon */ = {
+			isa = PBXGroup;
+			children = (
+				795212645E176CCE9D924303 /* Info.plist */,
+				7B4FFE70371E44C4CFB78F9F /* IOKitHIDConstants.swift */,
+				01E3F1B5A7F7965EC0011C63 /* main.swift */,
+				F9C5572DDC88FB083F52E48B /* PostureSensorDaemon.entitlements */,
+				4CF1516AA6B3B6072A5F3FC1 /* SensorManager.swift */,
+				142E177E1330C4FCF6903930 /* SignalProcessor.swift */,
+				8FFB27A67BEABC90D766D49F /* XPCServer.swift */,
+				E1B70F2DFE1EA92A6E28C783 /* Filters */,
+			);
+			path = PostureSensorDaemon;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		EA222DD92DA2C0689B5904E0 /* PostureSensorDaemon */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BC70FC7D2A105F512AC72E0C /* Build configuration list for PBXNativeTarget "PostureSensorDaemon" */;
+			buildPhases = (
+				4E56CDE9484CC28D6111CAE8 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PostureSensorDaemon;
+			packageProductDependencies = (
+			);
+			productName = PostureSensorDaemon;
+			productReference = ED8A416BC3D0D78C1BD91CEA /* PostureSensorDaemon */;
+			productType = "com.apple.product-type.tool";
+		};
+		FDEB8BCA2776EF8D0B9B29DB /* PostureDesk */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 133698DF2A30F246BA14BDA6 /* Build configuration list for PBXNativeTarget "PostureDesk" */;
+			buildPhases = (
+				77110B245BBCE41C9C8E6964 /* Sources */,
+				CBFD5F2F94C741E2C18F1C7F /* Resources */,
+				2349CBC503AFC51B263FDDB2 /* Copy Helper Tool and LaunchDaemon Plist */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				97E4D87E850C5B8E1EBE8001 /* PBXTargetDependency */,
+			);
+			name = PostureDesk;
+			packageProductDependencies = (
+			);
+			productName = PostureDesk;
+			productReference = E28D8AB4BC98AACDF5ABDE7D /* PostureDesk.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		107CE9DF9DF902D882FBC815 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 906655045E1BC1CA9F478614 /* Build configuration list for PBXProject "PostureDesk" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = C3FF4B6E3E344D373EA37BF0;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = EB6A7C5C91692E17EE840708 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FDEB8BCA2776EF8D0B9B29DB /* PostureDesk */,
+				EA222DD92DA2C0689B5904E0 /* PostureSensorDaemon */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CBFD5F2F94C741E2C18F1C7F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				431AA969AE94CA5EF39E5DFF /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		2349CBC503AFC51B263FDDB2 /* Copy Helper Tool and LaunchDaemon Plist */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Helper Tool and LaunchDaemon Plist";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "mkdir -p \"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Library/HelperTools\"\nmkdir -p \"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Library/LaunchDaemons\"\ncp \"${BUILT_PRODUCTS_DIR}/PostureSensorDaemon\" \"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Library/HelperTools/\"\ncp \"${SRCROOT}/LaunchDaemons/com.posturedesk.sensor-daemon.plist\" \"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Library/LaunchDaemons/\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4E56CDE9484CC28D6111CAE8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6589F321CDE174E42D2AD9D7 /* BandpassFilter.swift in Sources */,
+				72D2F2A8557B1644796AE8BB /* FFTAnalyzer.swift in Sources */,
+				D3D3041A6CE87110A3D3D22F /* IOKitHIDConstants.swift in Sources */,
+				2D770CFA135A8487117346A9 /* KalmanFilter.swift in Sources */,
+				B58C8ADE3559CDD287B2844F /* MahonyAHRS.swift in Sources */,
+				645230FEAAE6516498AD7B1B /* PostureSensorProtocol.swift in Sources */,
+				386A4CDBD292FD5046D14728 /* SensorManager.swift in Sources */,
+				026AA2747157D0DAB6C59437 /* SensorTypes.swift in Sources */,
+				708B9D8EA2705355EFEE094C /* SignalProcessor.swift in Sources */,
+				78E283A736CF8A420A779906 /* XPCServer.swift in Sources */,
+				9CC0B46379E8FAFBDCCCBFD9 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		77110B245BBCE41C9C8E6964 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E2056C8B55D72D8F9F2AC823 /* BandpassFilter.swift in Sources */,
+				63986293222761C36770EAB9 /* BreakTracker.swift in Sources */,
+				49FA155970A4DFAD2FE37EAC /* CircularProgressRing.swift in Sources */,
+				4C588E7C8E49871055E13541 /* DaemonInstaller.swift in Sources */,
+				58D37DAAC4FBDFEF616EC32C /* DashboardView.swift in Sources */,
+				4463EBF048D19B14E2220784 /* DesignSystem.swift in Sources */,
+				D60322F3D8C691DB70C15294 /* DirectSensorClient.swift in Sources */,
+				305EBB1D567C4EFAAA666329 /* FFTAnalyzer.swift in Sources */,
+				E5941DB6F93F35ECB036BBC7 /* FatigueMonitor.swift in Sources */,
+				1322E94FF74AF82798BD6A4A /* HistoryView.swift in Sources */,
+				8F73D202A434896F96F436AE /* IOKitHIDConstants.swift in Sources */,
+				DDA79FFD626629548F8A0579 /* KalmanFilter.swift in Sources */,
+				AB3F319079DAED1BA973C5AF /* LicenseManager.swift in Sources */,
+				55D8998E61BA743A8A535CF3 /* MahonyAHRS.swift in Sources */,
+				E357338F472D4996063A0696 /* MainWindow.swift in Sources */,
+				4E2D093994EDD0AEA99275AF /* MenuBarPopover.swift in Sources */,
+				3372CC49D5A071BE38E5B605 /* MetricCard.swift in Sources */,
+				DDD9A7A1451D74C8746A4697 /* NotificationManager.swift in Sources */,
+				D581869D45445D90D1DC6F7E /* OnboardingView.swift in Sources */,
+				64BF872AAEF688100A38210D /* PostureAnalyzer.swift in Sources */,
+				70A4D75D7FAA3D56FDBE8988 /* PostureDeskApp.swift in Sources */,
+				AC33E961CBF3C86052213AA5 /* PostureDriftCard.swift in Sources */,
+				E4754014B7BF54FF32ECF33F /* PostureFigure.swift in Sources */,
+				8FB6573A782F32A25CC22F94 /* PostureSensorProtocol.swift in Sources */,
+				67698A3DA4B9C74E02D6D2D0 /* PostureViewModel.swift in Sources */,
+				5AA407A64BD1B548BFF15E0E /* SensorManager.swift in Sources */,
+				C78897F32B468E47C5707DBB /* SensorSnapshot+Extensions.swift in Sources */,
+				02FBCBA368BD69F235B44CDA /* SensorTypes.swift in Sources */,
+				EAC0D8E9F9D64BDDF2008BAC /* SensorXPCClient.swift in Sources */,
+				F29DF027450E50EE477506C2 /* SessionRow.swift in Sources */,
+				047E766BB9E7DCF11E64B6A6 /* SessionSummaryCard.swift in Sources */,
+				D525C60D95BA5E794C099B3D /* SettingsView.swift in Sources */,
+				FF1C5F9482BD64AEC8FB4972 /* SignalProcessor.swift in Sources */,
+				41B2EF808D66EBDB440A5AB9 /* SurfaceClassifier.swift in Sources */,
+				EF8847612A43AF3183937EF9 /* TypingIntensityCard.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		97E4D87E850C5B8E1EBE8001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EA222DD92DA2C0689B5904E0 /* PostureSensorDaemon */;
+			targetProxy = CF08D6F62FF5E1303906D8F4 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		03311E1E9D93491A3E620C15 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Debug;
+		};
+		25E3DA1BB9323E4F121806DE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Release;
+		};
+		A0C5648A386E28F40BE47F92 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = PostureSensorDaemon/PostureSensorDaemon.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = PostureSensorDaemon/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.posturedesk.sensor-daemon";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		BD18F8089071F414060CA81F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PostureDesk/PostureDesk.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = PostureDesk/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.posturedesk.app;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		E91D3DE6BDE5EDCDAF6E4D5D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = PostureSensorDaemon/PostureSensorDaemon.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = PostureSensorDaemon/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.posturedesk.sensor-daemon";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		ECB82AA6D0F7BFA914CA5664 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PostureDesk/PostureDesk.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = PostureDesk/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.posturedesk.app;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		133698DF2A30F246BA14BDA6 /* Build configuration list for PBXNativeTarget "PostureDesk" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BD18F8089071F414060CA81F /* Debug */,
+				ECB82AA6D0F7BFA914CA5664 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		906655045E1BC1CA9F478614 /* Build configuration list for PBXProject "PostureDesk" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				03311E1E9D93491A3E620C15 /* Debug */,
+				25E3DA1BB9323E4F121806DE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BC70FC7D2A105F512AC72E0C /* Build configuration list for PBXNativeTarget "PostureSensorDaemon" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E91D3DE6BDE5EDCDAF6E4D5D /* Debug */,
+				A0C5648A386E28F40BE47F92 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 107CE9DF9DF902D882FBC815 /* Project object */;
+}

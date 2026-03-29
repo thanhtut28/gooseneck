@@ -1,0 +1,264 @@
+import Foundation
+import IOKit
+import IOKit.hid
+
+/// Raw 3-axis acceleration sample from the IMU
+struct AccelSample {
+    let x: Double  // g-force
+    let y: Double  // g-force
+    let z: Double  // g-force
+    let timestamp: TimeInterval
+}
+
+/// Manages IOKit HID connections to the Apple Silicon accelerometer and lid angle sensor.
+final class SensorManager: NSObject {
+
+    // MARK: - State
+
+    private var accelManager: IOHIDManager?
+    private var accelDevice: IOHIDDevice?
+    private var accelReportBuffer: UnsafeMutablePointer<UInt8>?
+
+    private var lidAngleManager: IOHIDManager?
+    private var lidAngleDevice: IOHIDDevice?
+    private var lidAnglePollTimer: Timer?
+
+    private(set) var hasAccelerometer = false
+    private(set) var hasGyroscope = false
+    private(set) var hasLidAngle = false
+
+    // Prevent deallocation while IOKit callbacks are active
+    private var retainedSelf: SensorManager?
+
+    /// Called on each new accelerometer sample (~100Hz)
+    var onAccelSample: ((AccelSample) -> Void)?
+
+    /// Called when lid angle updates (~10Hz)
+    var onLidAngleUpdate: ((Double) -> Void)?
+
+    /// Latest lid angle in degrees (-1 if unavailable)
+    private(set) var currentLidAngle: Double = -1
+
+    // MARK: - Lifecycle
+
+    func start() {
+        retainedSelf = self  // prevent deallocation while callbacks are registered
+        startAccelerometer()
+        startLidAngleSensor()
+    }
+
+    func stop() {
+        stopAccelerometer()
+        stopLidAngleSensor()
+        retainedSelf = nil
+    }
+
+    deinit {
+        stop()
+    }
+
+    // MARK: - Accelerometer
+
+    private func startAccelerometer() {
+        let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
+        self.accelManager = manager
+
+        let matchingDict: [String: Any] = [
+            kIOHIDVendorIDKey as String: HIDConstants.appleVendorID,
+            kIOHIDDeviceUsagePageKey as String: HIDConstants.accelUsagePage,
+            kIOHIDDeviceUsageKey as String: HIDConstants.accelUsageID,
+        ]
+        IOHIDManagerSetDeviceMatching(manager, matchingDict as CFDictionary)
+
+        let context = Unmanaged.passUnretained(self).toOpaque()
+
+        IOHIDManagerRegisterDeviceMatchingCallback(manager, { ctx, _, _, device in
+            let mgr = Unmanaged<SensorManager>.fromOpaque(ctx!).takeUnretainedValue()
+            mgr.accelDeviceMatched(device)
+        }, context)
+
+        IOHIDManagerRegisterDeviceRemovalCallback(manager, { ctx, _, _, device in
+            let mgr = Unmanaged<SensorManager>.fromOpaque(ctx!).takeUnretainedValue()
+            mgr.accelDeviceRemoved(device)
+        }, context)
+
+        IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetCurrent(), CFRunLoopMode.defaultMode.rawValue)
+
+        let result = IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone))
+        if result != kIOReturnSuccess {
+            print("[SensorManager] Failed to open accelerometer manager: \(result)")
+        }
+    }
+
+    private func accelDeviceMatched(_ device: IOHIDDevice) {
+        print("[SensorManager] Accelerometer device matched")
+        self.accelDevice = device
+        self.hasAccelerometer = true
+
+        let result = IOHIDDeviceOpen(device, IOOptionBits(kIOHIDOptionsTypeNone))
+        if result != kIOReturnSuccess {
+            print("[SensorManager] Failed to open accelerometer device: \(result)")
+            return
+        }
+
+        // Allocate persistent report buffer (must outlive the callback)
+        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: HIDConstants.reportSize)
+        buffer.initialize(repeating: 0, count: HIDConstants.reportSize)
+        self.accelReportBuffer = buffer
+
+        let context = Unmanaged.passUnretained(self).toOpaque()
+
+        IOHIDDeviceRegisterInputReportCallback(
+            device,
+            buffer,
+            HIDConstants.reportSize,
+            { ctx, _, _, _, _, report, reportLength in
+                let mgr = Unmanaged<SensorManager>.fromOpaque(ctx!).takeUnretainedValue()
+                mgr.parseAccelReport(report: report, length: Int(reportLength))
+            },
+            context
+        )
+    }
+
+    private func accelDeviceRemoved(_ device: IOHIDDevice) {
+        print("[SensorManager] Accelerometer device removed")
+        self.accelDevice = nil
+        self.hasAccelerometer = false
+
+        if let buffer = accelReportBuffer {
+            buffer.deallocate()
+            accelReportBuffer = nil
+        }
+    }
+
+    private func stopAccelerometer() {
+        if let device = accelDevice {
+            IOHIDDeviceClose(device, IOOptionBits(kIOHIDOptionsTypeNone))
+            accelDevice = nil
+        }
+        if let manager = accelManager {
+            IOHIDManagerUnscheduleFromRunLoop(manager, CFRunLoopGetCurrent(), CFRunLoopMode.defaultMode.rawValue)
+            IOHIDManagerClose(manager, IOOptionBits(kIOHIDOptionsTypeNone))
+            accelManager = nil
+        }
+        if let buffer = accelReportBuffer {
+            buffer.deallocate()
+            accelReportBuffer = nil
+        }
+        hasAccelerometer = false
+    }
+
+    // MARK: - Accelerometer Report Parsing
+
+    private func parseAccelReport(report: UnsafePointer<UInt8>, length: Int) {
+        guard length >= 18 else { return }  // Need at least bytes 0-17
+
+        let x = readInt32LE(from: report, at: HIDConstants.xOffset)
+        let y = readInt32LE(from: report, at: HIDConstants.yOffset)
+        let z = readInt32LE(from: report, at: HIDConstants.zOffset)
+
+        let sample = AccelSample(
+            x: Double(x) / HIDConstants.scaleFactor,
+            y: Double(y) / HIDConstants.scaleFactor,
+            z: Double(z) / HIDConstants.scaleFactor,
+            timestamp: Date.timeIntervalSinceReferenceDate
+        )
+
+        onAccelSample?(sample)
+    }
+
+    private func readInt32LE(from ptr: UnsafePointer<UInt8>, at offset: Int) -> Int32 {
+        let b0 = UInt32(ptr[offset])
+        let b1 = UInt32(ptr[offset + 1]) << 8
+        let b2 = UInt32(ptr[offset + 2]) << 16
+        let b3 = UInt32(ptr[offset + 3]) << 24
+        return Int32(bitPattern: b0 | b1 | b2 | b3)
+    }
+
+    // MARK: - Lid Angle Sensor
+
+    private func startLidAngleSensor() {
+        let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
+        self.lidAngleManager = manager
+
+        let matchingDict: [String: Any] = [
+            kIOHIDVendorIDKey as String: HIDConstants.appleVendorID,
+            kIOHIDDeviceUsagePageKey as String: HIDConstants.lidAngleUsagePage,
+            kIOHIDDeviceUsageKey as String: HIDConstants.lidAngleUsageID,
+        ]
+        IOHIDManagerSetDeviceMatching(manager, matchingDict as CFDictionary)
+
+        IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetCurrent(), CFRunLoopMode.defaultMode.rawValue)
+
+        let result = IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone))
+        if result != kIOReturnSuccess {
+            print("[SensorManager] Failed to open lid angle manager: \(result)")
+            return
+        }
+
+        // Find the device directly (lid angle uses polling, not streaming callbacks)
+        if let deviceSet = IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice>,
+           let device = deviceSet.first {
+            self.lidAngleDevice = device
+            self.hasLidAngle = true
+
+            let openResult = IOHIDDeviceOpen(device, IOOptionBits(kIOHIDOptionsTypeNone))
+            if openResult != kIOReturnSuccess {
+                print("[SensorManager] Failed to open lid angle device: \(openResult)")
+                self.hasLidAngle = false
+                return
+            }
+
+            print("[SensorManager] Lid angle sensor found")
+
+            // Poll at 10Hz
+            lidAnglePollTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+                self?.pollLidAngle()
+            }
+        } else {
+            print("[SensorManager] Lid angle sensor not found on this device")
+        }
+    }
+
+    private func pollLidAngle() {
+        guard let device = lidAngleDevice else { return }
+
+        var reportBuffer = [UInt8](repeating: 0, count: HIDConstants.lidAngleReportBufferSize)
+        var reportLength = CFIndex(reportBuffer.count)
+
+        let result = IOHIDDeviceGetReport(
+            device,
+            kIOHIDReportTypeFeature,
+            HIDConstants.lidAngleReportID,
+            &reportBuffer,
+            &reportLength
+        )
+
+        guard result == kIOReturnSuccess, reportLength >= 2 else { return }
+
+        // Lid angle: 16-bit LE in centidegrees
+        let low = UInt16(reportBuffer[0])
+        let high = UInt16(reportBuffer[1]) << 8
+        let centidegrees = Int16(bitPattern: low | high)
+        let degrees = Double(centidegrees) / 100.0
+
+        currentLidAngle = degrees
+        onLidAngleUpdate?(degrees)
+    }
+
+    private func stopLidAngleSensor() {
+        lidAnglePollTimer?.invalidate()
+        lidAnglePollTimer = nil
+
+        if let device = lidAngleDevice {
+            IOHIDDeviceClose(device, IOOptionBits(kIOHIDOptionsTypeNone))
+            lidAngleDevice = nil
+        }
+        if let manager = lidAngleManager {
+            IOHIDManagerUnscheduleFromRunLoop(manager, CFRunLoopGetCurrent(), CFRunLoopMode.defaultMode.rawValue)
+            IOHIDManagerClose(manager, IOOptionBits(kIOHIDOptionsTypeNone))
+            lidAngleManager = nil
+        }
+        hasLidAngle = false
+    }
+}

@@ -1,1 +1,10 @@
 .superpowers/
+.agents/
+.claude/
+build/
+*.xcuserdata
+xcuserdata/
+DerivedData/
+.DS_Store
+*.swp
+skills-lock.json
