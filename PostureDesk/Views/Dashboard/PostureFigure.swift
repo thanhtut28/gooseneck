@@ -1,136 +1,112 @@
 import SwiftUI
 
-/// Minimal side-view sitting figure that tilts based on posture drift.
-/// Shows a clean silhouette with an arrow hint when drifting.
+/// Premium abstract Alignment Orb that replaces the original human coach mark.
 struct PostureFigure: View {
-    let drift: Double      // degrees from baseline
+    let drift: Double
     let isDrifting: Bool
-
-    private var tiltAngle: Double {
-        // Signed tilt: positive = forward lean, negative = backward lean, clamped ±25°
-        let clamped = max(min(drift * 1.5, 25), -25)
-        return clamped
+    
+    // Smoothly animated properties
+    private var driftOffset: CGFloat {
+        // Map drift (-25 to +25) to a physical offset within the lens (-40 to +40 points)
+        let clamped = max(min(drift, 25), -25)
+        return CGFloat(clamped) * 1.8
     }
 
     private var figureColor: Color {
         if isDrifting { return DS.Colors.accentWarn }
-        if abs(drift) > 3 { return DS.Colors.textSecondary }
+        if abs(drift) > 3 { return DS.Colors.accentInfo.opacity(0.8) } // slightly off-center
         return DS.Colors.accentGood
     }
 
     var body: some View {
         ZStack {
-            // Seated figure
-            seatedFigure
-                .rotationEffect(.degrees(tiltAngle), anchor: .bottom)
-                .animation(.easeInOut(duration: 0.8), value: tiltAngle)
+            // Glass bezel / lens
+            Circle()
+                .fill(.thinMaterial)
+                .frame(width: 130, height: 130)
+                .shadow(color: Color.black.opacity(0.2), radius: 15, x: 0, y: 8)
+            
+            // Bezel rim (liquid glass stroke)
+            Circle()
+                .stroke(LinearGradient(colors: [Color.white.opacity(0.25), Color.white.opacity(0.02)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5)
+                .frame(width: 130, height: 130)
 
-            // Correction arrow (only when drifting)
+            // Etched Crosshairs
+            Crosshairs()
+                .stroke(Color.primary.opacity(0.15), style: StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
+                .frame(width: 110, height: 110)
+
+            // Inner Orb (The active indicator)
+            ZStack {
+                // Soft outer glow / diffusion
+                Circle()
+                    .fill(figureColor.opacity(0.25))
+                    .frame(width: 48, height: 48)
+                    .blur(radius: 8)
+                
+                // Neon core
+                Circle()
+                    .fill(figureColor)
+                    .frame(width: 14, height: 14)
+                    .shadow(color: figureColor.opacity(0.8), radius: 8, x: 0, y: 0)
+                
+                // Glass highlight on the orb core
+                Circle()
+                    .stroke(Color.white.opacity(0.8), lineWidth: 1)
+                    .frame(width: 14, height: 14)
+            }
+            .offset(x: driftOffset, y: 0)
+            .animation(.spring(response: 0.5, dampingFraction: 0.6), value: driftOffset)
+
+            // Correction arrow badge (sleek floating pill)
             if isDrifting {
-                correctionArrow
-                    .transition(.opacity.combined(with: .scale))
+                correctionBadge
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.8, anchor: .center).combined(with: .opacity),
+                        removal: .opacity
+                    ))
             }
         }
-        .animation(.easeInOut(duration: 0.5), value: isDrifting)
+        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: isDrifting)
+        .frame(width: 180, height: 180)
     }
 
-    private var seatedFigure: some View {
-        Canvas { context, size in
-            let w = size.width
-            let h = size.height
-
-            // Head
-            let headCenter = CGPoint(x: w * 0.5, y: h * 0.18)
-            let headRadius = w * 0.09
-            context.fill(
-                Path(ellipseIn: CGRect(
-                    x: headCenter.x - headRadius,
-                    y: headCenter.y - headRadius,
-                    width: headRadius * 2,
-                    height: headRadius * 2
-                )),
-                with: .color(figureColor)
-            )
-
-            // Spine (neck to lower back)
-            var spine = Path()
-            spine.move(to: CGPoint(x: w * 0.5, y: h * 0.27))
-            spine.addQuadCurve(
-                to: CGPoint(x: w * 0.48, y: h * 0.58),
-                control: CGPoint(x: w * 0.5, y: h * 0.42)
-            )
-            context.stroke(
-                spine,
-                with: .color(figureColor),
-                style: StrokeStyle(lineWidth: 3, lineCap: .round)
-            )
-
-            // Shoulders
-            var shoulders = Path()
-            shoulders.move(to: CGPoint(x: w * 0.32, y: h * 0.32))
-            shoulders.addLine(to: CGPoint(x: w * 0.68, y: h * 0.32))
-            context.stroke(
-                shoulders,
-                with: .color(figureColor),
-                style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
-            )
-
-            // Arms (resting on desk)
-            var leftArm = Path()
-            leftArm.move(to: CGPoint(x: w * 0.32, y: h * 0.32))
-            leftArm.addQuadCurve(
-                to: CGPoint(x: w * 0.25, y: h * 0.52),
-                control: CGPoint(x: w * 0.28, y: h * 0.42)
-            )
-            context.stroke(leftArm, with: .color(figureColor),
-                           style: StrokeStyle(lineWidth: 2, lineCap: .round))
-
-            var rightArm = Path()
-            rightArm.move(to: CGPoint(x: w * 0.68, y: h * 0.32))
-            rightArm.addQuadCurve(
-                to: CGPoint(x: w * 0.75, y: h * 0.52),
-                control: CGPoint(x: w * 0.72, y: h * 0.42)
-            )
-            context.stroke(rightArm, with: .color(figureColor),
-                           style: StrokeStyle(lineWidth: 2, lineCap: .round))
-
-            // Upper legs (seated)
-            var legs = Path()
-            legs.move(to: CGPoint(x: w * 0.48, y: h * 0.58))
-            legs.addLine(to: CGPoint(x: w * 0.7, y: h * 0.62))
-            context.stroke(legs, with: .color(figureColor),
-                           style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
-
-            // Lower leg
-            var lowerLeg = Path()
-            lowerLeg.move(to: CGPoint(x: w * 0.7, y: h * 0.62))
-            lowerLeg.addLine(to: CGPoint(x: w * 0.68, y: h * 0.82))
-            context.stroke(lowerLeg, with: .color(figureColor),
-                           style: StrokeStyle(lineWidth: 2, lineCap: .round))
-
-            // Chair hint (subtle)
-            var chair = Path()
-            chair.move(to: CGPoint(x: w * 0.35, y: h * 0.58))
-            chair.addLine(to: CGPoint(x: w * 0.35, y: h * 0.85))
-            context.stroke(chair, with: .color(DS.Colors.textMuted),
-                           style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
-        }
-        .frame(width: 100, height: 140)
-    }
-
-    private var correctionArrow: some View {
+    private var correctionBadge: some View {
         let arrowIcon = drift > 0 ? "arrow.left" : "arrow.right"
-        let xOffset: CGFloat = drift > 0 ? -50 : 50
+        // Place the badge dynamically pushing inward based on the drift
+        let xOffset: CGFloat = drift > 0 ? -65 : 65
 
-        return VStack(spacing: 2) {
-            Image(systemName: arrowIcon)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(DS.Colors.accentWarn.opacity(0.7))
-
-            Text("readjust")
-                .font(.system(size: 9, weight: .medium, design: .rounded))
-                .foregroundStyle(DS.Colors.accentWarn.opacity(0.5))
+        return HStack(spacing: 4) {
+             Image(systemName: arrowIcon)
+                 .font(.system(size: 11, weight: .bold))
+             Text("Align")
+                 .font(.system(size: 11, weight: .bold, design: .rounded))
         }
-        .offset(x: xOffset, y: -10)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .foregroundStyle(.white)
+        .background(
+            Capsule()
+                .fill(DS.Colors.accentWarn.opacity(0.85))
+                .shadow(color: DS.Colors.accentWarn.opacity(0.5), radius: 8, x: 0, y: 4)
+        )
+        .overlay(
+            Capsule()
+                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+        )
+        .offset(x: xOffset, y: -45)
+    }
+}
+
+private struct Crosshairs: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        // Horizontal line
+        path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+        // Vertical line
+        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+        return path
     }
 }

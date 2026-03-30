@@ -11,10 +11,12 @@ struct MetricCard<Content: View>: View {
         content
             .padding(20)
             .frame(maxWidth: .infinity, minHeight: 160)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+                    .stroke(DS.Gradients.glassBorder, lineWidth: 1.5)
+                    .opacity(0.8)
             )
+            .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 4)
     }
 }

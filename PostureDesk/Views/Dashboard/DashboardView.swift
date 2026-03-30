@@ -94,18 +94,19 @@ struct DashboardView: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 11, weight: .semibold))
                 Text(title)
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
             }
-            .foregroundStyle(DS.Colors.textPrimary.opacity(0.8))
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(DS.Colors.bg.opacity(0.6), in: RoundedRectangle(cornerRadius: 8))
+            .foregroundStyle(DS.Colors.textPrimary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 9)
+            .background(.thinMaterial, in: Capsule())
             .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(DS.Colors.cardBorder, lineWidth: 1)
+                Capsule()
+                    .stroke(LinearGradient(colors: [Color.white.opacity(0.15), Color.clear], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
             )
+            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
         }
         .buttonStyle(.plain)
     }

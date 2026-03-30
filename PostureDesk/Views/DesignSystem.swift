@@ -8,22 +8,22 @@ enum DS {
     // MARK: Colors
 
     enum Colors {
-        static let bg = adaptive(light: "F4F4F5", dark: "1B1B1F")
-        static let cardBg = adaptive(light: "FFFFFF", dark: "242428")
+        static let bg = adaptive(light: "F4F4F5", dark: "0E0E12")
+        static let cardBg = adaptive(light: "FFFFFF", dark: "16161A")
         static let cardBorder = Color(nsColor: NSColor(name: nil) { appearance in
             let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
             return isDark
-                ? NSColor.white.withAlphaComponent(0.04)
-                : NSColor.black.withAlphaComponent(0.06)
+                ? NSColor.white.withAlphaComponent(0.06)
+                : NSColor.black.withAlphaComponent(0.08)
         })
 
-        static let textPrimary = adaptive(light: "18181B", dark: "E4E4E7")
-        static let textSecondary = adaptive(light: "71717A", dark: "71717A")
+        static let textPrimary = adaptive(light: "18181B", dark: "FAFAFA")
+        static let textSecondary = adaptive(light: "71717A", dark: "A1A1AA")
         static let textMuted = adaptive(light: "A1A1AA", dark: "52525B")
 
-        static let accentGood = adaptive(light: "16A34A", dark: "4ADE80")
-        static let accentWarn = adaptive(light: "D97706", dark: "FBBF24")
-        static let accentDanger = adaptive(light: "DC2626", dark: "F87171")
+        static let accentGood = adaptive(light: "10B981", dark: "34D399") // More vibrant emerald/spring green
+        static let accentWarn = adaptive(light: "F59E0B", dark: "FBBF24") // Solid amber
+        static let accentDanger = adaptive(light: "EF4444", dark: "F87171")
         static let accentInfo = adaptive(light: "6366F1", dark: "818CF8")
 
         private static func adaptive(light: String, dark: String) -> Color {
@@ -32,6 +32,40 @@ enum DS {
                 return isDark ? NSColor(hex: dark) : NSColor(hex: light)
             })
         }
+    }
+
+    // MARK: Gradients
+
+    enum Gradients {
+        static let glassBorder = LinearGradient(
+            colors: [
+                Color.white.opacity(0.12),
+                Color.white.opacity(0.02),
+                Color.white.opacity(0.0)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        
+        static let primaryGlow = RadialGradient(
+            colors: [
+                DS.Colors.accentGood.opacity(0.15),
+                DS.Colors.bg.opacity(0.0)
+            ],
+            center: .center,
+            startRadius: 0,
+            endRadius: 180
+        )
+        
+        static let driftingGlow = RadialGradient(
+            colors: [
+                DS.Colors.accentWarn.opacity(0.25),
+                DS.Colors.bg.opacity(0.0)
+            ],
+            center: .center,
+            startRadius: 0,
+            endRadius: 180
+        )
     }
 
     // MARK: Typography
@@ -100,13 +134,24 @@ extension Color {
 // MARK: - Card View Modifier
 
 struct DSCard: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+    
     func body(content: Content) -> some View {
         content
             .padding(DS.Spacing.cardPadding)
             .background(DS.Colors.cardBg, in: RoundedRectangle(cornerRadius: DS.Spacing.cardRadius))
+            // Premium glass border stroke
             .overlay(
                 RoundedRectangle(cornerRadius: DS.Spacing.cardRadius)
-                    .stroke(DS.Colors.cardBorder, lineWidth: 1)
+                    .stroke(
+                        colorScheme == .dark ? DS.Gradients.glassBorder : LinearGradient(colors: [DS.Colors.cardBorder], startPoint: .top, endPoint: .bottom),
+                        lineWidth: 1.5
+                    )
+            )
+            // Subtle drop shadow for depth
+            .shadow(
+                color: Color.black.opacity(colorScheme == .dark ? 0.2 : 0.05),
+                radius: 12, x: 0, y: 4
             )
     }
 }
