@@ -100,6 +100,41 @@ struct SessionSummaryCard: View {
                     .contentTransition(.numericText())
                     .animation(.easeInOut(duration: 0.4), value: minutesLeft)
             }
+            // Surface suggestion banner
+            if viewModel.surfaceClassifier.hasPendingSuggestion {
+                HStack(spacing: 8) {
+                    Image(systemName: "location.fill.viewfinder")
+                        .font(.system(size: 11))
+                        .foregroundStyle(DS.Colors.accentInfo)
+
+                    Text("Looks like you moved to \(viewModel.surfaceClassifier.suggestedSurface.label.lowercased())")
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(DS.Colors.textSecondary)
+
+                    Spacer()
+
+                    Button("Switch") {
+                        viewModel.acceptSurfaceSuggestion()
+                    }
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundStyle(DS.Colors.accentInfo)
+                    .buttonStyle(.plain)
+
+                    Button {
+                        viewModel.dismissSurfaceSuggestion()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(DS.Colors.textMuted)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(DS.Colors.accentInfo.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .animation(.easeInOut(duration: 0.3), value: viewModel.surfaceClassifier.hasPendingSuggestion)
+            }
         }
         .frame(maxWidth: .infinity, minHeight: 160, alignment: .leading)
         .dsCard()

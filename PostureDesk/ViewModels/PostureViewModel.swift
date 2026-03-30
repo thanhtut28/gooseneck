@@ -91,6 +91,17 @@ final class PostureViewModel {
         finalizeCurrentSession()
     }
 
+    /// Accept the auto-detected surface suggestion.
+    func acceptSurfaceSuggestion() {
+        selectedSurface = surfaceClassifier.suggestedSurface
+        surfaceClassifier.acceptSuggestion()
+    }
+
+    /// Dismiss the surface suggestion.
+    func dismissSurfaceSuggestion() {
+        surfaceClassifier.dismissSuggestion()
+    }
+
     // MARK: - System Idle Time
 
     private var systemIdleSeconds: Double {
@@ -113,7 +124,10 @@ final class PostureViewModel {
         postureAnalyzer.update(pitch: snapshot.pitch, lidAngle: snapshot.lidAngle)
         breakTracker.update(isActive: present)
         fatigueMonitor.update(typingRMS: snapshot.typingRMS, isActive: present)
+        surfaceClassifier.currentSurface = selectedSurface
         surfaceClassifier.update(
+            pitch: snapshot.pitch,
+            roll: snapshot.roll,
             vibrationVariance: snapshot.vibrationVariance,
             fftLow: snapshot.fftLowBin,
             fftMid: snapshot.fftMidBin,
