@@ -101,9 +101,10 @@ final class FormattingAndFatigueTests: XCTestCase {
         }
 
         // After 5 days decay + 600 session samples, baseline should be close to 0.003
-        // (decayedWeight = max(0.3, 0.8 - 0.1*5) = 0.3, session weight at 600 samples = 0.7)
-        // effective persisted weight = 0.3 * 0.3 = 0.09
-        XCTAssertGreaterThan(monitor.baselineRMS, 0.0025,
+        // decayedWeight = max(0.3, 0.8 - 0.5) = 0.3
+        // weight = max(0.3, 0.3 - 1.0 * (0.3 - 0.3)) = 0.3
+        // baseline = 0.001 * 0.3 + ~0.003 * 0.7 ≈ 0.0024
+        XCTAssertGreaterThan(monitor.baselineRMS, 0.002,
             "After 5 days decay + 10 min session, baseline should be dominated by session data")
     }
 

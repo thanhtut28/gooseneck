@@ -105,14 +105,14 @@ final class FatigueMonitor {
 
         guard calibrationState == .ready else { return }
 
-        // Compute blended baseline: persisted weight decays as session grows
-        // effectiveWeight = persistedBaselineWeight * max(minimumPersistedWeight, 1 - sessionFraction)
-        // This compounds the time-decay with session-based decay.
+        // Compute blended baseline: linear interpolation from startWeight down to 0.3
+        // weight = max(0.3, startWeight - (sessionSampleCount / 600) * (startWeight - 0.3))
+        let startWeight = persistedBaseline > 0 ? persistedBaselineWeight : 0
         if persistedBaseline > 0 {
             let sessionFraction = min(1.0, Double(sessionSampleCount) / baselineTransitionSamples)
-            let sessionMultiplier = max(minimumPersistedWeight, 1.0 - sessionFraction)
-            let effectiveWeight = persistedBaselineWeight * sessionMultiplier
-            baselineRMS = persistedBaseline * effectiveWeight + sessionBaselineMean * (1.0 - effectiveWeight)
+            let weight = max(minimumPersistedWeight,
+                             startWeight - sessionFraction * (startWeight - minimumPersistedWeight))
+            baselineRMS = persistedBaseline * weight + sessionBaselineMean * (1.0 - weight)
         } else {
             baselineRMS = sessionBaselineMean
         }
