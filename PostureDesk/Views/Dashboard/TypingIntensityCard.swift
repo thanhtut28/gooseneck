@@ -4,9 +4,11 @@ struct TypingIntensityCard: View {
     @Environment(PostureViewModel.self) private var viewModel
 
     private var intensity: Double { viewModel.fatigueMonitor.currentIntensityPercent }
-    private var hasBaseline: Bool { viewModel.fatigueMonitor.baselineRMS > 0 }
+    private var calibrationState: TypingCalibrationState { viewModel.fatigueMonitor.calibrationState }
+    private var hasBaseline: Bool { calibrationState == .ready }
     private var isFatigued: Bool { viewModel.fatigueMonitor.isFatigued }
     private var history: [Double] { viewModel.fatigueMonitor.intensityHistory }
+    private var bootstrapProgress: Double { viewModel.fatigueMonitor.bootstrapProgress }
 
     private var accentColor: Color {
         if isFatigued { return DS.Colors.accentDanger }
@@ -14,58 +16,117 @@ struct TypingIntensityCard: View {
         return DS.Colors.accentGood
     }
 
+    private var qualitativeLabel: String {
+        if !hasBaseline { return "learning" }
+        if intensity <= 0 { return "normal" }
+        if intensity <= 20 { return "light" }
+        if intensity <= 50 { return "moderate" }
+        if intensity <= 80 { return "heavy" }
+        return "intense"
+    }
+
+    private var qualitativeColor: Color {
+        if !hasBaseline { return DS.Colors.textMuted }
+        if intensity <= 0 { return DS.Colors.accentGood }
+        if intensity <= 20 { return DS.Colors.accentGood }
+        if intensity <= 50 { return DS.Colors.accentWarn }
+        if intensity <= 80 { return DS.Colors.accentWarn }
+        return DS.Colors.accentDanger
+    }
+
     var body: some View {
-        HStack(spacing: 24) {
-            // Left: metrics
-            VStack(alignment: .leading, spacing: 12) {
-                Text("typing")
-                    .font(DS.Font.label())
-                    .foregroundStyle(DS.Colors.textMuted)
-                    .textCase(.uppercase)
-                    .tracking(1.5)
+        VStack(alignment: .leading, spacing: 16) {
+            // Top: metrics row
+            HStack(spacing: 24) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("typing")
+                        .font(DS.Font.label())
+                        .foregroundStyle(DS.Colors.textMuted)
+                        .textCase(.uppercase)
+                        .tracking(1.5)
 
-                if hasBaseline && intensity > 0 {
-                    HStack(alignment: .firstTextBaseline, spacing: 2) {
-                        Text("+")
-                            .font(.system(size: 18, weight: .medium, design: .rounded))
-                            .foregroundStyle(DS.Colors.textMuted)
-                        Text(String(format: "%.0f", intensity))
-                            .font(DS.Font.metric(36))
-                            .foregroundStyle(accentColor)
-                            .contentTransition(.numericText())
-                        Text("%")
-                            .font(.system(size: 18, weight: .medium, design: .rounded))
-                            .foregroundStyle(DS.Colors.textMuted)
+                    if hasBaseline && intensity > 0 {
+                        HStack(alignment: .firstTextBaseline, spacing: 2) {
+                            Text("+")
+                                .font(.system(size: 18, weight: .medium, design: .rounded))
+                                .foregroundStyle(DS.Colors.textMuted)
+                            Text(String(format: "%.0f", intensity))
+                                .font(DS.Font.metric(36))
+                                .foregroundStyle(accentColor)
+                                .contentTransition(.numericText())
+                            Text("%")
+                                .font(.system(size: 18, weight: .medium, design: .rounded))
+                                .foregroundStyle(DS.Colors.textMuted)
+
+                            Text(qualitativeLabel)
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundStyle(qualitativeColor)
+                                .padding(.leading, 6)
+                        }
+                    } else if hasBaseline {
+                        HStack(alignment: .firstTextBaseline, spacing: 2) {
+                            Text("0")
+                                .font(DS.Font.metric(36))
+                                .foregroundStyle(DS.Colors.accentGood)
+                            Text("%")
+                                .font(.system(size: 18, weight: .medium, design: .rounded))
+                                .foregroundStyle(DS.Colors.textMuted)
+                            Text("normal")
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundStyle(DS.Colors.accentGood)
+                                .padding(.leading, 6)
+                        }
+                    } else {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .stroke(DS.Colors.bg, lineWidth: 3)
+                                    .frame(width: 32, height: 32)
+                                Circle()
+                                    .trim(from: 0, to: bootstrapProgress)
+                                    .stroke(DS.Colors.accentGood, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                                    .frame(width: 32, height: 32)
+                                    .rotationEffect(.degrees(-90))
+                                    .animation(.easeInOut(duration: 0.3), value: bootstrapProgress)
+                            }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Learning your rhythm...")
+                                    .font(DS.Font.metric(18))
+                                    .foregroundStyle(DS.Colors.textSecondary)
+                                Text("\(Int(bootstrapProgress * 60))s / 60s")
+                                    .font(DS.Font.caption())
+                                    .foregroundStyle(DS.Colors.textMuted.opacity(0.7))
+                            }
+                        }
                     }
-                } else {
-                    Text(hasBaseline ? "normal" : "calibrating")
-                        .font(DS.Font.metric(24))
-                        .foregroundStyle(hasBaseline ? DS.Colors.accentGood : DS.Colors.textMuted)
+
+                    // Level bars
+                    HStack(spacing: 3) {
+                        ForEach(0..<10, id: \.self) { i in
+                            let threshold = Double(i) * 10
+                            RoundedRectangle(cornerRadius: 1)
+                                .fill(intensity > threshold ? barColor(threshold) : DS.Colors.bg)
+                                .frame(width: 16, height: 3)
+                                .animation(.easeInOut(duration: 0.3).delay(Double(i) * 0.02), value: intensity)
+                        }
+                    }
+
+                    Text("vs session baseline")
+                        .font(DS.Font.caption())
+                        .foregroundStyle(DS.Colors.textMuted)
                 }
 
-                // Level bars
-                HStack(spacing: 3) {
-                    ForEach(0..<10, id: \.self) { i in
-                        let threshold = Double(i) * 10
-                        RoundedRectangle(cornerRadius: 1)
-                            .fill(intensity > threshold ? barColor(threshold) : DS.Colors.bg)
-                            .frame(width: 16, height: 3)
-                            .animation(.easeInOut(duration: 0.3).delay(Double(i) * 0.02), value: intensity)
-                    }
-                }
+                Spacer()
 
-                Text("vs session baseline")
-                    .font(DS.Font.caption())
-                    .foregroundStyle(DS.Colors.textMuted)
+                // Keyboard coach mark when no sparkline data
+                if history.count < 10 {
+                    keyboardCoachMark
+                }
             }
 
-            Spacer()
-
-            // Right: sparkline when data available, keyboard coach mark otherwise
+            // Bottom: full-width sparkline when data available
             if history.count >= 10 {
                 intensitySparkline
-            } else {
-                keyboardCoachMark
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -79,7 +140,11 @@ struct TypingIntensityCard: View {
         let sampled = downsample(history, to: 60)
         let maxVal = max(sampled.max() ?? 1, 10) // At least 10% scale
 
-        return VStack(alignment: .trailing, spacing: 4) {
+        return VStack(alignment: .leading, spacing: 6) {
+            Text("5 min trend")
+                .font(DS.Font.caption())
+                .foregroundStyle(DS.Colors.textMuted)
+
             Canvas { context, size in
                 let w = size.width
                 let h = size.height
@@ -115,11 +180,7 @@ struct TypingIntensityCard: View {
                 context.stroke(line, with: .color(accentColor.opacity(0.6)),
                                style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
             }
-            .frame(width: 160, height: 70)
-
-            Text("last 5 min")
-                .font(DS.Font.caption())
-                .foregroundStyle(DS.Colors.textMuted)
+            .frame(height: 80)
         }
     }
 
@@ -198,8 +259,9 @@ struct TypingIntensityCard: View {
     }
 
     private func barColor(_ threshold: Double) -> Color {
-        if threshold >= 70 { return DS.Colors.accentDanger }
-        if threshold >= 40 { return DS.Colors.accentWarn }
+        if threshold >= 80 { return DS.Colors.accentDanger }
+        if threshold >= 50 { return DS.Colors.accentWarn }
+        if threshold >= 20 { return DS.Colors.accentWarn.opacity(0.7) }
         return DS.Colors.accentGood
     }
 }
