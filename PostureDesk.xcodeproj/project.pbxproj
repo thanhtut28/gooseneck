@@ -7,93 +7,100 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		026AA2747157D0DAB6C59437 /* SensorTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDDF5AE443183053158DACE /* SensorTypes.swift */; };
 		02FBCBA368BD69F235B44CDA /* SensorTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDDF5AE443183053158DACE /* SensorTypes.swift */; };
 		047E766BB9E7DCF11E64B6A6 /* SessionSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 453DE6CAD8C13EE51CFDD9BC /* SessionSummaryCard.swift */; };
 		1322E94FF74AF82798BD6A4A /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E3940C8AAC3FC3B2DF55B18 /* HistoryView.swift */; };
-		2D770CFA135A8487117346A9 /* KalmanFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA8C6F5CB3B72557AF10925E /* KalmanFilter.swift */; };
+		1AAC22DE7348D56821A031B6 /* IslandVariantPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 387BBCE8A7931563C909393D /* IslandVariantPicker.swift */; };
+		1F8858B068129134D270D625 /* LicenseManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168DFF3AE444815EFA58071D /* LicenseManagerTests.swift */; };
 		305EBB1D567C4EFAAA666329 /* FFTAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C561A93C6DBDA226D3980FBB /* FFTAnalyzer.swift */; };
 		3372CC49D5A071BE38E5B605 /* MetricCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A465749C589A45E02D9A8E /* MetricCard.swift */; };
-		386A4CDBD292FD5046D14728 /* SensorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF1516AA6B3B6072A5F3FC1 /* SensorManager.swift */; };
-		41B2EF808D66EBDB440A5AB9 /* SurfaceClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016931B6B21F81CF17CB44C8 /* SurfaceClassifier.swift */; };
+		3B47B280862900F3E7A90B43 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8861E7AF4C6ECFE081C4AF7D /* KeychainStore.swift */; };
+		3BBBEC9936BA8441806D135C /* PostureAnalyzerAndSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F68915B6F0E1FFF05375F7 /* PostureAnalyzerAndSettingsTests.swift */; };
 		431AA969AE94CA5EF39E5DFF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ACBC481C43A1AE8D3C8ADE21 /* Assets.xcassets */; };
 		4463EBF048D19B14E2220784 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4CAE4C0808663A0C1C4FCE5 /* DesignSystem.swift */; };
 		49FA155970A4DFAD2FE37EAC /* CircularProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBE3D02A3075A2BB40EB8F6B /* CircularProgressRing.swift */; };
-		4C588E7C8E49871055E13541 /* DaemonInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54E81A95C50F8296570AA256 /* DaemonInstaller.swift */; };
 		4E2D093994EDD0AEA99275AF /* MenuBarPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 895F44C77430F7C3BDEA22D5 /* MenuBarPopover.swift */; };
 		55D8998E61BA743A8A535CF3 /* MahonyAHRS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00AB3FF4E3170752DD8B8C85 /* MahonyAHRS.swift */; };
 		58D37DAAC4FBDFEF616EC32C /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BB8C3B602F4E750A13369B2 /* DashboardView.swift */; };
 		5AA407A64BD1B548BFF15E0E /* SensorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF1516AA6B3B6072A5F3FC1 /* SensorManager.swift */; };
+		5AB6423E91F971BEE7CAAE45 /* DisplayFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64AD74B7114784F3FC5C7A78 /* DisplayFormatter.swift */; };
 		63986293222761C36770EAB9 /* BreakTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74FFD3F9647A6223FA8ECC64 /* BreakTracker.swift */; };
-		645230FEAAE6516498AD7B1B /* PostureSensorProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AF12F9D790EEDA102C1CEE /* PostureSensorProtocol.swift */; };
 		64BF872AAEF688100A38210D /* PostureAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546AAC870FED4E3AD3AC3D9D /* PostureAnalyzer.swift */; };
-		6589F321CDE174E42D2AD9D7 /* BandpassFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6DBB5C5371B76557958F87C /* BandpassFilter.swift */; };
 		67698A3DA4B9C74E02D6D2D0 /* PostureViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFBE673483793FDDB47F87C6 /* PostureViewModel.swift */; };
-		708B9D8EA2705355EFEE094C /* SignalProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142E177E1330C4FCF6903930 /* SignalProcessor.swift */; };
 		70A4D75D7FAA3D56FDBE8988 /* PostureDeskApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67BEDD355D7FD0F72E61047 /* PostureDeskApp.swift */; };
-		72D2F2A8557B1644796AE8BB /* FFTAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C561A93C6DBDA226D3980FBB /* FFTAnalyzer.swift */; };
-		78E283A736CF8A420A779906 /* XPCServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FFB27A67BEABC90D766D49F /* XPCServer.swift */; };
+		77069843630C9E7B83ECBEF7 /* HistoryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B9285CC8FFDCB286B31FEC9 /* HistoryStoreTests.swift */; };
+		8DB49E05337F3AF7CBD83A3F /* PostureDeskCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1D7354189209258723D9FB /* PostureDeskCommands.swift */; };
 		8F73D202A434896F96F436AE /* IOKitHIDConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4FFE70371E44C4CFB78F9F /* IOKitHIDConstants.swift */; };
-		8FB6573A782F32A25CC22F94 /* PostureSensorProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AF12F9D790EEDA102C1CEE /* PostureSensorProtocol.swift */; };
-		9CC0B46379E8FAFBDCCCBFD9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E3F1B5A7F7965EC0011C63 /* main.swift */; };
+		91FC6825CF0748344F2E05E0 /* PostureIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D4A5902FE3C08DAE02AF885 /* PostureIslandView.swift */; };
+		993C4CA61ED568F4CE3DB6F5 /* LiquidBlob.swift in Sources */ = {isa = PBXBuildFile; fileRef = B633497EB8C3CE5890CC0152 /* LiquidBlob.swift */; };
+		9E17A0561A49DDD7205D5F3A /* PostureIslandWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79AE48090B4B86FFE279F062 /* PostureIslandWindow.swift */; };
 		AB3F319079DAED1BA973C5AF /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DFFEE6129FD0094F57D06B /* LicenseManager.swift */; };
 		AC33E961CBF3C86052213AA5 /* PostureDriftCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 401979E11918A92D280247D7 /* PostureDriftCard.swift */; };
-		B58C8ADE3559CDD287B2844F /* MahonyAHRS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00AB3FF4E3170752DD8B8C85 /* MahonyAHRS.swift */; };
+		B5B5D98552595B1CC62E931B /* MacBookCoachMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3059A662D8D53AB2095CFFDE /* MacBookCoachMark.swift */; };
 		C78897F32B468E47C5707DBB /* SensorSnapshot+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AB50BB34662CD441ADEFC21 /* SensorSnapshot+Extensions.swift */; };
-		D3D3041A6CE87110A3D3D22F /* IOKitHIDConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4FFE70371E44C4CFB78F9F /* IOKitHIDConstants.swift */; };
+		D02D99290DA9EF22182E91AA /* PostureIslandManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C561D549F3C46CCB3367700 /* PostureIslandManager.swift */; };
+		D4B226D02DD29BE0A57E47CB /* FormattingAndFatigueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2F9C9F61720F7D38636B42C /* FormattingAndFatigueTests.swift */; };
 		D525C60D95BA5E794C099B3D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3CACAFCCA254EE5CA21AA2 /* SettingsView.swift */; };
 		D581869D45445D90D1DC6F7E /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C01EAA955CB82110787C9E /* OnboardingView.swift */; };
 		D60322F3D8C691DB70C15294 /* DirectSensorClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19B170B3F3731A442C92558D /* DirectSensorClient.swift */; };
+		DBB4BBBF5CD9F8FD8FA5068B /* PostureIslandPillShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF035E4B1D570F5AC04A6E7 /* PostureIslandPillShape.swift */; };
 		DDA79FFD626629548F8A0579 /* KalmanFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA8C6F5CB3B72557AF10925E /* KalmanFilter.swift */; };
 		DDD9A7A1451D74C8746A4697 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DCB37AEFC41B5AE9037926C /* NotificationManager.swift */; };
 		E2056C8B55D72D8F9F2AC823 /* BandpassFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6DBB5C5371B76557958F87C /* BandpassFilter.swift */; };
 		E357338F472D4996063A0696 /* MainWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4226DE834B02EF28C67ADEE /* MainWindow.swift */; };
+		E3EF4F679E3478F3157EDE62 /* IslandVariant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F8E33F59554502D4683550A /* IslandVariant.swift */; };
 		E4754014B7BF54FF32ECF33F /* PostureFigure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18835C83085F4C3923AE3CEF /* PostureFigure.swift */; };
 		E5941DB6F93F35ECB036BBC7 /* FatigueMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 072036368E55AD73866829D8 /* FatigueMonitor.swift */; };
-		EAC0D8E9F9D64BDDF2008BAC /* SensorXPCClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B631AC8AA9DB4702B781F809 /* SensorXPCClient.swift */; };
 		EF8847612A43AF3183937EF9 /* TypingIntensityCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C913BA00823EA299493176 /* TypingIntensityCard.swift */; };
 		F29DF027450E50EE477506C2 /* SessionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED5463ECC359257DD667D02 /* SessionRow.swift */; };
 		FF1C5F9482BD64AEC8FB4972 /* SignalProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142E177E1330C4FCF6903930 /* SignalProcessor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		CF08D6F62FF5E1303906D8F4 /* PBXContainerItemProxy */ = {
+		9B87732651612B2D427E11F6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 107CE9DF9DF902D882FBC815 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = EA222DD92DA2C0689B5904E0;
-			remoteInfo = PostureSensorDaemon;
+			remoteGlobalIDString = FDEB8BCA2776EF8D0B9B29DB;
+			remoteInfo = PostureDesk;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		00AB3FF4E3170752DD8B8C85 /* MahonyAHRS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MahonyAHRS.swift; sourceTree = "<group>"; };
-		016931B6B21F81CF17CB44C8 /* SurfaceClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfaceClassifier.swift; sourceTree = "<group>"; };
-		01E3F1B5A7F7965EC0011C63 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		072036368E55AD73866829D8 /* FatigueMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FatigueMonitor.swift; sourceTree = "<group>"; };
+		0A837064ABFAFEC1A534CED4 /* PostureDeskTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PostureDeskTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0EDDF5AE443183053158DACE /* SensorTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorTypes.swift; sourceTree = "<group>"; };
+		0F8E33F59554502D4683550A /* IslandVariant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandVariant.swift; sourceTree = "<group>"; };
 		13D238E86ED0844496207D90 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		142E177E1330C4FCF6903930 /* SignalProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalProcessor.swift; sourceTree = "<group>"; };
+		168DFF3AE444815EFA58071D /* LicenseManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManagerTests.swift; sourceTree = "<group>"; };
 		18835C83085F4C3923AE3CEF /* PostureFigure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureFigure.swift; sourceTree = "<group>"; };
 		19B170B3F3731A442C92558D /* DirectSensorClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectSensorClient.swift; sourceTree = "<group>"; };
+		1A1D7354189209258723D9FB /* PostureDeskCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureDeskCommands.swift; sourceTree = "<group>"; };
 		1BB8C3B602F4E750A13369B2 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
-		26AF12F9D790EEDA102C1CEE /* PostureSensorProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureSensorProtocol.swift; sourceTree = "<group>"; };
+		3059A662D8D53AB2095CFFDE /* MacBookCoachMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBookCoachMark.swift; sourceTree = "<group>"; };
+		387BBCE8A7931563C909393D /* IslandVariantPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandVariantPicker.swift; sourceTree = "<group>"; };
 		3ED5463ECC359257DD667D02 /* SessionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRow.swift; sourceTree = "<group>"; };
 		401979E11918A92D280247D7 /* PostureDriftCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureDriftCard.swift; sourceTree = "<group>"; };
 		453DE6CAD8C13EE51CFDD9BC /* SessionSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSummaryCard.swift; sourceTree = "<group>"; };
 		4AB50BB34662CD441ADEFC21 /* SensorSnapshot+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SensorSnapshot+Extensions.swift"; sourceTree = "<group>"; };
 		4CF1516AA6B3B6072A5F3FC1 /* SensorManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorManager.swift; sourceTree = "<group>"; };
+		4D4A5902FE3C08DAE02AF885 /* PostureIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureIslandView.swift; sourceTree = "<group>"; };
 		4E3940C8AAC3FC3B2DF55B18 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		546AAC870FED4E3AD3AC3D9D /* PostureAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureAnalyzer.swift; sourceTree = "<group>"; };
-		54E81A95C50F8296570AA256 /* DaemonInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonInstaller.swift; sourceTree = "<group>"; };
+		5B9285CC8FFDCB286B31FEC9 /* HistoryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryStoreTests.swift; sourceTree = "<group>"; };
+		5C561D549F3C46CCB3367700 /* PostureIslandManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureIslandManager.swift; sourceTree = "<group>"; };
+		64AD74B7114784F3FC5C7A78 /* DisplayFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayFormatter.swift; sourceTree = "<group>"; };
 		74FFD3F9647A6223FA8ECC64 /* BreakTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakTracker.swift; sourceTree = "<group>"; };
-		795212645E176CCE9D924303 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		79AE48090B4B86FFE279F062 /* PostureIslandWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureIslandWindow.swift; sourceTree = "<group>"; };
+		7AF035E4B1D570F5AC04A6E7 /* PostureIslandPillShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureIslandPillShape.swift; sourceTree = "<group>"; };
 		7B4FFE70371E44C4CFB78F9F /* IOKitHIDConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOKitHIDConstants.swift; sourceTree = "<group>"; };
+		8861E7AF4C6ECFE081C4AF7D /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		895F44C77430F7C3BDEA22D5 /* MenuBarPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPopover.swift; sourceTree = "<group>"; };
-		8FFB27A67BEABC90D766D49F /* XPCServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCServer.swift; sourceTree = "<group>"; };
 		9DCB37AEFC41B5AE9037926C /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		ACBC481C43A1AE8D3C8ADE21 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		B631AC8AA9DB4702B781F809 /* SensorXPCClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorXPCClient.swift; sourceTree = "<group>"; };
+		B633497EB8C3CE5890CC0152 /* LiquidBlob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidBlob.swift; sourceTree = "<group>"; };
 		B8A465749C589A45E02D9A8E /* MetricCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCard.swift; sourceTree = "<group>"; };
 		B8DFFEE6129FD0094F57D06B /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
 		BA8C6F5CB3B72557AF10925E /* KalmanFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KalmanFilter.swift; sourceTree = "<group>"; };
@@ -104,13 +111,13 @@
 		C6DBB5C5371B76557958F87C /* BandpassFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BandpassFilter.swift; sourceTree = "<group>"; };
 		CC3CACAFCCA254EE5CA21AA2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		D0C913BA00823EA299493176 /* TypingIntensityCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingIntensityCard.swift; sourceTree = "<group>"; };
+		D2F9C9F61720F7D38636B42C /* FormattingAndFatigueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormattingAndFatigueTests.swift; sourceTree = "<group>"; };
 		D4CAE4C0808663A0C1C4FCE5 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		D8F68915B6F0E1FFF05375F7 /* PostureAnalyzerAndSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureAnalyzerAndSettingsTests.swift; sourceTree = "<group>"; };
 		E28D8AB4BC98AACDF5ABDE7D /* PostureDesk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PostureDesk.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E9C01EAA955CB82110787C9E /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
-		ED8A416BC3D0D78C1BD91CEA /* PostureSensorDaemon */ = {isa = PBXFileReference; includeInIndex = 0; path = PostureSensorDaemon; sourceTree = BUILT_PRODUCTS_DIR; };
 		EFBE673483793FDDB47F87C6 /* PostureViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureViewModel.swift; sourceTree = "<group>"; };
 		F4226DE834B02EF28C67ADEE /* MainWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindow.swift; sourceTree = "<group>"; };
-		F9C5572DDC88FB083F52E48B /* PostureSensorDaemon.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PostureSensorDaemon.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -126,16 +133,27 @@
 			isa = PBXGroup;
 			children = (
 				74FFD3F9647A6223FA8ECC64 /* BreakTracker.swift */,
-				54E81A95C50F8296570AA256 /* DaemonInstaller.swift */,
 				19B170B3F3731A442C92558D /* DirectSensorClient.swift */,
 				072036368E55AD73866829D8 /* FatigueMonitor.swift */,
+				8861E7AF4C6ECFE081C4AF7D /* KeychainStore.swift */,
 				B8DFFEE6129FD0094F57D06B /* LicenseManager.swift */,
 				9DCB37AEFC41B5AE9037926C /* NotificationManager.swift */,
 				546AAC870FED4E3AD3AC3D9D /* PostureAnalyzer.swift */,
-				B631AC8AA9DB4702B781F809 /* SensorXPCClient.swift */,
-				016931B6B21F81CF17CB44C8 /* SurfaceClassifier.swift */,
+				5C561D549F3C46CCB3367700 /* PostureIslandManager.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		3CD8DBE29B1B40B79187B4AD /* Island */ = {
+			isa = PBXGroup;
+			children = (
+				0F8E33F59554502D4683550A /* IslandVariant.swift */,
+				387BBCE8A7931563C909393D /* IslandVariantPicker.swift */,
+				7AF035E4B1D570F5AC04A6E7 /* PostureIslandPillShape.swift */,
+				4D4A5902FE3C08DAE02AF885 /* PostureIslandView.swift */,
+				79AE48090B4B86FFE279F062 /* PostureIslandWindow.swift */,
+			);
+			path = Island;
 			sourceTree = "<group>";
 		};
 		44A442F2B52D711AF1CD192F /* PostureDesk */ = {
@@ -147,6 +165,7 @@
 				BE3A88EC7B4F4E4ADED1087B /* Models */,
 				994ECDF152BDCFB9BA4A8956 /* Resources */,
 				36B18483D0D673EA944F46F4 /* Services */,
+				EAD4C2F90670117E193B816F /* Utilities */,
 				124BBF58E1EE427360426F1A /* ViewModels */,
 				C982076CA4F6AE8D3A4C1468 /* Views */,
 			);
@@ -174,6 +193,7 @@
 			children = (
 				BBE3D02A3075A2BB40EB8F6B /* CircularProgressRing.swift */,
 				1BB8C3B602F4E750A13369B2 /* DashboardView.swift */,
+				B633497EB8C3CE5890CC0152 /* LiquidBlob.swift */,
 				B8A465749C589A45E02D9A8E /* MetricCard.swift */,
 				401979E11918A92D280247D7 /* PostureDriftCard.swift */,
 				18835C83085F4C3923AE3CEF /* PostureFigure.swift */,
@@ -181,6 +201,17 @@
 				D0C913BA00823EA299493176 /* TypingIntensityCard.swift */,
 			);
 			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		A8F9961CEFEDC31B04E28B1A /* PostureDeskTests */ = {
+			isa = PBXGroup;
+			children = (
+				D2F9C9F61720F7D38636B42C /* FormattingAndFatigueTests.swift */,
+				5B9285CC8FFDCB286B31FEC9 /* HistoryStoreTests.swift */,
+				168DFF3AE444815EFA58071D /* LicenseManagerTests.swift */,
+				D8F68915B6F0E1FFF05375F7 /* PostureAnalyzerAndSettingsTests.swift */,
+			);
+			path = PostureDeskTests;
 			sourceTree = "<group>";
 		};
 		BE3A88EC7B4F4E4ADED1087B /* Models */ = {
@@ -195,6 +226,7 @@
 			isa = PBXGroup;
 			children = (
 				44A442F2B52D711AF1CD192F /* PostureDesk */,
+				A8F9961CEFEDC31B04E28B1A /* PostureDeskTests */,
 				ECD0881D2402AE05361A3BDE /* PostureSensorDaemon */,
 				E741DA02182E21B4EA4A1DC5 /* Shared */,
 				EB6A7C5C91692E17EE840708 /* Products */,
@@ -208,8 +240,11 @@
 				F4226DE834B02EF28C67ADEE /* MainWindow.swift */,
 				895F44C77430F7C3BDEA22D5 /* MenuBarPopover.swift */,
 				E9C01EAA955CB82110787C9E /* OnboardingView.swift */,
+				1A1D7354189209258723D9FB /* PostureDeskCommands.swift */,
 				A69BD292601A84BF5896EC46 /* Dashboard */,
 				D2936B9C32C33C3ECEC2198E /* History */,
+				3CD8DBE29B1B40B79187B4AD /* Island */,
+				E76E413864B8F8F19EAF8D53 /* Onboarding */,
 				4C24E25031217B5F49043A46 /* Settings */,
 			);
 			path = Views;
@@ -238,17 +273,32 @@
 		E741DA02182E21B4EA4A1DC5 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
-				26AF12F9D790EEDA102C1CEE /* PostureSensorProtocol.swift */,
 				0EDDF5AE443183053158DACE /* SensorTypes.swift */,
 			);
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		E76E413864B8F8F19EAF8D53 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				3059A662D8D53AB2095CFFDE /* MacBookCoachMark.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		EAD4C2F90670117E193B816F /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				64AD74B7114784F3FC5C7A78 /* DisplayFormatter.swift */,
+			);
+			path = Utilities;
 			sourceTree = "<group>";
 		};
 		EB6A7C5C91692E17EE840708 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				E28D8AB4BC98AACDF5ABDE7D /* PostureDesk.app */,
-				ED8A416BC3D0D78C1BD91CEA /* PostureSensorDaemon */,
+				0A837064ABFAFEC1A534CED4 /* PostureDeskTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -256,13 +306,9 @@
 		ECD0881D2402AE05361A3BDE /* PostureSensorDaemon */ = {
 			isa = PBXGroup;
 			children = (
-				795212645E176CCE9D924303 /* Info.plist */,
 				7B4FFE70371E44C4CFB78F9F /* IOKitHIDConstants.swift */,
-				01E3F1B5A7F7965EC0011C63 /* main.swift */,
-				F9C5572DDC88FB083F52E48B /* PostureSensorDaemon.entitlements */,
 				4CF1516AA6B3B6072A5F3FC1 /* SensorManager.swift */,
 				142E177E1330C4FCF6903930 /* SignalProcessor.swift */,
-				8FFB27A67BEABC90D766D49F /* XPCServer.swift */,
 				E1B70F2DFE1EA92A6E28C783 /* Filters */,
 			);
 			path = PostureSensorDaemon;
@@ -271,22 +317,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		EA222DD92DA2C0689B5904E0 /* PostureSensorDaemon */ = {
+		9732D64204FB4D6AEE0B62B0 /* PostureDeskTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = BC70FC7D2A105F512AC72E0C /* Build configuration list for PBXNativeTarget "PostureSensorDaemon" */;
+			buildConfigurationList = E4A40801048786A3977601F6 /* Build configuration list for PBXNativeTarget "PostureDeskTests" */;
 			buildPhases = (
-				4E56CDE9484CC28D6111CAE8 /* Sources */,
+				2B08FFD51F9639397B1917AF /* Sources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				288DBD86C1A4513BFA4F66FC /* PBXTargetDependency */,
 			);
-			name = PostureSensorDaemon;
+			name = PostureDeskTests;
 			packageProductDependencies = (
 			);
-			productName = PostureSensorDaemon;
-			productReference = ED8A416BC3D0D78C1BD91CEA /* PostureSensorDaemon */;
-			productType = "com.apple.product-type.tool";
+			productName = PostureDeskTests;
+			productReference = 0A837064ABFAFEC1A534CED4 /* PostureDeskTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		FDEB8BCA2776EF8D0B9B29DB /* PostureDesk */ = {
 			isa = PBXNativeTarget;
@@ -294,12 +341,10 @@
 			buildPhases = (
 				77110B245BBCE41C9C8E6964 /* Sources */,
 				CBFD5F2F94C741E2C18F1C7F /* Resources */,
-				2349CBC503AFC51B263FDDB2 /* Copy Helper Tool and LaunchDaemon Plist */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				97E4D87E850C5B8E1EBE8001 /* PBXTargetDependency */,
 			);
 			name = PostureDesk;
 			packageProductDependencies = (
@@ -334,7 +379,7 @@
 			projectRoot = "";
 			targets = (
 				FDEB8BCA2776EF8D0B9B29DB /* PostureDesk */,
-				EA222DD92DA2C0689B5904E0 /* PostureSensorDaemon */,
+				9732D64204FB4D6AEE0B62B0 /* PostureDeskTests */,
 			);
 		};
 /* End PBXProject section */
@@ -350,43 +395,15 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		2349CBC503AFC51B263FDDB2 /* Copy Helper Tool and LaunchDaemon Plist */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Copy Helper Tool and LaunchDaemon Plist";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "mkdir -p \"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Library/HelperTools\"\nmkdir -p \"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Library/LaunchDaemons\"\ncp \"${BUILT_PRODUCTS_DIR}/PostureSensorDaemon\" \"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Library/HelperTools/\"\ncp \"${SRCROOT}/LaunchDaemons/com.posturedesk.sensor-daemon.plist\" \"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Library/LaunchDaemons/\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
-		4E56CDE9484CC28D6111CAE8 /* Sources */ = {
+		2B08FFD51F9639397B1917AF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6589F321CDE174E42D2AD9D7 /* BandpassFilter.swift in Sources */,
-				72D2F2A8557B1644796AE8BB /* FFTAnalyzer.swift in Sources */,
-				D3D3041A6CE87110A3D3D22F /* IOKitHIDConstants.swift in Sources */,
-				2D770CFA135A8487117346A9 /* KalmanFilter.swift in Sources */,
-				B58C8ADE3559CDD287B2844F /* MahonyAHRS.swift in Sources */,
-				645230FEAAE6516498AD7B1B /* PostureSensorProtocol.swift in Sources */,
-				386A4CDBD292FD5046D14728 /* SensorManager.swift in Sources */,
-				026AA2747157D0DAB6C59437 /* SensorTypes.swift in Sources */,
-				708B9D8EA2705355EFEE094C /* SignalProcessor.swift in Sources */,
-				78E283A736CF8A420A779906 /* XPCServer.swift in Sources */,
-				9CC0B46379E8FAFBDCCCBFD9 /* main.swift in Sources */,
+				D4B226D02DD29BE0A57E47CB /* FormattingAndFatigueTests.swift in Sources */,
+				77069843630C9E7B83ECBEF7 /* HistoryStoreTests.swift in Sources */,
+				1F8858B068129134D270D625 /* LicenseManagerTests.swift in Sources */,
+				3BBBEC9936BA8441806D135C /* PostureAnalyzerAndSettingsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -397,16 +414,21 @@
 				E2056C8B55D72D8F9F2AC823 /* BandpassFilter.swift in Sources */,
 				63986293222761C36770EAB9 /* BreakTracker.swift in Sources */,
 				49FA155970A4DFAD2FE37EAC /* CircularProgressRing.swift in Sources */,
-				4C588E7C8E49871055E13541 /* DaemonInstaller.swift in Sources */,
 				58D37DAAC4FBDFEF616EC32C /* DashboardView.swift in Sources */,
 				4463EBF048D19B14E2220784 /* DesignSystem.swift in Sources */,
 				D60322F3D8C691DB70C15294 /* DirectSensorClient.swift in Sources */,
+				5AB6423E91F971BEE7CAAE45 /* DisplayFormatter.swift in Sources */,
 				305EBB1D567C4EFAAA666329 /* FFTAnalyzer.swift in Sources */,
 				E5941DB6F93F35ECB036BBC7 /* FatigueMonitor.swift in Sources */,
 				1322E94FF74AF82798BD6A4A /* HistoryView.swift in Sources */,
 				8F73D202A434896F96F436AE /* IOKitHIDConstants.swift in Sources */,
+				E3EF4F679E3478F3157EDE62 /* IslandVariant.swift in Sources */,
+				1AAC22DE7348D56821A031B6 /* IslandVariantPicker.swift in Sources */,
 				DDA79FFD626629548F8A0579 /* KalmanFilter.swift in Sources */,
+				3B47B280862900F3E7A90B43 /* KeychainStore.swift in Sources */,
 				AB3F319079DAED1BA973C5AF /* LicenseManager.swift in Sources */,
+				993C4CA61ED568F4CE3DB6F5 /* LiquidBlob.swift in Sources */,
+				B5B5D98552595B1CC62E931B /* MacBookCoachMark.swift in Sources */,
 				55D8998E61BA743A8A535CF3 /* MahonyAHRS.swift in Sources */,
 				E357338F472D4996063A0696 /* MainWindow.swift in Sources */,
 				4E2D093994EDD0AEA99275AF /* MenuBarPopover.swift in Sources */,
@@ -415,19 +437,21 @@
 				D581869D45445D90D1DC6F7E /* OnboardingView.swift in Sources */,
 				64BF872AAEF688100A38210D /* PostureAnalyzer.swift in Sources */,
 				70A4D75D7FAA3D56FDBE8988 /* PostureDeskApp.swift in Sources */,
+				8DB49E05337F3AF7CBD83A3F /* PostureDeskCommands.swift in Sources */,
 				AC33E961CBF3C86052213AA5 /* PostureDriftCard.swift in Sources */,
 				E4754014B7BF54FF32ECF33F /* PostureFigure.swift in Sources */,
-				8FB6573A782F32A25CC22F94 /* PostureSensorProtocol.swift in Sources */,
+				D02D99290DA9EF22182E91AA /* PostureIslandManager.swift in Sources */,
+				DBB4BBBF5CD9F8FD8FA5068B /* PostureIslandPillShape.swift in Sources */,
+				91FC6825CF0748344F2E05E0 /* PostureIslandView.swift in Sources */,
+				9E17A0561A49DDD7205D5F3A /* PostureIslandWindow.swift in Sources */,
 				67698A3DA4B9C74E02D6D2D0 /* PostureViewModel.swift in Sources */,
 				5AA407A64BD1B548BFF15E0E /* SensorManager.swift in Sources */,
 				C78897F32B468E47C5707DBB /* SensorSnapshot+Extensions.swift in Sources */,
 				02FBCBA368BD69F235B44CDA /* SensorTypes.swift in Sources */,
-				EAC0D8E9F9D64BDDF2008BAC /* SensorXPCClient.swift in Sources */,
 				F29DF027450E50EE477506C2 /* SessionRow.swift in Sources */,
 				047E766BB9E7DCF11E64B6A6 /* SessionSummaryCard.swift in Sources */,
 				D525C60D95BA5E794C099B3D /* SettingsView.swift in Sources */,
 				FF1C5F9482BD64AEC8FB4972 /* SignalProcessor.swift in Sources */,
-				41B2EF808D66EBDB440A5AB9 /* SurfaceClassifier.swift in Sources */,
 				EF8847612A43AF3183937EF9 /* TypingIntensityCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -435,10 +459,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		97E4D87E850C5B8E1EBE8001 /* PBXTargetDependency */ = {
+		288DBD86C1A4513BFA4F66FC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = EA222DD92DA2C0689B5904E0 /* PostureSensorDaemon */;
-			targetProxy = CF08D6F62FF5E1303906D8F4 /* PBXContainerItemProxy */;
+			target = FDEB8BCA2776EF8D0B9B29DB /* PostureDesk */;
+			targetProxy = 9B87732651612B2D427E11F6 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -562,24 +586,39 @@
 			};
 			name = Release;
 		};
-		A0C5648A386E28F40BE47F92 /* Release */ = {
+		5B9AF7F43D8D202FB58663D4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = PostureSensorDaemon/PostureSensorDaemon.entitlements;
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_HARDENED_RUNTIME = YES;
-				INFOPLIST_FILE = PostureSensorDaemon/Info.plist;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.posturedesk.sensor-daemon";
+				PRODUCT_BUNDLE_IDENTIFIER = com.posturedesk.tests;
 				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PostureDesk.app/Contents/MacOS/PostureDesk";
 			};
 			name = Release;
+		};
+		B39746728E978D564D94A195 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.posturedesk.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PostureDesk.app/Contents/MacOS/PostureDesk";
+			};
+			name = Debug;
 		};
 		BD18F8089071F414060CA81F /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -592,26 +631,10 @@
 				INFOPLIST_FILE = PostureDesk/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MARKETING_VERSION = 1.0.0;
+				POLAR_API_BASE_URL = "https://sandbox-api.polar.sh/v1/customer-portal/license-keys";
+				POLAR_CHECKOUT_URL = "https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_DOGu45YJUcHzeFxGZw5EqT0L9gN3L9Qm2dTQn2Z4xHn/redirect";
+				POLAR_ORGANIZATION_ID = "322cca40-cd2e-4d58-83e9-ec08ee2b0c19";
 				PRODUCT_BUNDLE_IDENTIFIER = com.posturedesk.app;
-				SDKROOT = macosx;
-			};
-			name = Debug;
-		};
-		E91D3DE6BDE5EDCDAF6E4D5D /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = PostureSensorDaemon/PostureSensorDaemon.entitlements;
-				COMBINE_HIDPI_IMAGES = YES;
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_HARDENED_RUNTIME = YES;
-				INFOPLIST_FILE = PostureSensorDaemon/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.posturedesk.sensor-daemon";
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -627,6 +650,9 @@
 				INFOPLIST_FILE = PostureDesk/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MARKETING_VERSION = 1.0.0;
+				POLAR_API_BASE_URL = "https://api.polar.sh/v1/customer-portal/license-keys";
+				POLAR_CHECKOUT_URL = "https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_DOGu45YJUcHzeFxGZw5EqT0L9gN3L9Qm2dTQn2Z4xHn/redirect";
+				POLAR_ORGANIZATION_ID = "322cca40-cd2e-4d58-83e9-ec08ee2b0c19";
 				PRODUCT_BUNDLE_IDENTIFIER = com.posturedesk.app;
 				SDKROOT = macosx;
 			};
@@ -653,11 +679,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		BC70FC7D2A105F512AC72E0C /* Build configuration list for PBXNativeTarget "PostureSensorDaemon" */ = {
+		E4A40801048786A3977601F6 /* Build configuration list for PBXNativeTarget "PostureDeskTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				E91D3DE6BDE5EDCDAF6E4D5D /* Debug */,
-				A0C5648A386E28F40BE47F92 /* Release */,
+				B39746728E978D564D94A195 /* Debug */,
+				5B9AF7F43D8D202FB58663D4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

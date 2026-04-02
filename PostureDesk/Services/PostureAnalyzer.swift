@@ -4,6 +4,7 @@ import Foundation
 /// Uses a 90-second sliding window to distinguish gradual slouching from intentional adjustments.
 @Observable
 final class PostureAnalyzer {
+    private let notifyDriftEpisode: (Double) -> Void
 
     private(set) var currentDrift: Double = 0       // Signed combined drift
     private(set) var driftMagnitude: Double = 0     // Absolute combined drift for threshold
@@ -18,9 +19,22 @@ final class PostureAnalyzer {
     private let warmupSeconds = 5  // Wait for AHRS to stabilize
     private var driftHistory: [(timestamp: Date, drift: Double)] = []
     private let windowDuration: TimeInterval = 90
+    private var hasSentNotificationForCurrentEpisode = false
 
     /// Current surface-aware drift threshold
     var driftThreshold: Double = 10.0
+
+    init(
+        notifyDriftEpisode: @escaping (Double) -> Void = { driftMagnitude in
+            NotificationManager.shared.send(
+                category: NotificationCategory.posture.rawValue,
+                title: "PostureDesk",
+                body: String(format: "You've shifted %.0f° from your baseline. Time for a quick readjust?", driftMagnitude)
+            )
+        }
+    ) {
+        self.notifyDriftEpisode = notifyDriftEpisode
+    }
 
     /// Calibrate baseline with current sensor readings.
     func calibrate(pitch: Double, lidAngle: Double) {
@@ -34,6 +48,7 @@ final class PostureAnalyzer {
         pitchDrift = 0
         lidAngleDrift = 0
         driftMagnitude = 0
+        hasSentNotificationForCurrentEpisode = false
     }
 
     /// Process a new sensor snapshot (called at 1Hz).
@@ -66,11 +81,12 @@ final class PostureAnalyzer {
         isDrifting = checkSustainedDrift()
 
         if isDrifting {
-            NotificationManager.shared.send(
-                category: "posture",
-                title: "PostureDesk",
-                body: String(format: "You've shifted %.0f° from your baseline. Time for a quick readjust?", driftMagnitude)
-            )
+            if !hasSentNotificationForCurrentEpisode {
+                notifyDriftEpisode(driftMagnitude)
+                hasSentNotificationForCurrentEpisode = true
+            }
+        } else {
+            hasSentNotificationForCurrentEpisode = false
         }
     }
 

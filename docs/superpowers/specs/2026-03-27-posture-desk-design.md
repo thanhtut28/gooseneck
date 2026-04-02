@@ -21,46 +21,31 @@ Remote workers and developers spend money on ergonomic hardware (standing desks,
 - **UI**: SwiftUI (menu bar + popover)
 - **Sensor access**: IOKit HID (C API via bridging header)
 - **Signal processing**: Accelerate framework (vDSP for FFT, bandpass filters)
-- **Privilege separation**: XPC Services + SMAppService (launchd privileged helper)
+- **Runtime architecture**: Direct in-process sensor access via IOKit HID
 - **Persistence**: SwiftData
 - **Notifications**: UserNotifications framework
 - **Min deployment**: macOS 14 Sonoma (SwiftData requires this)
 
 ## Architecture
 
-Two-process design with privilege separation:
+Single-process menu bar app with direct sensor access:
 
 ```
-PostureDesk.app (SwiftUI, unprivileged)
-    ↕ XPC (PostureSensorProtocol)
-PostureSensorDaemon (launchd via SMAppService, privileged)
-    ↕ IOKit HID callbacks (800Hz)
+PostureDesk.app (SwiftUI)
+    ↕ in-process IOKit HID callbacks
 AppleSPUHIDDevice (BMI286 accelerometer + lid angle sensor)
 ```
 
-**PostureSensorDaemon** (privileged helper):
-- Installed once via SMAppService, auto-starts on boot via launchd
-- Reads raw IOKit HID data at 800Hz (22-byte reports, x/y/z as int32 LE, divide by 65536 for g-force)
+**Direct sensor pipeline**:
+- Reads raw IOKit HID data at ~100Hz (22-byte reports, x/y/z as int32 LE, divide by 65536 for g-force)
 - Reads lid angle via HID Feature Report ID 1 (16-bit LE centidegrees)
 - Runs signal processing: gravity removal (Kalman filter), orientation (Mahony AHRS), bandpass filtering, FFT
-- Emits a `SensorSnapshot` every 1 second over XPC
+- Emits a `SensorSnapshot` every 1 second to the app runtime
 
-**PostureDesk.app** (unprivileged):
-- Connects to daemon via XPC
+**PostureDesk.app**:
+- Owns the sensor pipeline directly via `DirectSensorClient`
 - Runs analysis logic (drift detection, break tracking, fatigue monitoring, surface classification)
 - Manages notifications, UI state, data persistence
-
-### XPC Protocol
-
-```swift
-protocol PostureSensorProtocol {
-    func getSensorSnapshot() -> SensorSnapshot
-    // { tilt: (pitch, roll), lidAngle, typingRMS, vibrationVariance, isActive }
-
-    func calibrateBaseline()  // Record current position as "good posture"
-    func getSensorStatus() -> SensorAvailability  // Which sensors are present
-}
-```
 
 ### IOKit HID Access Details
 
@@ -179,10 +164,9 @@ protocol PostureSensorProtocol {
 ### First Launch Flow
 
 1. Welcome screen (what PostureDesk does)
-2. Install helper (admin password prompt for SMAppService daemon installation)
-3. Sensor check (verify which sensors are available, graceful degradation if lid angle missing)
-4. Calibrate ("Sit in your ideal posture. Press Calibrate." Records 10-second baseline)
-5. Ready (menu bar icon appears, monitoring starts)
+2. Sensor check (verify which sensors are available, graceful degradation if lid angle missing)
+3. Calibrate ("Sit in your ideal posture. Press Calibrate." Records the real baseline)
+4. Ready (menu bar icon appears, monitoring starts)
 
 ## Project Structure
 
@@ -195,7 +179,7 @@ PostureDesk/
 │   │   ├── OnboardingView.swift
 │   │   └── SettingsView.swift
 │   ├── Services/
-│   │   ├── SensorXPCClient.swift   ← XPC connection to daemon
+│   │   ├── DirectSensorClient.swift ← In-process sensor runtime
 │   │   ├── PostureAnalyzer.swift   ← Drift detection logic
 │   │   ├── BreakTracker.swift      ← Session & presence tracking
 │   │   ├── FatigueMonitor.swift    ← Typing intensity analysis
@@ -208,22 +192,19 @@ PostureDesk/
 │   │   └── SensorSnapshot.swift
 │   └── Resources/
 │       └── Assets.xcassets
-├── PostureSensorDaemon/            ← Privileged helper target
-│   ├── main.swift
+├── PostureSensorDaemon/            ← Shared sensor pipeline sources compiled into app
 │   ├── SensorManager.swift         ← IOKit HID setup & callbacks
 │   ├── SignalProcessor.swift       ← Kalman, Mahony, FFT, filters
-│   ├── XPCServer.swift             ← Exposes PostureSensorProtocol
-│   └── Info.plist
-├── Shared/                         ← Shared between app & daemon
-│   ├── PostureSensorProtocol.swift ← XPC interface definition
-│   └── SensorTypes.swift           ← Shared enums & structs
+│   └── Filters/
+├── Shared/                         ← Shared app enums & structs
+│   └── SensorTypes.swift
 └── PostureDesk.xcodeproj
 ```
 
 ## Verification Plan
 
-1. **Sensor access**: Run daemon standalone, verify accelerometer data streams at expected rate and lid angle reads correctly
-2. **XPC communication**: Verify app receives SensorSnapshot from daemon after SMAppService installation
+1. **Sensor access**: Launch the app, verify accelerometer data streams at expected rate and lid angle reads correctly
+2. **Startup**: Confirm monitoring starts without any helper installation step
 3. **Posture drift**: Manually tilt laptop by 10°+, confirm alert fires after 90s
 4. **Break detection**: Type, stop for 30s, confirm Away state. Type for 45+ min, confirm break reminder
 5. **Typing fatigue**: Type normally for 15 min (baseline), then type harder — confirm intensity % increases in popover

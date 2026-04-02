@@ -8,7 +8,6 @@ Real-time posture and ergonomic coach for Apple Silicon MacBooks. Menu bar app t
 make generate      # xcodegen → PostureDesk.xcodeproj
 make build         # generate + xcodebuild Debug
 make run           # build + open .app
-make daemon-test   # build + sudo run daemon standalone
 make clean         # remove build artifacts
 ```
 
@@ -16,19 +15,17 @@ make clean         # remove build artifacts
 
 ## Architecture
 
-Two-process privilege-separated design:
+Single-process direct sensor runtime:
 
 ```
-PostureDesk.app (SwiftUI, unprivileged)
-    ↕ XPC (PostureSensorProtocol)
-PostureSensorDaemon (launchd helper, privileged)
-    ↕ IOKit HID callbacks
+PostureDesk.app (SwiftUI menu bar app)
+    ↕ in-process IOKit HID callbacks
 AppleSPUHIDDevice (BMI286 accelerometer + lid angle sensor)
 ```
 
-- **Daemon** reads raw IOKit HID at ~100Hz, runs signal pipeline (Kalman → Mahony AHRS → Bandpass → FFT), emits 1Hz `SensorSnapshot` over XPC
-- **App** receives snapshots and runs analysis (drift detection, break tracking, fatigue monitoring)
-- Currently uses `DirectSensorClient` (in-process) by default; `SensorXPCClient` available as alternative
+- **DirectSensorClient** owns sensor access and snapshot generation in-process
+- Shared sensor pipeline reads raw IOKit HID at ~100Hz, runs Kalman → Mahony AHRS → Bandpass → FFT, and produces a 1Hz `SensorSnapshot`
+- The app runs analysis (drift detection, break tracking, fatigue monitoring), notifications, and persistence locally
 
 ## Project Structure
 
@@ -36,38 +33,32 @@ AppleSPUHIDDevice (BMI286 accelerometer + lid angle sensor)
 PostureDesk/          ← Main app target (SwiftUI menu bar app)
   PostureDeskApp.swift    Entry point, MenuBarExtra, onboarding
   ViewModels/             PostureViewModel (central service hub)
-  Services/               Sensor clients, analyzers, notifications
+  Services/               Direct sensor client, analyzers, notifications
   Views/                  MenuBarPopover, Dashboard/, History/, Settings/
   Models/                 SwiftData models (Session, Calibration, Settings)
   Resources/              Assets.xcassets
 
-PostureSensorDaemon/  ← Privileged helper target (CLI tool)
-  main.swift              XPC listener setup
+PostureSensorDaemon/  ← Shared sensor pipeline sources (compiled into app)
   SensorManager.swift     IOKit HID device access
   SignalProcessor.swift   1-second snapshot aggregation
-  XPCServer.swift         PostureSensorProtocol implementation
   Filters/                KalmanFilter, MahonyAHRS, BandpassFilter, FFTAnalyzer
 
-Shared/               ← Shared between both targets
-  PostureSensorProtocol.swift   XPC @objc protocol (3 methods)
+Shared/               ← Shared app types
   SensorTypes.swift             SensorSnapshot, SensorAvailability, Surface enum
-
-LaunchDaemons/        ← launchd plist for daemon registration
 ```
 
 ## Build System
 
 - **XcodeGen** (`project.yml`) generates the Xcode project — run `make generate` after changing targets/settings
-- Two targets: `PostureDesk` (app) and `PostureSensorDaemon` (tool)
-- Post-build script copies daemon binary + plist into app bundle at `Contents/Library/`
-- The app target includes daemon sources (excluding `main.swift`, `XPCServer.swift`) for `DirectSensorClient`
+- One target: `PostureDesk` (app), plus `PostureDeskTests`
+- The app target compiles the shared sensor pipeline from `PostureSensorDaemon/`
 - Frameworks: IOKit, Accelerate (vDSP for FFT)
 - No third-party dependencies
 
 ## Key Conventions
 
 - **State management:** `@Observable` macro (Swift 5.10 macOS 14+), `@Binding` for two-way UI, `@Environment` for DI
-- **XPC transport:** `NSSecureCoding` for custom types (`SensorSnapshot`, `SensorAvailability`)
+- **Sensor types:** `NSSecureCoding` models for shared sensor value transport and persistence-friendly bridging
 - **Thread safety:** `NSLock` in `SignalProcessor` for sample buffer access
 - **IOKit callbacks:** `Unmanaged.passUnretained` + `toOpaque()` for C function pointer context
 - **Persistence:** SwiftData (`SessionRecord`, `CalibrationProfile`, `UserSettings`) — all local, no cloud sync
@@ -86,6 +77,6 @@ LaunchDaemons/        ← launchd plist for daemon registration
 
 - **Private APIs:** IOKit HID access to `AppleSPUHIDDevice` is undocumented — may break with macOS updates. Not App Store eligible.
 - **Sensor variance:** Not all MacBook models expose lid angle sensor. Accelerometer report format may differ across models.
-- **Sandbox disabled** in both targets (required for IOKit HID access)
-- **No tests yet** — test infrastructure not set up
+- **Sandbox disabled** in the app target (required for IOKit HID access)
+- **Tests available** via `xcodebuild test` and the `PostureDeskTests` target
 - Design spec lives at `docs/superpowers/specs/2026-03-27-posture-desk-design.md`

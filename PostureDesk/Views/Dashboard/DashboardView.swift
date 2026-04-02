@@ -31,7 +31,8 @@ struct DashboardView: View {
     private var heroSection: some View {
         HStack(spacing: 32) {
             PostureFigure(
-                drift: viewModel.postureAnalyzer.currentDrift,
+                pitchDrift: viewModel.postureAnalyzer.pitchDrift,
+                lidAngleDrift: viewModel.postureAnalyzer.lidAngleDrift,
                 isDrifting: viewModel.iconState == .drifting
             )
 
@@ -41,8 +42,8 @@ struct DashboardView: View {
                     .foregroundStyle(DS.Colors.textPrimary)
 
                 Text(heroSubtitle)
-                    .font(DS.Font.body())
-                    .foregroundStyle(DS.Colors.textSecondary)
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundStyle(DS.Colors.textPrimary.opacity(0.55))
 
                 if viewModel.isPaused {
                     Text("paused")
@@ -57,15 +58,30 @@ struct DashboardView: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 8) {
-                actionButton("Recalibrate", icon: "scope") {
-                    viewModel.calibrate()
+                actionButton(
+                    sensorError == nil ? "Recalibrate" : "Retry Sensors",
+                    icon: sensorError == nil ? "scope" : "arrow.clockwise",
+                    hint: sensorError == nil
+                        ? "Sets the current posture as your new baseline."
+                        : "Attempts to reconnect the built-in sensors."
+                ) {
+                    if sensorError == nil {
+                        viewModel.calibrate()
+                    } else {
+                        viewModel.start()
+                    }
                 }
-                actionButton(viewModel.isPaused ? "Resume" : "Pause", icon: viewModel.isPaused ? "play" : "pause") {
-                    viewModel.isPaused.toggle()
+                actionButton(
+                    viewModel.isPaused ? "Resume" : "Pause",
+                    icon: viewModel.isPaused ? "play" : "pause",
+                    hint: viewModel.isPaused
+                        ? "Resumes posture monitoring."
+                        : "Pauses posture monitoring until you resume it."
+                ) {
                     if viewModel.isPaused {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 3600) {
-                            viewModel.isPaused = false
-                        }
+                        viewModel.resumeMonitoring()
+                    } else {
+                        viewModel.pauseMonitoring()
                     }
                 }
             }
@@ -74,23 +90,49 @@ struct DashboardView: View {
     }
 
     private var heroTitle: String {
+        if sensorError != nil {
+            return "sensor unavailable"
+        }
+
         switch viewModel.iconState {
-        case .good: "posture looks good"
-        case .drifting: "time to readjust"
-        case .breakNeeded: "take a break"
-        case .away: "welcome back"
+        case .good:
+            return "posture looks good"
+        case .drifting:
+            return driftGuidance
+        case .breakNeeded:
+            return "take a break"
+        case .unavailable:
+            return "sensor unavailable"
+        case .away:
+            return "welcome back"
         }
     }
 
-    private var heroSubtitle: String {
-        let s = viewModel.breakTracker.totalActiveSeconds
-        let h = s / 3600
-        let m = (s % 3600) / 60
-        let dur = h > 0 ? "\(h)h \(m)m" : "\(m)m"
-        return "\(dur) active · \(viewModel.selectedSurface.label.lowercased())"
+    private var driftGuidance: String {
+        let pitch = viewModel.postureAnalyzer.pitchDrift
+        let lid = viewModel.postureAnalyzer.lidAngleDrift
+        let absPitch = abs(pitch)
+        let absLid = abs(lid)
+
+        // Show the dominant drift direction
+        if absPitch > absLid && absPitch > 2 {
+            return pitch > 0 ? "straighten up — leaning forward" : "straighten up — leaning back"
+        } else if absLid > 2 {
+            return lid > 0 ? "adjust screen — lid opening" : "adjust screen — lid closing"
+        }
+        return "time to readjust"
     }
 
-    private func actionButton(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
+    private var heroSubtitle: String {
+        if let sensorError {
+            return sensorError
+        }
+
+        let duration = DisplayFormatter.activeDuration(seconds: viewModel.breakTracker.totalActiveSeconds)
+        return "\(duration) active · \(viewModel.selectedSurface.label.lowercased())"
+    }
+
+    private func actionButton(_ title: String, icon: String, hint: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Image(systemName: icon)
@@ -101,13 +143,14 @@ struct DashboardView: View {
             .foregroundStyle(DS.Colors.textPrimary)
             .padding(.horizontal, 16)
             .padding(.vertical, 9)
-            .background(.thinMaterial, in: Capsule())
-            .overlay(
-                Capsule()
-                    .stroke(LinearGradient(colors: [Color.white.opacity(0.15), Color.clear], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+            .dsGlassButton()
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityHint(hint)
+    }
+
+    private var sensorError: String? {
+        viewModel.sensorClient.connectionError
     }
 }

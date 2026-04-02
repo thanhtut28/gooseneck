@@ -3,40 +3,65 @@ import SwiftData
 import SwiftUI
 
 struct HistoryView: View {
-    @Query(sort: \SessionRecord.startedAt, order: .reverse) private var sessions: [SessionRecord]
+    @Environment(\.modelContext) private var modelContext
+    @Environment(PostureViewModel.self) private var viewModel
+    @State private var selectedDate: Date?
+    @State private var historyData = HistorySnapshot.empty
 
     var body: some View {
+        let history = historyData
+
         ScrollView(showsIndicators: false) {
             VStack(spacing: DS.Spacing.sectionGap) {
-                if sessions.isEmpty {
+                if history.recentSessions.isEmpty {
                     emptyState
                 } else {
-                    weeklySummary
-                    weeklyChart
-                    sessionList
+                    weeklySummary(using: history)
+                    weeklyChart(using: history)
+                    sessionList(using: history)
                 }
             }
             .padding(DS.Spacing.pageInset)
         }
         .background(DS.Colors.bg)
+        .task {
+            reloadHistory()
+        }
+        .onChange(of: viewModel.historyRefreshToken) {
+            reloadHistory()
+        }
+    }
+
+    private func reloadHistory() {
+        do {
+            historyData = try HistoryStore.load(from: modelContext)
+        } catch {
+            #if DEBUG
+            print("[History] Failed to load history: \(error)")
+            #endif
+            historyData = .empty
+        }
     }
 
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "chart.bar.xaxis")
-                .font(.system(size: 40))
-                .foregroundStyle(DS.Colors.textMuted)
+        VStack(spacing: 24) {
+            Image(systemName: "moon.zzz.fill")
+                .font(.system(size: 48, weight: .light))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.white)
+                .padding(.bottom, 12)
 
             Text("no sessions yet")
                 .font(DS.Font.metric(28))
-                .foregroundStyle(DS.Colors.textSecondary)
+                .foregroundStyle(DS.Colors.textPrimary)
 
-            Text("your posture sessions will appear here\nas you use PostureDesk throughout the day")
+            Text("your posture insights will appear here\nas you use PostureDesk throughout the day")
                 .font(DS.Font.body())
                 .foregroundStyle(DS.Colors.textMuted)
                 .multilineTextAlignment(.center)
+                .lineSpacing(4)
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 100)
@@ -44,110 +69,119 @@ struct HistoryView: View {
 
     // MARK: - Weekly Summary
 
-    private var thisWeekSessions: [SessionRecord] {
-        let calendar = Calendar.current
-        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
-        return sessions.filter { $0.startedAt >= startOfWeek }
-    }
+    private func weeklySummary(using history: HistorySnapshot) -> some View {
+        let thisWeek = history.thisWeek
+        let lastWeek = history.lastWeek
 
-    private var lastWeekSessions: [SessionRecord] {
-        let calendar = Calendar.current
-        guard let thisWeekStart = calendar.dateInterval(of: .weekOfYear, for: Date())?.start else { return [] }
-        let lastWeekStart = calendar.date(byAdding: .weekOfYear, value: -1, to: thisWeekStart)!
-        return sessions.filter { $0.startedAt >= lastWeekStart && $0.startedAt < thisWeekStart }
-    }
+        return VStack(alignment: .leading, spacing: DS.Spacing.sectionGap) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("this week")
+                    .font(DS.Font.label())
+                    .foregroundStyle(DS.Colors.textMuted)
+                    .textCase(.uppercase)
+                    .tracking(1.5)
 
-    private var weeklySummary: some View {
-        let thisWeek = thisWeekSessions
-        let lastWeek = lastWeekSessions
+                Text(weekDateRange)
+                    .font(DS.Font.caption())
+                    .foregroundStyle(DS.Colors.textMuted)
+            }
 
-        let totalMinutes = thisWeek.reduce(0) { $0 + $1.totalActiveMinutes }
-        let totalAlerts = thisWeek.reduce(0) { $0 + $1.postureAlertCount }
-        let totalBreaks = thisWeek.reduce(0) { $0 + $1.breaksTaken }
-        let avgSession = thisWeek.isEmpty ? 0 : totalMinutes / thisWeek.count
+            // Featured Card
+            HStack {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("total active")
+                        .font(DS.Font.caption())
+                        .foregroundStyle(DS.Colors.textMuted)
+                        .textCase(.uppercase)
+                        .tracking(1.0)
 
-        // Trend vs last week
-        let lastWeekMinutes = lastWeek.reduce(0) { $0 + $1.totalActiveMinutes }
-        let lastWeekAlerts = lastWeek.reduce(0) { $0 + $1.postureAlertCount }
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        AnimatedDurationFormatter(minutes: thisWeek.activeMinutes, font: DS.Font.metric(48), color: DS.Colors.textPrimary)
 
-        return VStack(alignment: .leading, spacing: 20) {
-            Text("this week")
-                .font(DS.Font.label())
-                .foregroundStyle(DS.Colors.textMuted)
-                .textCase(.uppercase)
-                .tracking(1.5)
+                        if lastWeek.activeMinutes > 0 {
+                            Text(trendText(current: thisWeek.activeMinutes, previous: lastWeek.activeMinutes))
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundStyle(thisWeek.activeMinutes >= lastWeek.activeMinutes ? DS.Colors.accentGood : DS.Colors.accentDanger)
+                        }
+                    }
+                }
+                Spacer()
+            }
+            .padding(24)
+            .dsGlass()
 
-            HStack(spacing: 0) {
-                summaryMetric(
-                    value: formatDuration(totalMinutes),
-                    label: "total active",
-                    trend: lastWeekMinutes > 0 ? trendText(current: totalMinutes, previous: lastWeekMinutes) : nil,
-                    trendPositive: true
+            // Bento Grid
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DS.Spacing.sectionGap) {
+                bentoCard(
+                    value: thisWeek.sessionCount,
+                    label: "sessions"
                 )
 
-                Spacer()
-
-                summaryMetric(
-                    value: "\(thisWeek.count)",
-                    label: "sessions",
-                    trend: nil,
-                    trendPositive: true
-                )
-
-                Spacer()
-
-                summaryMetric(
-                    value: "\(totalAlerts)",
+                bentoCard(
+                    value: thisWeek.alertCount,
                     label: "posture alerts",
-                    trend: lastWeekAlerts > 0 ? trendText(current: totalAlerts, previous: lastWeekAlerts) : nil,
-                    trendPositive: totalAlerts <= lastWeekAlerts
+                    trend: lastWeek.alertCount > 0 ? alertTrendText(current: thisWeek.alertCount, previous: lastWeek.alertCount) : nil,
+                    trendPositive: thisWeek.alertCount <= lastWeek.alertCount
                 )
 
-                Spacer()
-
-                summaryMetric(
-                    value: "\(totalBreaks)",
-                    label: "breaks taken",
-                    trend: nil,
-                    trendPositive: true
+                bentoCard(
+                    value: thisWeek.breaksTaken,
+                    label: "breaks taken"
                 )
 
-                Spacer()
-
-                summaryMetric(
-                    value: avgSession > 0 ? "\(avgSession)m" : "—",
-                    label: "avg session",
-                    trend: nil,
-                    trendPositive: true
+                bentoCard(
+                    value: thisWeek.averageSessionMinutes,
+                    suffix: "m",
+                    emptyText: "—",
+                    label: "avg session"
                 )
             }
         }
-        .dsCard()
     }
 
-    private func summaryMetric(value: String, label: String, trend: String?, trendPositive: Bool) -> some View {
-        VStack(spacing: 6) {
-            Text(value)
-                .font(DS.Font.metric(24))
-                .foregroundStyle(DS.Colors.textPrimary)
-
-            Text(label)
-                .font(DS.Font.caption())
-                .foregroundStyle(DS.Colors.textMuted)
-
+    private func bentoCard(value: Int, suffix: String = "", emptyText: String? = nil, label: String, trend: String? = nil, trendPositive: Bool = true) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
             if let trend {
-                Text(trend)
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                    .foregroundStyle(trendPositive ? DS.Colors.accentGood : DS.Colors.accentWarn)
+                HStack {
+                    Spacer()
+                    Text(trend)
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundStyle(trendPositive ? DS.Colors.accentGood : DS.Colors.accentDanger)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background((trendPositive ? DS.Colors.accentGood : DS.Colors.accentDanger).opacity(0.15), in: Capsule())
+                }
+            } else {
+                Spacer().frame(height: 12)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                if value == 0 && emptyText != nil {
+                    Text(emptyText!)
+                        .font(DS.Font.metric(28))
+                        .foregroundStyle(DS.Colors.textPrimary)
+                } else {
+                    AnimatedMetricValue(value: value, suffix: suffix, font: DS.Font.metric(28), color: DS.Colors.textPrimary)
+                }
+
+                Text(label)
+                    .font(DS.Font.caption())
+                    .foregroundStyle(DS.Colors.textMuted)
+                    .textCase(.uppercase)
+                    .tracking(0.5)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .dsGlass()
     }
 
-    private func formatDuration(_ minutes: Int) -> String {
-        let h = minutes / 60
-        let m = minutes % 60
-        if h > 0 { return "\(h)h \(m)m" }
-        return "\(m)m"
+    private var weekDateRange: String {
+        let cal = Calendar.current
+        let weekStart = cal.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
+        let weekEnd = cal.date(byAdding: .day, value: 6, to: weekStart) ?? Date()
+        let fmt = Date.FormatStyle().month(.abbreviated).day()
+        return "\(weekStart.formatted(fmt)) – \(weekEnd.formatted(fmt))"
     }
 
     private func trendText(current: Int, previous: Int) -> String {
@@ -157,9 +191,18 @@ struct HistoryView: View {
         return change > 0 ? "+\(change)%" : "\(change)%"
     }
 
+    /// For alerts, fewer = better. Show as "↓25% fewer" or "↑25% more"
+    private func alertTrendText(current: Int, previous: Int) -> String {
+        guard previous > 0 else { return "" }
+        let change = Int(round(Double(current - previous) / Double(previous) * 100))
+        if change == 0 { return "same" }
+        if change < 0 { return "↓\(abs(change))% fewer" }
+        return "↑\(change)% more"
+    }
+
     // MARK: - Weekly Chart
 
-    private var weeklyChart: some View {
+    private func weeklyChart(using history: HistorySnapshot) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("daily active time")
                 .font(DS.Font.label())
@@ -167,76 +210,479 @@ struct HistoryView: View {
                 .textCase(.uppercase)
                 .tracking(1.5)
 
-            Chart(dailySummaries, id: \.date) { day in
-                BarMark(
+            Chart(history.dailySummaries, id: \.date) { day in
+                AreaMark(
                     x: .value("Day", day.date, unit: .day),
                     y: .value("Minutes", day.activeMinutes)
                 )
+                .interpolationMethod(.catmullRom)
                 .foregroundStyle(
-                    day.alertRate > 2 ? DS.Colors.accentWarn.opacity(0.7) : DS.Colors.accentInfo.opacity(0.7)
+                    LinearGradient(
+                        colors: [
+                            DS.Colors.accentInfo.opacity(0.4),
+                            DS.Colors.accentInfo.opacity(0.0)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
                 )
-                .cornerRadius(3)
+
+                LineMark(
+                    x: .value("Day", day.date, unit: .day),
+                    y: .value("Minutes", day.activeMinutes)
+                )
+                .interpolationMethod(.catmullRom)
+                .foregroundStyle(DS.Colors.accentInfo)
+                .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+
+                PointMark(
+                    x: .value("Day", day.date, unit: .day),
+                    y: .value("Minutes", day.activeMinutes)
+                )
+                .foregroundStyle(day.alertRate > 2 ? DS.Colors.accentWarn : DS.Colors.accentInfo)
+                .symbolSize(80)
+
+                if let selectedDate,
+                   Calendar.current.isDate(day.date, inSameDayAs: selectedDate) {
+                    RuleMark(x: .value("Day", day.date, unit: .day))
+                        .foregroundStyle(DS.Colors.accentInfo.opacity(0.5))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                        .annotation(position: .top, spacing: 8) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(day.date.formatted(.dateTime.weekday(.wide).month().day()))
+                                    .font(DS.Font.caption())
+                                    .foregroundStyle(DS.Colors.textMuted)
+                                
+                                Text("\(day.activeMinutes)m active")
+                                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                                    .foregroundStyle(DS.Colors.textPrimary)
+                                
+                                if day.alertRate > 0 {
+                                    Text("\(String(format: "%.1f", day.alertRate)) alerts/hr")
+                                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                                        .foregroundStyle(DS.Colors.accentWarn)
+                                }
+                            }
+                            .padding(12)
+                            .background(DS.Colors.cardBg.opacity(0.7).blendMode(.overlay))
+                            .dsGlass(cornerRadius: 12)
+                            .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
+                        }
+                }
             }
+            .chartXSelection(value: $selectedDate)
             .chartXAxis {
                 AxisMarks(values: .stride(by: .day)) { _ in
                     AxisValueLabel(format: .dateTime.weekday(.abbreviated))
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
                         .foregroundStyle(DS.Colors.textMuted)
                 }
             }
             .chartYAxis {
                 AxisMarks { value in
-                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-                        .foregroundStyle(DS.Colors.textMuted.opacity(0.3))
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4, 4]))
+                        .foregroundStyle(DS.Colors.textMuted.opacity(0.2))
                     AxisValueLabel {
                         if let mins = value.as(Int.self) {
                             Text("\(mins)m")
+                                .font(.system(size: 10, weight: .medium, design: .rounded))
                                 .foregroundStyle(DS.Colors.textMuted)
                         }
                     }
                 }
             }
-            .frame(height: 200)
+            .frame(height: 220)
+            .padding(.top, 8)
         }
-        .dsCard()
-    }
-
-    private var dailySummaries: [DailySummary] {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-
-        return (0..<7).reversed().map { offset in
-            let date = calendar.date(byAdding: .day, value: -offset, to: today)!
-            let daySessions = sessions.filter {
-                calendar.isDate($0.startedAt, inSameDayAs: date)
-            }
-            let totalMinutes = daySessions.reduce(0) { $0 + $1.totalActiveMinutes }
-            let totalAlerts = daySessions.reduce(0) { $0 + $1.postureAlertCount }
-            let alertRate = totalMinutes > 0 ? Double(totalAlerts) / Double(totalMinutes) * 60 : 0
-            return DailySummary(date: date, activeMinutes: totalMinutes, alertRate: alertRate)
-        }
+        .padding(24)
+        .dsGlass()
     }
 
     // MARK: - Session List
 
-    private var sessionList: some View {
-        VStack(alignment: .leading, spacing: 12) {
+    private func sessionList(using history: HistorySnapshot) -> some View {
+        let grouped = groupSessionsByDate(history.recentSessions)
+
+        return VStack(alignment: .leading, spacing: 12) {
             Text("recent sessions")
                 .font(DS.Font.label())
                 .foregroundStyle(DS.Colors.textMuted)
                 .textCase(.uppercase)
                 .tracking(1.5)
 
-            LazyVStack(spacing: 8) {
-                ForEach(sessions.prefix(20)) { session in
-                    SessionRow(session: session)
+            LazyVStack(spacing: 16) {
+                ForEach(grouped, id: \.label) { group in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(group.label)
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundStyle(DS.Colors.textSecondary)
+                            .padding(.leading, 4)
+
+                        ForEach(group.sessions) { session in
+                            SessionRow(session: session)
+                        }
+                    }
                 }
             }
         }
     }
+
+    private struct SessionGroup {
+        let label: String
+        let sessions: [SessionRecord]
+    }
+
+    private func groupSessionsByDate(_ sessions: [SessionRecord]) -> [SessionGroup] {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let yesterday = cal.date(byAdding: .day, value: -1, to: today)!
+        let weekAgo = cal.date(byAdding: .day, value: -7, to: today)!
+
+        var todaySessions: [SessionRecord] = []
+        var yesterdaySessions: [SessionRecord] = []
+        var thisWeekSessions: [SessionRecord] = []
+        var earlierSessions: [SessionRecord] = []
+
+        for session in sessions {
+            let day = cal.startOfDay(for: session.startedAt)
+            if day == today {
+                todaySessions.append(session)
+            } else if day == yesterday {
+                yesterdaySessions.append(session)
+            } else if day >= weekAgo {
+                thisWeekSessions.append(session)
+            } else {
+                earlierSessions.append(session)
+            }
+        }
+
+        var groups: [SessionGroup] = []
+        if !todaySessions.isEmpty { groups.append(SessionGroup(label: "Today", sessions: todaySessions)) }
+        if !yesterdaySessions.isEmpty { groups.append(SessionGroup(label: "Yesterday", sessions: yesterdaySessions)) }
+        if !thisWeekSessions.isEmpty { groups.append(SessionGroup(label: "This Week", sessions: thisWeekSessions)) }
+        if !earlierSessions.isEmpty { groups.append(SessionGroup(label: "Earlier", sessions: earlierSessions)) }
+        return groups
+    }
 }
 
-private struct DailySummary {
+// MARK: - Animations & Formatters
+
+private struct AnimatedMetricValue: View {
+    let value: Int
+    let suffix: String
+    @State private var animatedValue: Double = 0
+    let font: SwiftUI.Font
+    let color: Color
+
+    var body: some View {
+        AnimatableSuffixText(value: animatedValue, suffix: suffix)
+            .font(font)
+            .foregroundStyle(color)
+            .onAppear {
+                withAnimation(.spring(response: 1.0, dampingFraction: 0.8)) {
+                    animatedValue = Double(value)
+                }
+            }
+            .onChange(of: value) {
+                withAnimation(.spring(response: 1.0, dampingFraction: 0.8)) {
+                    animatedValue = Double(value)
+                }
+            }
+    }
+}
+
+private struct AnimatableSuffixText: View, Animatable {
+    var value: Double
+    var suffix: String
+
+    var animatableData: Double {
+        get { value }
+        set { value = newValue }
+    }
+
+    var body: some View {
+        Text("\(Int(value))\(suffix)")
+    }
+}
+
+private struct AnimatedDurationFormatter: View {
+    let minutes: Int
+    @State private var animatedMinutes: Double = 0
+    let font: SwiftUI.Font
+    let color: Color
+
+    var body: some View {
+        AnimatableDurationText(minutes: animatedMinutes)
+            .font(font)
+            .foregroundStyle(color)
+            .onAppear {
+                withAnimation(.spring(response: 1.5, dampingFraction: 0.8)) {
+                    animatedMinutes = Double(minutes)
+                }
+            }
+            .onChange(of: minutes) {
+                withAnimation(.spring(response: 1.5, dampingFraction: 0.8)) {
+                    animatedMinutes = Double(minutes)
+                }
+            }
+    }
+}
+
+private struct AnimatableDurationText: View, Animatable {
+    var minutes: Double
+
+    var animatableData: Double {
+        get { minutes }
+        set { minutes = newValue }
+    }
+
+    var body: some View {
+        let mins = Int(minutes)
+        let h = mins / 60
+        let m = mins % 60
+        if h > 0 { Text("\(h)h \(m)m") }
+        else { Text("\(m)m") }
+    }
+}
+
+struct DailySummary {
     let date: Date
     let activeMinutes: Int
-    let alertRate: Double  // alerts per hour
+    let alertRate: Double
+}
+
+struct WeeklyAggregate {
+    let activeMinutes: Int
+    let alertCount: Int
+    let breaksTaken: Int
+    let sessionCount: Int
+    let averageSessionMinutes: Int
+
+    static let empty = WeeklyAggregate(
+        activeMinutes: 0,
+        alertCount: 0,
+        breaksTaken: 0,
+        sessionCount: 0,
+        averageSessionMinutes: 0
+    )
+}
+
+struct HistoryWindow {
+    let calendar: Calendar
+    let today: Date
+    let chartStart: Date
+    let thisWeekStart: Date
+    let lastWeekStart: Date
+    let nextWeekStart: Date
+    let bucketRangeStart: Date
+
+    init(now: Date, calendar: Calendar) {
+        self.calendar = calendar
+        self.today = calendar.startOfDay(for: now)
+        self.chartStart = calendar.date(byAdding: .day, value: -6, to: today) ?? today
+        self.thisWeekStart = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? today
+        self.lastWeekStart = calendar.date(byAdding: .weekOfYear, value: -1, to: thisWeekStart) ?? thisWeekStart
+        self.nextWeekStart = calendar.date(byAdding: .weekOfYear, value: 1, to: thisWeekStart) ?? thisWeekStart
+        self.bucketRangeStart = min(chartStart, lastWeekStart)
+    }
+}
+
+struct HistorySnapshot {
+    let recentSessions: [SessionRecord]
+    let dailySummaries: [DailySummary]
+    let thisWeek: WeeklyAggregate
+    let lastWeek: WeeklyAggregate
+
+    static let empty = HistorySnapshot(
+        recentSessions: [],
+        dailySummaries: [],
+        thisWeek: .empty,
+        lastWeek: .empty
+    )
+
+    static func build(
+        recentSessions: [SessionRecord],
+        aggregateSessions: [SessionRecord],
+        window: HistoryWindow
+    ) -> HistorySnapshot {
+        var dayBuckets: [Date: DayAccumulator] = [:]
+        var thisWeekSessions: [SessionRecord] = []
+        var lastWeekSessions: [SessionRecord] = []
+
+        for session in aggregateSessions {
+            guard let endedAt = session.endedAt else { continue }
+
+            if endedAt >= window.thisWeekStart, endedAt < window.nextWeekStart {
+                thisWeekSessions.append(session)
+            } else if endedAt >= window.lastWeekStart, endedAt < window.thisWeekStart {
+                lastWeekSessions.append(session)
+            }
+
+            distribute(
+                session: session,
+                endedAt: endedAt,
+                into: &dayBuckets,
+                from: window.bucketRangeStart,
+                to: window.nextWeekStart,
+                calendar: window.calendar
+            )
+        }
+
+        let dailySummaries = (0..<7).reversed().map { offset in
+            let date = window.calendar.date(byAdding: .day, value: -offset, to: window.today) ?? window.today
+            let bucket = dayBuckets[date] ?? DayAccumulator()
+            let activeMinutes = Int(bucket.activeMinutes.rounded())
+            let alerts = bucket.alertCount.rounded()
+            let alertRate = activeMinutes > 0 ? alerts / Double(activeMinutes) * 60 : 0
+
+            return DailySummary(date: date, activeMinutes: activeMinutes, alertRate: alertRate)
+        }
+
+        return HistorySnapshot(
+            recentSessions: recentSessions,
+            dailySummaries: dailySummaries,
+            thisWeek: weeklyAggregate(
+                for: DateInterval(start: window.thisWeekStart, end: window.nextWeekStart),
+                using: dayBuckets,
+                sessions: thisWeekSessions,
+                calendar: window.calendar
+            ),
+            lastWeek: weeklyAggregate(
+                for: DateInterval(start: window.lastWeekStart, end: window.thisWeekStart),
+                using: dayBuckets,
+                sessions: lastWeekSessions,
+                calendar: window.calendar
+            )
+        )
+    }
+
+    static func weeklyAggregate(
+        for interval: DateInterval,
+        using dayBuckets: [Date: DayAccumulator],
+        sessions: [SessionRecord],
+        calendar: Calendar
+    ) -> WeeklyAggregate {
+        var activeMinutes = 0.0
+        var alertCount = 0.0
+        var breaksTaken = 0.0
+
+        var day = interval.start
+        while day < interval.end {
+            let bucket = dayBuckets[day] ?? DayAccumulator()
+            activeMinutes += bucket.activeMinutes
+            alertCount += bucket.alertCount
+            breaksTaken += bucket.breaksTaken
+            day = calendar.date(byAdding: .day, value: 1, to: day) ?? interval.end
+        }
+
+        let averageSessionMinutes: Int
+        if sessions.isEmpty {
+            averageSessionMinutes = 0
+        } else {
+            averageSessionMinutes = sessions.reduce(0) { $0 + $1.totalActiveMinutes } / sessions.count
+        }
+
+        return WeeklyAggregate(
+            activeMinutes: Int(activeMinutes.rounded()),
+            alertCount: Int(alertCount.rounded()),
+            breaksTaken: Int(breaksTaken.rounded()),
+            sessionCount: sessions.count,
+            averageSessionMinutes: averageSessionMinutes
+        )
+    }
+
+    static func distribute(
+        session: SessionRecord,
+        endedAt: Date,
+        into dayBuckets: inout [Date: DayAccumulator],
+        from rangeStart: Date,
+        to rangeEnd: Date,
+        calendar: Calendar
+    ) {
+        let startedAt = session.startedAt
+        let effectiveStart = max(startedAt, rangeStart)
+        let effectiveEnd = min(endedAt, rangeEnd)
+
+        guard effectiveStart < effectiveEnd else {
+            let dayStart = calendar.startOfDay(for: startedAt)
+            guard dayStart >= rangeStart, dayStart < rangeEnd else { return }
+
+            var bucket = dayBuckets[dayStart] ?? DayAccumulator()
+            bucket.activeMinutes += Double(session.totalActiveMinutes)
+            bucket.alertCount += Double(session.postureAlertCount)
+            bucket.breaksTaken += Double(session.breaksTaken)
+            dayBuckets[dayStart] = bucket
+            return
+        }
+
+        let totalDuration = max(endedAt.timeIntervalSince(startedAt), 1)
+        var dayStart = calendar.startOfDay(for: effectiveStart)
+
+        while dayStart < effectiveEnd {
+            let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) ?? effectiveEnd
+            let overlapStart = max(startedAt, dayStart)
+            let overlapEnd = min(endedAt, dayEnd)
+
+            if overlapStart < overlapEnd {
+                let ratio = overlapEnd.timeIntervalSince(overlapStart) / totalDuration
+                var bucket = dayBuckets[dayStart] ?? DayAccumulator()
+                bucket.activeMinutes += Double(session.totalActiveMinutes) * ratio
+                bucket.alertCount += Double(session.postureAlertCount) * ratio
+                bucket.breaksTaken += Double(session.breaksTaken) * ratio
+                dayBuckets[dayStart] = bucket
+            }
+
+            dayStart = dayEnd
+        }
+    }
+}
+
+enum HistoryStore {
+    @MainActor
+    static func load(
+        from modelContext: ModelContext,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) throws -> HistorySnapshot {
+        let window = HistoryWindow(now: now, calendar: calendar)
+        let recentSessions = try modelContext.fetch(recentSessionsDescriptor())
+        let aggregateSessions = try modelContext.fetch(aggregationDescriptor(for: window))
+
+        return HistorySnapshot.build(
+            recentSessions: recentSessions,
+            aggregateSessions: aggregateSessions,
+            window: window
+        )
+    }
+
+    static func recentSessionsDescriptor() -> FetchDescriptor<SessionRecord> {
+        var descriptor = FetchDescriptor<SessionRecord>(
+            predicate: #Predicate<SessionRecord> { session in
+                session.endedAt != nil && session.totalActiveMinutes > 0
+            },
+            sortBy: [SortDescriptor(\SessionRecord.startedAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = 20
+        return descriptor
+    }
+
+    static func aggregationDescriptor(for window: HistoryWindow) -> FetchDescriptor<SessionRecord> {
+        let bucketRangeStart = window.bucketRangeStart
+        let nextWeekStart = window.nextWeekStart
+
+        return FetchDescriptor<SessionRecord>(
+            predicate: #Predicate<SessionRecord> { session in
+                session.totalActiveMinutes > 0
+                    && session.startedAt < nextWeekStart
+                    && (session.endedAt ?? bucketRangeStart) > bucketRangeStart
+            },
+            sortBy: [SortDescriptor(\SessionRecord.startedAt)]
+        )
+    }
+}
+
+struct DayAccumulator {
+    var activeMinutes: Double = 0
+    var alertCount: Double = 0
+    var breaksTaken: Double = 0
 }

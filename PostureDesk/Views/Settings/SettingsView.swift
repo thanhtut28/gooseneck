@@ -1,31 +1,29 @@
+import ServiceManagement
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(LicenseManager.self) private var licenseManager
     @Environment(PostureViewModel.self) private var viewModel
 
-    @State private var breakInterval: Int = 45
-    @State private var driftSensitivity: Double = 10
-    @State private var fatigueThreshold: Double = 30
-    @State private var notificationsEnabled: Bool = true
+    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var showDeactivateAlert: Bool = false
 
     var body: some View {
         @Bindable var vm = viewModel
         ScrollView(showsIndicators: false) {
             VStack(spacing: DS.Spacing.sectionGap) {
-                // Posture
-                settingsGroup("posture") {
+                // Monitoring (posture + typing fatigue)
+                settingsGroup("monitoring") {
                     VStack(alignment: .leading, spacing: 12) {
                         settingRow("Drift Sensitivity") {
-                            Text(String(format: "%.0f°", driftSensitivity))
+                            Text(String(format: "%.0f°", vm.driftThreshold))
                                 .font(.system(size: 13, weight: .medium, design: .rounded).monospacedDigit())
                                 .foregroundStyle(DS.Colors.textSecondary)
                         }
-                        Slider(value: $driftSensitivity, in: 5...25, step: 1)
+                        Slider(value: $vm.driftThreshold, in: 5...25, step: 1)
                             .tint(DS.Colors.accentInfo)
-                            .onChange(of: driftSensitivity) { _, newValue in
-                                viewModel.postureAnalyzer.driftThreshold = newValue
-                            }
+                            .accessibilityLabel("Drift Sensitivity")
+                        settingHint("Lower = more sensitive to posture changes")
                     }
 
                     settingRow("Surface") {
@@ -36,51 +34,112 @@ struct SettingsView: View {
                         }
                         .pickerStyle(.menu)
                         .frame(width: 100)
+                        .labelsHidden()
+                        .accessibilityLabel("Surface")
+                    }
+
+                    Divider()
+                        .foregroundStyle(DS.Colors.cardBorder)
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        settingRow("Fatigue Threshold") {
+                            Text(String(format: "+%.0f%%", viewModel.fatigueMonitor.fatigueThresholdPercent))
+                                .font(.system(size: 13, weight: .medium, design: .rounded).monospacedDigit())
+                                .foregroundStyle(DS.Colors.textSecondary)
+                        }
+                        Slider(value: Binding(
+                            get: { viewModel.fatigueMonitor.fatigueThresholdPercent },
+                            set: { viewModel.fatigueMonitor.fatigueThresholdPercent = $0 }
+                        ), in: 10...50, step: 5)
+                            .tint(DS.Colors.accentInfo)
+                            .accessibilityLabel("Fatigue Threshold")
+                        settingHint("Higher = more tolerance before fatigue alert")
                     }
                 }
 
                 // Breaks
                 settingsGroup("breaks") {
-                    settingRow("Break Interval") {
-                        Picker("", selection: $breakInterval) {
-                            Text("5 min").tag(5)
-                            Text("15 min").tag(15)
-                            Text("30 min").tag(30)
-                            Text("45 min").tag(45)
-                            Text("60 min").tag(60)
+                    VStack(alignment: .leading, spacing: 8) {
+                        settingRow("Break Interval") {
+                            Picker("Break Interval", selection: Binding(
+                                get: { viewModel.breakTracker.breakIntervalMinutes },
+                                set: { viewModel.breakTracker.breakIntervalMinutes = $0 }
+                            )) {
+                                Text("5 min").tag(5)
+                                Text("15 min").tag(15)
+                                Text("30 min").tag(30)
+                                Text("45 min").tag(45)
+                                Text("60 min").tag(60)
+                            }
+                            .pickerStyle(.menu)
+                            .frame(width: 100)
+                            .labelsHidden()
+                            .accessibilityLabel("Break Interval")
+                        }
+
+                        if viewModel.breakTracker.breakIntervalMinutes == 5 {
+                            Text("5-minute intervals will trigger frequent alerts")
+                                .font(DS.Font.caption())
+                                .foregroundStyle(DS.Colors.accentWarn)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
+                    }
+                    .animation(.easeInOut(duration: 0.2), value: viewModel.breakTracker.breakIntervalMinutes)
+
+                    settingRow("Reminder Cadence") {
+                        Picker("Reminder cadence", selection: Binding(
+                            get: { viewModel.breakTracker.breakReminderCadence },
+                            set: { viewModel.breakTracker.breakReminderCadence = $0 }
+                        )) {
+                            ForEach(BreakReminderCadence.allCases, id: \.self) { cadence in
+                                Text(cadence.label).tag(cadence)
+                            }
                         }
                         .pickerStyle(.menu)
-                        .frame(width: 100)
-                        .onChange(of: breakInterval) { _, newValue in
-                            viewModel.breakTracker.breakIntervalMinutes = newValue
-                        }
+                        .frame(width: 120)
+                        .labelsHidden()
+                        .accessibilityLabel("Reminder cadence")
                     }
                 }
 
-                // Fatigue
-                settingsGroup("typing fatigue") {
-                    VStack(alignment: .leading, spacing: 12) {
-                        settingRow("Fatigue Threshold") {
-                            Text(String(format: "+%.0f%%", fatigueThreshold))
-                                .font(.system(size: 13, weight: .medium, design: .rounded).monospacedDigit())
-                                .foregroundStyle(DS.Colors.textSecondary)
-                        }
-                        Slider(value: $fatigueThreshold, in: 10...50, step: 5)
-                            .tint(DS.Colors.accentInfo)
-                            .onChange(of: fatigueThreshold) { _, newValue in
-                                viewModel.fatigueMonitor.fatigueThresholdPercent = newValue
-                            }
-                    }
-                }
-
-                // Notifications
+                // Notifications with per-category toggles
                 settingsGroup("notifications") {
-                    settingRow("Enable notifications") {
-                        Toggle("", isOn: $notificationsEnabled)
+                    settingRow("Notifications") {
+                        Toggle("Notifications", isOn: $vm.notificationsEnabled)
                             .toggleStyle(.checkbox)
                             .tint(DS.Colors.accentGood)
+                            .labelsHidden()
+                            .accessibilityLabel("Enable notifications")
+                    }
+
+                    if vm.notificationsEnabled {
+                        VStack(spacing: 12) {
+                            settingRow("Posture alerts") {
+                                Toggle("Posture alerts", isOn: $vm.postureNotificationsEnabled)
+                                    .toggleStyle(.checkbox)
+                                    .tint(DS.Colors.accentGood)
+                                    .labelsHidden()
+                            }
+
+                            settingRow("Break reminders") {
+                                Toggle("Break reminders", isOn: $vm.breakNotificationsEnabled)
+                                    .toggleStyle(.checkbox)
+                                    .tint(DS.Colors.accentGood)
+                                    .labelsHidden()
+                            }
+
+                            settingRow("Typing fatigue") {
+                                Toggle("Typing fatigue", isOn: $vm.fatigueNotificationsEnabled)
+                                    .toggleStyle(.checkbox)
+                                    .tint(DS.Colors.accentGood)
+                                    .labelsHidden()
+                            }
+                        }
+                        .padding(.leading, 20)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                 }
+                .animation(.easeInOut(duration: 0.2), value: vm.notificationsEnabled)
 
                 // Appearance
                 settingsGroup("appearance") {
@@ -92,23 +151,78 @@ struct SettingsView: View {
                         }
                         .pickerStyle(.segmented)
                         .frame(width: 200)
+                        .labelsHidden()
+                        .accessibilityLabel("Theme")
+                    }
+
+                    settingRow("Launch at Login") {
+                        Toggle("Launch at Login", isOn: Binding(
+                            get: { launchAtLogin },
+                            set: { newValue in
+                                do {
+                                    if newValue {
+                                        try SMAppService.mainApp.register()
+                                    } else {
+                                        try SMAppService.mainApp.unregister()
+                                    }
+                                    launchAtLogin = newValue
+                                } catch {
+                                    // Registration failed — toggle stays at current state
+                                }
+                            }
+                        ))
+                        .toggleStyle(.checkbox)
+                        .tint(DS.Colors.accentGood)
+                        .labelsHidden()
+                        .accessibilityLabel("Launch at Login")
+                    }
+
+                    settingRow("Posture Island") {
+                        Toggle("Posture Island", isOn: $vm.dynamicIslandEnabled)
+                            .toggleStyle(.checkbox)
+                            .tint(DS.Colors.accentGood)
+                            .labelsHidden()
+                            .accessibilityLabel("Posture Island")
+                    }
+
+                    if vm.dynamicIslandEnabled {
+                        Divider()
+                            .foregroundStyle(DS.Colors.cardBorder)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Island Style")
+                                .font(DS.Font.body())
+                                .foregroundStyle(DS.Colors.textPrimary)
+
+                            IslandVariantPicker(selection: $vm.islandVariant)
+                        }
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                 }
+                .animation(.easeInOut(duration: 0.2), value: vm.dynamicIslandEnabled)
 
-                // License
-                settingsGroup("license") {
+                // License & About
+                settingsGroup("license & about") {
                     settingRow("Status") {
                         HStack(spacing: 6) {
                             Circle()
-                                .fill(PostureDeskApp.licenseManager.isLicensed ? DS.Colors.accentGood : DS.Colors.accentDanger)
+                                .fill(licenseStatusColor)
                                 .frame(width: 6, height: 6)
-                            Text(PostureDeskApp.licenseManager.isLicensed ? "Active" : "Inactive")
+                            Text(licenseManager.stateLabel)
                                 .font(DS.Font.caption())
                                 .foregroundStyle(DS.Colors.textSecondary)
                         }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("License status \(licenseManager.stateLabel)")
                     }
 
-                    if let masked = PostureDeskApp.licenseManager.maskedKey {
+                    if let detail = licenseManager.stateDetail {
+                        Text(detail)
+                            .font(DS.Font.caption())
+                            .foregroundStyle(DS.Colors.textMuted)
+                    }
+
+                    if let masked = licenseManager.maskedKey {
                         settingRow("Key") {
                             Text(masked)
                                 .font(.system(size: 12, design: .monospaced))
@@ -125,10 +239,10 @@ struct SettingsView: View {
                         .buttonStyle(.plain)
                         .font(.system(size: 12, weight: .medium))
                     }
-                }
 
-                // About
-                settingsGroup("about") {
+                    Divider()
+                        .foregroundStyle(DS.Colors.cardBorder)
+
                     HStack {
                         Text("PostureDesk")
                             .font(.system(size: 15, weight: .semibold, design: .rounded))
@@ -147,24 +261,25 @@ struct SettingsView: View {
             .padding(DS.Spacing.pageInset)
         }
         .background(DS.Colors.bg)
+        .onAppear {
+            launchAtLogin = SMAppService.mainApp.status == .enabled
+        }
         .alert("Deactivate License", isPresented: $showDeactivateAlert) {
             Button("Cancel", role: .cancel) {}
             Button("Deactivate", role: .destructive) {
                 Task {
-                    await PostureDeskApp.licenseManager.deactivate()
-                    UserDefaults.standard.set(false, forKey: "onboardingComplete")
-                    if let delegate = NSApp.delegate as? AppDelegate {
-                        delegate.showOnboarding(startAt: .activate)
+                    await licenseManager.deactivate()
+                    await MainActor.run {
+                        viewModel.stop(lockMonitoring: true)
+                        UserDefaults.standard.set(false, forKey: "onboardingComplete")
+                        if let delegate = NSApp.delegate as? AppDelegate {
+                            delegate.showOnboarding(startAt: .activate)
+                        }
                     }
                 }
             }
         } message: {
             Text("This will deactivate your license and require re-activation to continue using PostureDesk.")
-        }
-        .onAppear {
-            breakInterval = viewModel.breakTracker.breakIntervalMinutes
-            driftSensitivity = viewModel.postureAnalyzer.driftThreshold
-            fatigueThreshold = viewModel.fatigueMonitor.fatigueThresholdPercent
         }
     }
 
@@ -192,6 +307,25 @@ struct SettingsView: View {
                 .foregroundStyle(DS.Colors.textPrimary)
             Spacer()
             trailing()
+        }
+    }
+
+    private func settingHint(_ text: String) -> some View {
+        Text(text)
+            .font(DS.Font.caption())
+            .foregroundStyle(DS.Colors.textMuted)
+    }
+
+    private var licenseStatusColor: Color {
+        switch licenseManager.licenseState {
+        case .active:
+            return DS.Colors.accentGood
+        case .gracePeriod:
+            return DS.Colors.accentWarn
+        case .validating:
+            return DS.Colors.accentInfo
+        default:
+            return DS.Colors.accentDanger
         }
     }
 }

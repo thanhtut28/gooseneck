@@ -20,6 +20,12 @@
     <string>$(CURRENT_PROJECT_VERSION)</string>
     <key>LSMinimumSystemVersion</key>
     <string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+    <key>PolarAPIBaseURL</key>
+    <string>$(POLAR_API_BASE_URL)</string>
+    <key>PolarCheckoutURL</key>
+    <string>$(POLAR_CHECKOUT_URL)</string>
+    <key>PolarOrganizationID</key>
+    <string>$(POLAR_ORGANIZATION_ID)</string>
     <key>LSUIElement</key>
     <true/>
 </dict>

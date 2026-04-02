@@ -14,16 +14,21 @@ struct SessionSummaryCard: View {
     private var remaining: Int { max(0, target - breakSeconds) }
     private var minutesLeft: Int { remaining / 60 }
     private var isBreakTime: Bool { remaining <= 0 }
+    private var overdueMinutes: Int { max(0, breakSeconds - target) / 60 }
+    private var breakProgress: Double {
+        guard target > 0 else { return 0 }
+        return min(Double(breakSeconds) / Double(target), 1.0)
+    }
 
-    private var breakChipColor: Color {
+    private var breakColor: Color {
         if isBreakTime { return DS.Colors.accentDanger }
-        if Double(breakSeconds) / Double(target) > 0.8 { return DS.Colors.accentWarn }
-        return DS.Colors.accentInfo
+        if breakProgress > 0.8 { return DS.Colors.accentWarn }
+        return DS.Colors.accentGood
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Top row: label + skip button
+            // Top row: label + break button
             HStack {
                 Text("session")
                     .font(DS.Font.label())
@@ -34,12 +39,12 @@ struct SessionSummaryCard: View {
                 Spacer()
 
                 Button {
-                    viewModel.breakTracker.recordBreak()
+                    viewModel.recordBreak()
                 } label: {
                     HStack(spacing: 5) {
-                        Image(systemName: "forward.end")
+                        Image(systemName: "checkmark.circle")
                             .font(.system(size: 10, weight: .medium))
-                        Text("Skip Break")
+                        Text("Took a Break")
                             .font(.system(size: 11, weight: .medium, design: .rounded))
                     }
                     .foregroundStyle(DS.Colors.textPrimary.opacity(0.8))
@@ -54,89 +59,80 @@ struct SessionSummaryCard: View {
                 .buttonStyle(.plain)
             }
 
-            Spacer()
-
-            // Hero: session duration
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                if hours > 0 {
-                    Text("\(hours)")
+            // Main content: time + break progress
+            HStack(alignment: .center, spacing: 24) {
+                // Session duration
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    if hours > 0 {
+                        Text("\(hours)")
+                            .font(DS.Font.hero())
+                            .foregroundStyle(DS.Colors.textPrimary)
+                            .contentTransition(.numericText())
+                        Text("h")
+                            .font(.system(size: 18, weight: .medium, design: .rounded))
+                            .foregroundStyle(DS.Colors.textMuted)
+                    }
+                    Text("\(minutes)")
                         .font(DS.Font.hero())
                         .foregroundStyle(DS.Colors.textPrimary)
                         .contentTransition(.numericText())
-                    Text("h")
+                    Text("m")
                         .font(.system(size: 18, weight: .medium, design: .rounded))
                         .foregroundStyle(DS.Colors.textMuted)
                 }
-                Text("\(minutes)")
-                    .font(DS.Font.hero())
-                    .foregroundStyle(DS.Colors.textPrimary)
-                    .contentTransition(.numericText())
-                Text("m")
-                    .font(.system(size: 18, weight: .medium, design: .rounded))
-                    .foregroundStyle(DS.Colors.textMuted)
-            }
 
-            // Bottom row: status dots + break chip
-            HStack(spacing: 0) {
-                HStack(spacing: 14) {
-                    statusDot(
-                        viewModel.breakTracker.state == .active ? DS.Colors.accentGood : DS.Colors.textMuted,
-                        label: viewModel.breakTracker.state == .active ? "active" : "away"
-                    )
-                    statusDot(
-                        surfaceColor,
-                        label: viewModel.selectedSurface.label.lowercased()
-                    )
-                }
+                // Break sprint progress
+                VStack(alignment: .leading, spacing: 8) {
+                    // Progress bar
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            // Track
+                            Capsule()
+                                .fill(DS.Colors.textMuted.opacity(0.12))
+                                .frame(height: 6)
 
-                Spacer()
-
-                Text(isBreakTime ? "break time" : "break in \(minutesLeft)m")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(breakChipColor)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(breakChipColor.opacity(0.12), in: Capsule())
-                    .contentTransition(.numericText())
-                    .animation(.easeInOut(duration: 0.4), value: minutesLeft)
-            }
-            // Surface suggestion banner
-            if viewModel.surfaceClassifier.hasPendingSuggestion {
-                HStack(spacing: 8) {
-                    Image(systemName: "location.fill.viewfinder")
-                        .font(.system(size: 11))
-                        .foregroundStyle(DS.Colors.accentInfo)
-
-                    Text("Looks like you moved to \(viewModel.surfaceClassifier.suggestedSurface.label.lowercased())")
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
-                        .foregroundStyle(DS.Colors.textSecondary)
-
-                    Spacer()
-
-                    Button("Switch") {
-                        viewModel.acceptSurfaceSuggestion()
+                            // Fill
+                            Capsule()
+                                .fill(breakColor)
+                                .frame(width: max(6, geo.size.width * breakProgress), height: 6)
+                                .animation(.easeInOut(duration: 0.8), value: breakProgress)
+                        }
                     }
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundStyle(DS.Colors.accentInfo)
-                    .buttonStyle(.plain)
+                    .frame(height: 6)
 
-                    Button {
-                        viewModel.dismissSurfaceSuggestion()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 9, weight: .medium))
+                    // Break label
+                    HStack {
+                        Text(isBreakTime ? "break time — \(overdueMinutes)m overdue" : "next break in \(minutesLeft)m")
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(breakColor)
+                            .contentTransition(.numericText())
+                            .animation(.easeInOut(duration: 0.4), value: isBreakTime ? overdueMinutes : minutesLeft)
+
+                        Spacer()
+
+                        Text("\(Int(breakProgress * 100))%")
+                            .font(.system(size: 11, weight: .medium, design: .monospaced))
                             .foregroundStyle(DS.Colors.textMuted)
+                            .contentTransition(.numericText())
                     }
-                    .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(DS.Colors.accentInfo.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.easeInOut(duration: 0.3), value: viewModel.surfaceClassifier.hasPendingSuggestion)
+                .frame(maxWidth: .infinity)
             }
+
+            // Status dots
+            HStack(spacing: 14) {
+                statusDot(
+                    viewModel.breakTracker.state == .active ? DS.Colors.accentGood : DS.Colors.textMuted,
+                    label: viewModel.breakTracker.state == .active ? "active" : "away"
+                )
+                statusDot(
+                    surfaceColor,
+                    label: viewModel.selectedSurface.label.lowercased()
+                )
+            }
+
         }
-        .frame(maxWidth: .infinity, minHeight: 160, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .dsCard()
     }
 
@@ -158,5 +154,7 @@ struct SessionSummaryCard: View {
                 .font(DS.Font.caption())
                 .foregroundStyle(DS.Colors.textSecondary)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label.capitalized)
     }
 }

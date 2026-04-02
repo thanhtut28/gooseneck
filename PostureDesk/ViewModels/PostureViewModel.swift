@@ -10,12 +10,11 @@ final class PostureViewModel {
     private static let driftThresholdDefaultsKey = "driftThreshold"
 
     // Services
+    // Shipping runtime path: the app reads sensors directly in-process.
     let sensorClient = DirectSensorClient()
     let postureAnalyzer = PostureAnalyzer()
     let breakTracker = BreakTracker()
     let fatigueMonitor = FatigueMonitor()
-    let surfaceClassifier = SurfaceClassifier()
-
     // UI State
     var iconState: IconState = .away
     var historyRefreshToken = 0
@@ -26,6 +25,7 @@ final class PostureViewModel {
     @ObservationIgnored private var autoResumeWorkItem: DispatchWorkItem?
     @ObservationIgnored private var isStarted = false
     @ObservationIgnored private var appearanceObserver: NSObjectProtocol?
+    @ObservationIgnored private var monitoringLocked = false
 
     // Theme: 0 = system, 1 = light, 2 = dark
     var themeMode: Int = UserDefaults.standard.integer(forKey: "themeMode") {
@@ -99,8 +99,17 @@ final class PostureViewModel {
     var selectedSurface: Surface = Surface(rawValue: UserDefaults.standard.integer(forKey: "selectedSurface")) ?? .desk {
         didSet {
             UserDefaults.standard.set(selectedSurface.rawValue, forKey: "selectedSurface")
+            driftThreshold = selectedSurface.driftThreshold
         }
     }
+
+    // Lid-angle nudge state (smart "did you move?" prompt)
+    private(set) var showSurfaceNudge: Bool = false
+    @ObservationIgnored private var nudgeSustainedSince: Date?
+    @ObservationIgnored private var nudgeDismissedAt: Date?
+    private let nudgeLidAngleThreshold: Double = 15.0
+    private let nudgeSustainDuration: TimeInterval = 30
+    private let nudgeCooldownDuration: TimeInterval = 300
 
     private let activityEventTypes: [CGEventType] = [
         .keyDown,
@@ -132,6 +141,7 @@ final class PostureViewModel {
         ) { [weak self] _ in
             self?.appearanceTick += 1
         }
+        cleanUpOrphanedSessions()
     }
 
     deinit {
@@ -146,6 +156,8 @@ final class PostureViewModel {
 
     /// Start monitoring — connects sensors and begins processing loop.
     func start() {
+        guard !monitoringLocked else { return }
+
         if isStarted {
             if !sensorClient.isConnected {
                 sensorClient.connect()
@@ -171,6 +183,39 @@ final class PostureViewModel {
         }
     }
 
+    func unlockMonitoring() {
+        monitoringLocked = false
+    }
+
+    func stop(lockMonitoring: Bool = false, finalizeSession: Bool = true) {
+        monitoringLocked = lockMonitoring
+
+        autoResumeWorkItem?.cancel()
+        autoResumeWorkItem = nil
+        processTimer?.invalidate()
+        processTimer = nil
+
+        if finalizeSession {
+            finalizeCurrentSession()
+        } else {
+            discardCurrentSession()
+        }
+
+        sensorClient.disconnect()
+        islandManager.hide()
+        fatigueMonitor.resetSession()
+        breakTracker.stop()
+        showSurfaceNudge = false
+        nudgeSustainedSince = nil
+        nudgeDismissedAt = nil
+        postureAlertCount = 0
+        wasDrifting = false
+        logCounter = 0
+        isPaused = false
+        isStarted = false
+        iconState = .away
+    }
+
     /// Calibrate posture baseline from current readings.
     @discardableResult
     func calibrate() -> Bool {
@@ -181,6 +226,8 @@ final class PostureViewModel {
         breakTracker.resetSession(at: now)
         fatigueMonitor.resetSession()
         finalizeCurrentSession(endedAt: now)
+        showSurfaceNudge = false
+        nudgeSustainedSince = nil
 
         if !isPaused, isUserPresent {
             startNewSession(at: now)
@@ -225,15 +272,43 @@ final class PostureViewModel {
         updateIconState()
     }
 
-    /// Accept the auto-detected surface suggestion.
-    func acceptSurfaceSuggestion() {
-        selectedSurface = surfaceClassifier.suggestedSurface
-        surfaceClassifier.acceptSuggestion()
+    // MARK: - Surface Nudge
+
+    /// User confirmed they moved — switch surface and recalibrate.
+    func acceptSurfaceNudge(to surface: Surface) {
+        selectedSurface = surface
+        showSurfaceNudge = false
+        nudgeSustainedSince = nil
+        nudgeDismissedAt = Date()
+        calibrate()
     }
 
-    /// Dismiss the surface suggestion.
-    func dismissSurfaceSuggestion() {
-        surfaceClassifier.dismissSuggestion()
+    /// User dismissed the nudge.
+    func dismissSurfaceNudge() {
+        showSurfaceNudge = false
+        nudgeSustainedSince = nil
+        nudgeDismissedAt = Date()
+    }
+
+    private func checkLidAngleNudge(at now: Date) {
+        let drift = abs(postureAnalyzer.lidAngleDrift)
+
+        guard !showSurfaceNudge else { return }
+        if let dismissedAt = nudgeDismissedAt,
+           now.timeIntervalSince(dismissedAt) < nudgeCooldownDuration {
+            return
+        }
+
+        if drift > nudgeLidAngleThreshold {
+            if nudgeSustainedSince == nil {
+                nudgeSustainedSince = now
+            } else if let since = nudgeSustainedSince,
+                      now.timeIntervalSince(since) >= nudgeSustainDuration {
+                showSurfaceNudge = true
+            }
+        } else {
+            nudgeSustainedSince = nil
+        }
     }
 
     // MARK: - System Idle Time
@@ -264,15 +339,7 @@ final class PostureViewModel {
         postureAnalyzer.update(pitch: snapshot.pitch, lidAngle: snapshot.lidAngle)
         let breakUpdate = breakTracker.update(isActive: present, at: now)
         fatigueMonitor.update(typingRMS: snapshot.typingRMS, isActive: present)
-        surfaceClassifier.currentSurface = selectedSurface
-        surfaceClassifier.update(
-            pitch: snapshot.pitch,
-            roll: snapshot.roll,
-            vibrationVariance: snapshot.vibrationVariance,
-            fftLow: snapshot.fftLowBin,
-            fftMid: snapshot.fftMidBin,
-            fftHigh: snapshot.fftHighBin
-        )
+        checkLidAngleNudge(at: now)
 
         postureAnalyzer.driftThreshold = driftThreshold
 
@@ -430,6 +497,35 @@ final class PostureViewModel {
         #if DEBUG
         print("[Session] Finalized session (\(session.totalActiveMinutes)m, \(session.postureAlertCount) alerts, \(session.breaksTaken) breaks)")
         #endif
+    }
+
+    private func discardCurrentSession() {
+        guard let session = currentSession else { return }
+        modelContext.delete(session)
+        try? modelContext.save()
+        currentSession = nil
+    }
+
+    private func cleanUpOrphanedSessions() {
+        let descriptor = FetchDescriptor<SessionRecord>(
+            predicate: #Predicate<SessionRecord> { $0.endedAt == nil }
+        )
+        guard let orphans = try? modelContext.fetch(descriptor), !orphans.isEmpty else { return }
+
+        for session in orphans {
+            if session.totalActiveMinutes > 0 {
+                session.endedAt = session.startedAt.addingTimeInterval(Double(session.totalActiveMinutes) * 60)
+                #if DEBUG
+                print("[Session] Recovered orphaned session: \(session.totalActiveMinutes)m from \(session.startedAt)")
+                #endif
+            } else {
+                modelContext.delete(session)
+                #if DEBUG
+                print("[Session] Deleted empty orphaned session from \(session.startedAt)")
+                #endif
+            }
+        }
+        try? modelContext.save()
     }
 
 }

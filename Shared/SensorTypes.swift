@@ -28,7 +28,7 @@ import Foundation
     }
 }
 
-// MARK: - Sensor Snapshot (XPC-transportable)
+// MARK: - Sensor Snapshot
 
 @objc public class SensorSnapshot: NSObject, NSSecureCoding {
     public static var supportsSecureCoding: Bool { true }
@@ -99,7 +99,7 @@ import Foundation
     }
 }
 
-// MARK: - Sensor Availability (XPC-transportable)
+// MARK: - Sensor Availability
 
 @objc public class SensorAvailability: NSObject, NSSecureCoding {
     public static var supportsSecureCoding: Bool { true }

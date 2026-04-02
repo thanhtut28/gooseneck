@@ -19,11 +19,6 @@ targets:
       - path: PostureDesk
       - path: Shared
       - path: PostureSensorDaemon
-        excludes:
-          - main.swift
-          - XPCServer.swift
-          - Info.plist
-          - PostureSensorDaemon.entitlements
     frameworks:
       - sdk: IOKit.framework
       - sdk: Accelerate.framework
@@ -37,33 +32,23 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         COMBINE_HIDPI_IMAGES: YES
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
-    dependencies:
-      - target: PostureSensorDaemon
-        embed: false
-    postBuildScripts:
-      - name: Copy Helper Tool and LaunchDaemon Plist
-        script: |
-          mkdir -p "${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Library/HelperTools"
-          mkdir -p "${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Library/LaunchDaemons"
-          cp "${BUILT_PRODUCTS_DIR}/PostureSensorDaemon" "${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Library/HelperTools/"
-          cp "${SRCROOT}/LaunchDaemons/com.posturedesk.sensor-daemon.plist" "${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Library/LaunchDaemons/"
-        outputFiles: []
-
-  PostureSensorDaemon:
-    type: tool
+      configs:
+        Debug:
+          POLAR_API_BASE_URL: "https://sandbox-api.polar.sh/v1/customer-portal/license-keys"
+          POLAR_CHECKOUT_URL: "https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_DOGu45YJUcHzeFxGZw5EqT0L9gN3L9Qm2dTQn2Z4xHn/redirect"
+          POLAR_ORGANIZATION_ID: "322cca40-cd2e-4d58-83e9-ec08ee2b0c19"
+        Release:
+          POLAR_API_BASE_URL: "https://api.polar.sh/v1/customer-portal/license-keys"
+          POLAR_CHECKOUT_URL: "https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_DOGu45YJUcHzeFxGZw5EqT0L9gN3L9Qm2dTQn2Z4xHn/redirect"
+          POLAR_ORGANIZATION_ID: "322cca40-cd2e-4d58-83e9-ec08ee2b0c19"
+  PostureDeskTests:
+    type: bundle.unit-test
     platform: macOS
     sources:
-      - path: PostureSensorDaemon
-      - path: Shared
+      - path: PostureDeskTests
+    dependencies:
+      - target: PostureDesk
     settings:
       base:
-        INFOPLIST_FILE: PostureSensorDaemon/Info.plist
-        CODE_SIGN_ENTITLEMENTS: PostureSensorDaemon/PostureSensorDaemon.entitlements
-        ENABLE_HARDENED_RUNTIME: YES
-        PRODUCT_BUNDLE_IDENTIFIER: com.posturedesk.sensor-daemon
-        CREATE_INFOPLIST_SECTION_IN_BINARY: YES
-        MARKETING_VERSION: "1.0.0"
-        CURRENT_PROJECT_VERSION: "1"
-    frameworks:
-      - sdk: IOKit.framework
-      - sdk: Accelerate.framework
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.posturedesk.tests

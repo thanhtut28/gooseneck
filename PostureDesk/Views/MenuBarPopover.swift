@@ -10,22 +10,35 @@ struct MenuBarPopover: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Current Posture")
-                        .font(.caption)
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
                     Text(statusText)
-                        .font(.title3.bold())
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
                         .foregroundStyle(statusColor)
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("Session")
-                        .font(.caption)
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
                     Text(sessionDuration)
-                        .font(.body.monospacedDigit())
+                        .font(.system(size: 13, weight: .medium, design: .rounded).monospacedDigit())
+                        .foregroundStyle(.primary)
                 }
             }
             .padding(12)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Current posture")
+            .accessibilityValue("\(statusText), session \(sessionDuration)")
+
+            if let sensorError {
+                Divider()
+
+                Text(sensorError)
+                    .font(DS.Font.caption())
+                    .foregroundStyle(DS.Colors.accentDanger)
+                    .padding(12)
+            }
 
             Divider()
 
@@ -44,17 +57,21 @@ struct MenuBarPopover: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Next Break")
-                        .font(.caption)
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
                     Text(breakCountdown)
-                        .font(.body)
+                        .font(.system(size: 13, weight: .regular, design: .rounded))
+                        .foregroundStyle(.primary)
                 }
                 Spacer()
-                Button("Skip") {
-                    viewModel.breakTracker.recordBreak()
+                Button("Took a Break") {
+                    viewModel.recordBreak()
                 }
+                .font(.system(size: 11, weight: .medium, design: .rounded))
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .accessibilityLabel("Took a break")
+                .accessibilityHint("Marks a break as taken and resets the break countdown.")
             }
             .padding(12)
 
@@ -62,97 +79,110 @@ struct MenuBarPopover: View {
 
             // Quick actions
             HStack(spacing: 8) {
-                Button("Recalibrate") {
-                    viewModel.calibrate()
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-
-                Button(viewModel.isPaused ? "Resume" : "Pause 1hr") {
-                    viewModel.isPaused.toggle()
-                    if viewModel.isPaused {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 3600) {
-                            viewModel.isPaused = false
-                        }
+                Button(sensorError == nil ? "Recalibrate" : "Retry Sensors") {
+                    if sensorError == nil {
+                        viewModel.calibrate()
+                    } else {
+                        viewModel.start()
                     }
                 }
+                .font(.system(size: 11, weight: .medium, design: .rounded))
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .accessibilityLabel(sensorError == nil ? "Recalibrate posture" : "Retry sensor connection")
+
+                Button(viewModel.isPaused ? "Resume" : "Pause") {
+                    if viewModel.isPaused {
+                        viewModel.resumeMonitoring()
+                    } else {
+                        viewModel.pauseMonitoring()
+                    }
+                }
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .accessibilityLabel(viewModel.isPaused ? "Resume monitoring" : "Pause monitoring")
+                .accessibilityHint(viewModel.isPaused ? "Resumes posture monitoring." : "Pauses posture monitoring until you resume it.")
 
                 Spacer()
 
                 Button {
                     openWindow(id: "dashboard")
                     NSApp.setActivationPolicy(.regular)
-                    NSApp.activate()
+                    NSApp.activate(ignoringOtherApps: true)
                 } label: {
                     Image(systemName: "macwindow")
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
                 .help("Open Dashboard")
+                .accessibilityLabel("Open Dashboard")
 
                 Button("Quit") {
                     NSApplication.shared.terminate(nil)
                 }
+                .font(.system(size: 11, weight: .medium, design: .rounded))
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .accessibilityHint("Closes PostureDesk.")
             }
             .padding(12)
         }
         .frame(width: 280)
-        .onAppear {
-            viewModel.start()
-        }
     }
 
     // MARK: - Computed Properties
 
     private var statusText: String {
+        if sensorError != nil { return "Unavailable" }
         switch viewModel.iconState {
         case .good: return "Good"
         case .drifting: return "Drifting"
         case .breakNeeded: return "Break Needed"
+        case .unavailable: return "Unavailable"
         case .away: return "Away"
         }
     }
 
     private var statusColor: Color {
+        if sensorError != nil { return DS.Colors.accentDanger }
         switch viewModel.iconState {
-        case .good: return .green
-        case .drifting: return .yellow
-        case .breakNeeded: return .red
-        case .away: return .secondary
+        case .good: return DS.Colors.accentGood
+        case .drifting: return DS.Colors.accentWarn
+        case .breakNeeded: return DS.Colors.accentDanger
+        case .unavailable: return DS.Colors.accentDanger
+        case .away: return DS.Colors.textMuted
         }
     }
 
     private var sessionDuration: String {
-        let seconds = viewModel.breakTracker.totalActiveSeconds
-        let h = seconds / 3600
-        let m = (seconds % 3600) / 60
-        if h > 0 { return "\(h)h \(m)m" }
-        return "\(m)m"
+        DisplayFormatter.activeDuration(seconds: viewModel.breakTracker.totalActiveSeconds)
     }
 
     private func driftValue(for keyPath: KeyPath<SensorSnapshot, Double>) -> String {
         guard let snapshot = viewModel.sensorClient.latestSnapshot else { return "—" }
         let value = snapshot[keyPath: keyPath]
         if value < 0 { return "N/A" }
-        let delta = abs(value - viewModel.postureAnalyzer.baselineLidAngle)
-        return String(format: "+%.1f°", delta)
+        let delta = value - viewModel.postureAnalyzer.baselineLidAngle
+        let sign = delta >= 0 ? "+" : ""
+        return String(format: "%@%.1f°", sign, delta)
     }
 
     private var tiltValue: String {
         guard let snapshot = viewModel.sensorClient.latestSnapshot else { return "—" }
-        let delta = abs(snapshot.pitch - viewModel.postureAnalyzer.baselinePitch)
-        return String(format: "+%.1f°", delta)
+        let delta = snapshot.pitch - viewModel.postureAnalyzer.baselinePitch
+        let sign = delta >= 0 ? "+" : ""
+        return String(format: "%@%.1f°", sign, delta)
     }
 
     private var driftColor: Color {
-        viewModel.postureAnalyzer.isDrifting ? .yellow : .green
+        viewModel.postureAnalyzer.isDrifting ? DS.Colors.accentWarn : DS.Colors.accentGood
     }
 
     private var typingValue: String {
+        guard viewModel.fatigueMonitor.calibrationState == .ready else {
+            return "Calibrating"
+        }
         let pct = viewModel.fatigueMonitor.currentIntensityPercent
         if pct > 0 {
             return String(format: "↑ %.0f%% from baseline", pct)
@@ -161,21 +191,24 @@ struct MenuBarPopover: View {
     }
 
     private var typingColor: Color {
-        viewModel.fatigueMonitor.isFatigued ? .orange : .green
+        guard viewModel.fatigueMonitor.calibrationState == .ready else {
+            return .secondary
+        }
+        return viewModel.fatigueMonitor.isFatigued ? DS.Colors.accentWarn : DS.Colors.accentGood
     }
 
     private var breakCountdown: String {
-        let elapsed = viewModel.breakTracker.secondsSinceLastBreak
-        let target = viewModel.breakTracker.breakIntervalMinutes * 60
-        let remaining = max(0, target - elapsed)
-        return "in \(remaining / 60) min"
+        DisplayFormatter.breakCountdown(
+            elapsedSeconds: viewModel.breakTracker.secondsSinceLastBreak,
+            intervalMinutes: viewModel.breakTracker.breakIntervalMinutes
+        )
     }
 
     private var surfacePicker: some View {
         @Bindable var vm = viewModel
         return HStack {
             Text("Surface")
-                .font(.caption)
+                .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
             Spacer()
             Picker("", selection: $vm.selectedSurface) {
@@ -185,6 +218,8 @@ struct MenuBarPopover: View {
             }
             .pickerStyle(.menu)
             .controlSize(.small)
+            .labelsHidden()
+            .accessibilityLabel("Surface")
         }
     }
 
@@ -193,12 +228,19 @@ struct MenuBarPopover: View {
     private func metricRow(_ label: String, value: String, color: Color) -> some View {
         HStack {
             Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundStyle(.primary)
             Spacer()
             Text(value)
-                .font(.caption.monospacedDigit())
+                .font(.system(size: 12, weight: .medium, design: .rounded).monospacedDigit())
                 .foregroundStyle(color)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label)
+        .accessibilityValue(value)
+    }
+
+    private var sensorError: String? {
+        viewModel.sensorClient.connectionError
     }
 }

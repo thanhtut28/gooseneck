@@ -44,7 +44,7 @@ struct LidAngleCard: View {
 
     private var accentColor: Color {
         if progress > 0.8 { return DS.Colors.accentWarn }
-        if progress > 0.5 { return DS.Colors.textSecondary }
+        if progress > 0.5 { return DS.Colors.accentWarn.opacity(0.7) }
         return DS.Colors.accentGood
     }
 
@@ -81,7 +81,7 @@ struct LidAngleCard: View {
                 color: accentColor
             )
 
-            Text(magnitude < 1 ? "aligned" : drift > 0 ? "opening" : "closing")
+            Text(magnitude < 1 ? "centered" : drift > 0 ? "lid opening" : "lid closing")
                 .font(DS.Font.caption())
                 .foregroundStyle(DS.Colors.textMuted)
         }
@@ -101,7 +101,7 @@ struct TiltCard: View {
 
     private var accentColor: Color {
         if progress > 0.8 { return DS.Colors.accentWarn }
-        if progress > 0.5 { return DS.Colors.textSecondary }
+        if progress > 0.5 { return DS.Colors.accentWarn.opacity(0.7) }
         return DS.Colors.accentGood
     }
 
@@ -138,7 +138,7 @@ struct TiltCard: View {
                 color: accentColor
             )
 
-            Text(magnitude < 1 ? "level" : drift > 0 ? "forward" : "backward")
+            Text(magnitude < 1 ? "level" : drift > 0 ? "leaning forward" : "leaning back")
                 .font(DS.Font.caption())
                 .foregroundStyle(DS.Colors.textMuted)
         }

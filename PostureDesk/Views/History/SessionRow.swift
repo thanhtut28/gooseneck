@@ -6,14 +6,16 @@ struct SessionRow: View {
     var body: some View {
         HStack(spacing: 16) {
             // Date
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(session.startedAt.formatted(date: .abbreviated, time: .shortened))
-                    .font(DS.Font.body())
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
                     .foregroundStyle(DS.Colors.textPrimary)
 
-                Text("\(session.totalActiveMinutes)m · \(session.surface.label.lowercased())")
+                Text("\(DisplayFormatter.sessionDuration(minutes: session.totalActiveMinutes)) · \(session.surface.label.lowercased())")
                     .font(DS.Font.caption())
                     .foregroundStyle(DS.Colors.textMuted)
+                    .textCase(.uppercase)
+                    .tracking(0.5)
             }
 
             Spacer()
@@ -27,11 +29,7 @@ struct SessionRow: View {
             }
         }
         .padding(16)
-        .background(DS.Colors.cardBg, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(DS.Colors.cardBorder, lineWidth: 1)
-        )
+        .dsGlass(cornerRadius: 16)
     }
 
     private func miniStat(_ value: String, label: String, color: Color) -> some View {

@@ -160,4 +160,83 @@ extension View {
     func dsCard() -> some View {
         modifier(DSCard())
     }
+
+    func dsGlass(cornerRadius: CGFloat = DS.Spacing.cardRadius) -> some View {
+        modifier(DSGlass(cornerRadius: cornerRadius))
+    }
+
+    func dsGlassCircle() -> some View {
+        modifier(DSGlassCircle())
+    }
+
+    func dsGlassButton() -> some View {
+        modifier(DSGlassButton())
+    }
+}
+
+// MARK: - Glass Effect Modifiers (macOS 26+ with fallbacks)
+
+struct DSGlass: ViewModifier {
+    let cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        if #available(macOS 26, *) {
+            content
+                .padding(DS.Spacing.cardPadding)
+                .glassEffect(
+                    .regular,
+                    in: .rect(cornerRadius: cornerRadius)
+                )
+        } else {
+            content
+                .modifier(DSCard())
+        }
+    }
+}
+
+struct DSGlassCircle: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(macOS 26, *) {
+            content
+                .glassEffect(.regular, in: .circle)
+        } else {
+            content
+                .background(.thinMaterial, in: Circle())
+                .overlay(
+                    Circle()
+                        .stroke(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.1), Color.white.opacity(0.0)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                )
+        }
+    }
+}
+
+struct DSGlassButton: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(macOS 26, *) {
+            content
+                .glassEffect(.regular.interactive(), in: .capsule)
+        } else {
+            content
+                .background(.thinMaterial, in: Capsule())
+                .overlay(
+                    Capsule()
+                        .stroke(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.15), Color.clear],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                )
+                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+        }
+    }
 }
