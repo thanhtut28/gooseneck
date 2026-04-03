@@ -78,13 +78,16 @@ enum DS {
             .system(size: size, weight: .semibold, design: .rounded)
         }
         static func label() -> SwiftUI.Font {
-            .system(size: 11, weight: .medium, design: .rounded)
+            .system(size: 12, weight: .semibold, design: .rounded)
         }
         static func caption() -> SwiftUI.Font {
-            .system(size: 10, weight: .regular, design: .rounded)
+            .system(size: 11, weight: .regular, design: .rounded)
         }
         static func body() -> SwiftUI.Font {
             .system(size: 13, weight: .regular, design: .rounded)
+        }
+        static func rowTitle() -> SwiftUI.Font {
+            .system(size: 16, weight: .semibold, design: .rounded)
         }
     }
 
