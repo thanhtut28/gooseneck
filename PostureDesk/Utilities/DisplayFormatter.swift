@@ -17,6 +17,11 @@ enum DisplayFormatter {
 
     static func sessionDuration(minutes: Int) -> String {
         guard minutes > 0 else { return "< 1m" }
+        let hours = minutes / 60
+        let mins = minutes % 60
+        if hours > 0 {
+            return "\(hours)h \(mins)m"
+        }
         return "\(minutes)m"
     }
 
