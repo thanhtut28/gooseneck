@@ -91,11 +91,18 @@ struct PostureIslandView: View {
             )
         )
         .animation(isExpanded ? expandSpring : collapseSpring, value: isExpanded)
-        .shadow(
-            color: Color.black.opacity(colorScheme == .dark ? 0.35 : 0.15),
-            radius: isExpanded ? 24 : 0,
-            y: isExpanded ? 10 : 0
-        )
+        .background {
+            PostureIslandPillShape(
+                topCornerRadius: isExpanded ? 12 : 6,
+                bottomCornerRadius: isExpanded ? 24 : 14
+            )
+            .fill(Color.black)
+            .opacity(isExpanded ? 0.55 : isHovering ? 0.3 : 0)
+            .blur(radius: isExpanded ? 24 : isHovering ? 14 : 0)
+            .offset(y: isExpanded ? 8 : isHovering ? 3 : 0)
+            .animation(isExpanded ? expandSpring : collapseSpring, value: isExpanded)
+            .animation(isExpanded ? expandSpring : collapseSpring, value: isHovering)
+        }
     }
 
     // MARK: - Left Indicator (status dot only)
@@ -407,6 +414,15 @@ struct PostureIslandView: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
         .contentShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+        .background {
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .fill(Color.black)
+                .opacity(isExpanded ? 0.55 : isHovering ? 0.3 : 0)
+                .blur(radius: isExpanded ? 24 : isHovering ? 14 : 0)
+                .offset(y: isExpanded ? 8 : isHovering ? 3 : 0)
+                .animation(isExpanded ? expandSpring : collapseSpring, value: isExpanded)
+                .animation(isExpanded ? expandSpring : collapseSpring, value: isHovering)
+        }
         .animation(isExpanded ? expandSpring : collapseSpring, value: isExpanded)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.showSurfaceNudge)
         .padding(.top, 6)

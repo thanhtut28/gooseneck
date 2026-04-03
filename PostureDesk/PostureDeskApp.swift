@@ -5,7 +5,7 @@ import SwiftUI
 import UserNotifications
 
 @main
-struct PostureDeskApp: App {
+struct GooseNeckApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var viewModel: PostureViewModel
     let modelContainer: ModelContainer
@@ -23,14 +23,14 @@ struct PostureDeskApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("PostureDesk", systemImage: viewModel.iconState.rawValue) {
+        MenuBarExtra("GooseNeck", image: "MenuBarIcon") {
             MenuBarPopover()
                 .environment(viewModel)
                 .environment(Self.licenseManager)
         }
         .menuBarExtraStyle(.window)
 
-        Window("PostureDesk", id: "dashboard") {
+        Window("GooseNeck", id: "dashboard") {
             MainWindow()
                 .environment(viewModel)
                 .environment(Self.licenseManager)
@@ -38,7 +38,7 @@ struct PostureDeskApp: App {
         .defaultSize(width: 780, height: 520)
         .modelContainer(modelContainer)
         .commands {
-            PostureDeskCommands(viewModel: viewModel)
+            GooseNeckCommands(viewModel: viewModel)
         }
     }
 
@@ -50,7 +50,7 @@ struct PostureDeskApp: App {
     private static func makeModelContainer() -> ModelContainerBootstrap {
         let storeURL = persistentStoreURL()
         let configuration = ModelConfiguration(
-            "PostureDesk",
+            "GooseNeck",
             url: storeURL,
             cloudKitDatabase: .none
         )
@@ -69,7 +69,7 @@ struct PostureDeskApp: App {
                 do {
                     return ModelContainerBootstrap(
                         container: try ModelContainer(for: SessionRecord.self, configurations: configuration),
-                        launchIssue: "PostureDesk had to reset its local history store because it could not be opened."
+                        launchIssue: "GooseNeck had to reset its local history store because it could not be opened."
                     )
                 } catch {
                     logPersistentStoreError("reopen after reset", error: error)
@@ -78,14 +78,16 @@ struct PostureDeskApp: App {
 
             return ModelContainerBootstrap(
                 container: makeInMemoryModelContainer(),
-                launchIssue: "PostureDesk could not open its local history store. This session is using temporary in-memory storage, so history changes will not persist."
+                launchIssue: "GooseNeck could not open its local history store. This session is using temporary in-memory storage, so history changes will not persist."
             )
         }
     }
 
     private static func persistentStoreURL(fileManager: FileManager = .default) -> URL {
-        let baseURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        let directoryURL = baseURL.appendingPathComponent("PostureDesk", isDirectory: true)
+        guard let baseURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            fatalError("[Storage] Application Support directory unavailable")
+        }
+        let directoryURL = baseURL.appendingPathComponent("GooseNeck", isDirectory: true)
 
         try? fileManager.createDirectory(
             at: directoryURL,
@@ -116,7 +118,11 @@ struct PostureDeskApp: App {
 
     private static func makeInMemoryModelContainer() -> ModelContainer {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
-        return try! ModelContainer(for: SessionRecord.self, configurations: configuration)
+        do {
+            return try ModelContainer(for: SessionRecord.self, configurations: configuration)
+        } catch {
+            fatalError("[Storage] Cannot create even an in-memory store: \(error)")
+        }
     }
 
     private static func logPersistentStoreError(_ stage: String, error: Error) {
@@ -130,45 +136,46 @@ struct PostureDeskApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     private static let onboardingSetupCompleteDefaultsKey = "onboardingSetupComplete"
     private var onboardingWindow: NSWindow?
+    private var licenseRefreshTask: Task<Void, Never>?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         UNUserNotificationCenter.current().delegate = self
 
-        if let launchIssue = PostureDeskApp.persistentStoreLaunchIssue {
+        if let launchIssue = GooseNeckApp.persistentStoreLaunchIssue {
             presentLaunchIssueAlert(message: launchIssue)
         }
 
         let onboardingComplete = UserDefaults.standard.bool(forKey: "onboardingComplete")
         let onboardingSetupComplete = UserDefaults.standard.bool(forKey: Self.onboardingSetupCompleteDefaultsKey)
-        let hasStoredLicense = PostureDeskApp.licenseManager.isLicensed
+        let hasStoredLicense = GooseNeckApp.licenseManager.isLicensed
 
         if onboardingComplete {
             UserDefaults.standard.set(true, forKey: Self.onboardingSetupCompleteDefaultsKey)
         }
 
         if !onboardingComplete, !onboardingSetupComplete {
-            PostureDeskApp.sharedViewModel?.unlockMonitoring()
+            GooseNeckApp.sharedViewModel?.unlockMonitoring()
             showOnboarding(startAt: .welcome)
         } else if !hasStoredLicense {
             // Onboarding done but license removed — re-show at activate step
-            PostureDeskApp.sharedViewModel?.stop(lockMonitoring: true, finalizeSession: false)
+            GooseNeckApp.sharedViewModel?.stop(lockMonitoring: true, finalizeSession: false)
             showOnboarding(startAt: .activate)
         }
 
-        Task { [weak self] in
+        licenseRefreshTask = Task { [weak self] in
             guard onboardingComplete, hasStoredLicense else { return }
 
-            await PostureDeskApp.licenseManager.refreshStatus()
+            await GooseNeckApp.licenseManager.refreshStatus()
             await MainActor.run {
-                switch PostureDeskApp.licenseManager.licenseState {
+                switch GooseNeckApp.licenseManager.licenseState {
                 case .active, .gracePeriod:
-                    PostureDeskApp.sharedViewModel?.unlockMonitoring()
-                    PostureDeskApp.sharedViewModel?.start()
+                    GooseNeckApp.sharedViewModel?.unlockMonitoring()
+                    GooseNeckApp.sharedViewModel?.start()
                 case .unlicensed, .invalid:
-                    PostureDeskApp.sharedViewModel?.stop(lockMonitoring: true, finalizeSession: false)
+                    GooseNeckApp.sharedViewModel?.stop(lockMonitoring: true, finalizeSession: false)
                     self?.showOnboarding(startAt: .activate)
                 default:
-                    PostureDeskApp.sharedViewModel?.stop(lockMonitoring: true, finalizeSession: false)
+                    GooseNeckApp.sharedViewModel?.stop(lockMonitoring: true, finalizeSession: false)
                     break
                 }
             }
@@ -176,11 +183,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        PostureDeskApp.sharedViewModel?.stop(finalizeSession: true)
+        licenseRefreshTask?.cancel()
+        GooseNeckApp.sharedViewModel?.stop(finalizeSession: true)
     }
 
     func showOnboarding(startAt: OnboardingStep = .welcome) {
-        guard let viewModel = PostureDeskApp.sharedViewModel else { return }
+        guard let viewModel = GooseNeckApp.sharedViewModel else { return }
 
         if startAt == .welcome {
             viewModel.unlockMonitoring()
@@ -209,14 +217,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             backing: .buffered,
             defer: false
         )
-        window.title = "PostureDesk Setup"
+        window.title = "GooseNeck Setup"
         window.contentView = NSHostingView(
             rootView: OnboardingView(
                 isComplete: binding,
                 initialStep: startAt
             )
             .environment(viewModel)
-            .environment(PostureDeskApp.licenseManager)
+            .environment(GooseNeckApp.licenseManager)
         )
         window.center()
         window.makeKeyAndOrderFront(nil)
@@ -244,7 +252,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        guard let viewModel = PostureDeskApp.sharedViewModel else { return }
+        guard let viewModel = GooseNeckApp.sharedViewModel else { return }
 
         switch response.actionIdentifier {
         case NotificationAction.recalibrate.rawValue:

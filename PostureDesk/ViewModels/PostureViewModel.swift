@@ -5,7 +5,7 @@ import SwiftData
 import SwiftUI
 
 /// Central view model that aggregates all services and drives the menu bar UI.
-@Observable
+@MainActor @Observable
 final class PostureViewModel {
     private static let driftThresholdDefaultsKey = "driftThreshold"
 
@@ -41,9 +41,9 @@ final class PostureViewModel {
     var dynamicIslandEnabled: Bool = UserDefaults.standard.bool(forKey: "dynamicIslandEnabled") {
         didSet {
             UserDefaults.standard.set(dynamicIslandEnabled, forKey: "dynamicIslandEnabled")
-            if dynamicIslandEnabled {
+            if dynamicIslandEnabled, isStarted {
                 islandManager.show(viewModel: self)
-            } else {
+            } else if !dynamicIslandEnabled {
                 islandManager.hide()
             }
         }
@@ -138,19 +138,24 @@ final class PostureViewModel {
         appearanceObserver = DistributedNotificationCenter.default().addObserver(
             forName: .init("AppleInterfaceThemeChangedNotification"),
             object: nil, queue: .main
-        ) { [weak self] _ in
-            self?.appearanceTick += 1
+        ) { _ in
+            MainActor.assumeIsolated { [weak self] in
+                self?.appearanceTick += 1
+            }
         }
         cleanUpOrphanedSessions()
     }
 
     deinit {
-        processTimer?.invalidate()
-        autoResumeWorkItem?.cancel()
-        sensorClient.disconnect()
-        islandManager.hide()
-        if let appearanceObserver {
-            DistributedNotificationCenter.default().removeObserver(appearanceObserver)
+        // deinit is nonisolated; @MainActor classes are always deallocated on main thread
+        MainActor.assumeIsolated {
+            processTimer?.invalidate()
+            autoResumeWorkItem?.cancel()
+            sensorClient.disconnect()
+            islandManager.hide()
+            if let appearanceObserver {
+                DistributedNotificationCenter.default().removeObserver(appearanceObserver)
+            }
         }
     }
 
@@ -178,8 +183,10 @@ final class PostureViewModel {
             islandManager.show(viewModel: self)
         }
 
-        processTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.processLatestSnapshot()
+        processTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            MainActor.assumeIsolated { [weak self] in
+                self?.processLatestSnapshot()
+            }
         }
     }
 
@@ -213,7 +220,9 @@ final class PostureViewModel {
         logCounter = 0
         isPaused = false
         isStarted = false
-        iconState = .away
+        if iconState != .away {
+            iconState = .away
+        }
     }
 
     /// Calibrate posture baseline from current readings.
@@ -248,6 +257,7 @@ final class PostureViewModel {
         guard !isPaused else { return }
 
         isPaused = true
+        sensorClient.suspend()
         breakTracker.pause()
         updateCurrentSession()
         updateIconState()
@@ -266,6 +276,7 @@ final class PostureViewModel {
         guard isPaused else { return }
 
         isPaused = false
+        sensorClient.connect(resetPublishedState: false)
         let now = Date()
         let result = breakTracker.resume(isActive: isUserPresent, at: now)
         handleBreakTrackerUpdate(result, now: now)
@@ -341,8 +352,6 @@ final class PostureViewModel {
         fatigueMonitor.update(typingRMS: snapshot.typingRMS, isActive: present)
         checkLidAngleNudge(at: now)
 
-        postureAnalyzer.driftThreshold = driftThreshold
-
         // Track posture alerts (drift transitions)
         if postureAnalyzer.isDrifting && !wasDrifting {
             postureAlertCount += 1
@@ -390,20 +399,26 @@ final class PostureViewModel {
     }
 
     private func updateIconState() {
+        let nextState: IconState
+
         if sensorClient.connectionError != nil {
-            iconState = .unavailable
+            nextState = .unavailable
         } else if isPaused {
-            iconState = .away
+            nextState = .away
         } else if breakTracker.state != .active {
-            iconState = .away
+            nextState = .away
         } else if postureAnalyzer.isDrifting || postureAnalyzer.driftMagnitude > postureAnalyzer.driftThreshold {
             // Respond immediately to current drift, not just sustained drift
             // (notifications still require sustained drift via PostureAnalyzer.isDrifting)
-            iconState = .drifting
+            nextState = .drifting
         } else if breakTracker.isBreakOverdue {
-            iconState = .breakNeeded
+            nextState = .breakNeeded
         } else {
-            iconState = .good
+            nextState = .good
+        }
+
+        if iconState != nextState {
+            iconState = nextState
         }
     }
 
@@ -413,8 +428,10 @@ final class PostureViewModel {
 
         guard duration > 0 else { return }
 
-        let workItem = DispatchWorkItem { [weak self] in
-            self?.resumeMonitoring()
+        let workItem = DispatchWorkItem {
+            MainActor.assumeIsolated { [weak self] in
+                self?.resumeMonitoring()
+            }
         }
         autoResumeWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: workItem)
@@ -423,7 +440,7 @@ final class PostureViewModel {
     private func sendBreakReminder() {
         NotificationManager.shared.send(
             category: NotificationCategory.breakReminder.rawValue,
-            title: "PostureDesk",
+            title: "GooseNeck",
             body: "You've been active for \(formatDuration(breakTracker.secondsSinceLastBreak)) without a break. Stand up, stretch, look at something far away."
         )
     }
@@ -462,7 +479,7 @@ final class PostureViewModel {
         session.typingIntensityAvailable = fatigueMonitor.hasSessionTypingMetrics
         session.avgTypingIntensity = fatigueMonitor.hasSessionTypingMetrics ? max(0, fatigueMonitor.sessionAverageIntensity) : 0
         session.peakTypingIntensity = fatigueMonitor.hasSessionTypingMetrics ? max(0, fatigueMonitor.peakIntensityPercent) : 0
-        try? modelContext.save()
+        do { try modelContext.save() } catch { print("[Storage] Save failed: \(error)") }
     }
 
     private func finalizeCurrentSession(
@@ -475,7 +492,7 @@ final class PostureViewModel {
 
         guard finalizedActiveMinutes > 0 else {
             modelContext.delete(session)
-            try? modelContext.save()
+            do { try modelContext.save() } catch { print("[Storage] Save failed: \(error)") }
             currentSession = nil
             #if DEBUG
             print("[Session] Discarded 0m session")
@@ -491,7 +508,7 @@ final class PostureViewModel {
         session.avgTypingIntensity = fatigueMonitor.hasSessionTypingMetrics ? max(0, fatigueMonitor.sessionAverageIntensity) : 0
         session.peakTypingIntensity = fatigueMonitor.hasSessionTypingMetrics ? max(0, fatigueMonitor.peakIntensityPercent) : 0
         fatigueMonitor.persistCurrentBaseline()
-        try? modelContext.save()
+        do { try modelContext.save() } catch { print("[Storage] Save failed: \(error)") }
         historyRefreshToken &+= 1
         currentSession = nil
         #if DEBUG
@@ -502,7 +519,7 @@ final class PostureViewModel {
     private func discardCurrentSession() {
         guard let session = currentSession else { return }
         modelContext.delete(session)
-        try? modelContext.save()
+        do { try modelContext.save() } catch { print("[Storage] Save failed: \(error)") }
         currentSession = nil
     }
 
@@ -525,7 +542,7 @@ final class PostureViewModel {
                 #endif
             }
         }
-        try? modelContext.save()
+        do { try modelContext.save() } catch { print("[Storage] Save failed: \(error)") }
     }
 
 }

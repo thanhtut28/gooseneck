@@ -9,7 +9,7 @@ final class BandpassFilter {
     private var coefficients: [Double]  // 10 coefficients (5 per section * 2 sections)
     private var delays: [Double]        // 8 delay elements (4 per section * 2 sections)
 
-    init(lowCutoff: Double = 5.0, highCutoff: Double = 45.0, sampleRate: Double = 800.0) {
+    init(lowCutoff: Double = 5.0, highCutoff: Double = 45.0, sampleRate: Double = 100.0) {
         let hp = BandpassFilter.designHighPass(cutoff: lowCutoff, sampleRate: sampleRate)
         let lp = BandpassFilter.designLowPass(cutoff: highCutoff, sampleRate: sampleRate)
         self.coefficients = hp + lp

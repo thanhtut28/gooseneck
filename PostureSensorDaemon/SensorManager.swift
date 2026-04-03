@@ -23,38 +23,152 @@ final class SensorManager: NSObject {
     private var lidAngleDevice: IOHIDDevice?
     private var lidAnglePollTimer: Timer?
 
-    private(set) var hasAccelerometer = false
-    private(set) var hasGyroscope = false
-    private(set) var hasLidAngle = false
+    private let stateLock = NSLock()
+    private var workerThread: Thread?
+    private var workerReadySemaphore = DispatchSemaphore(value: 0)
+    private var keepAlivePort: Port?
+    private var isRunning = false
+
+    private var _hasAccelerometer = false
+    private var _hasGyroscope = false
+    private var _hasLidAngle = false
+    private var _currentLidAngle: Double = -1
+    private var _onAccelSample: ((AccelSample) -> Void)?
+    private var _onLidAngleUpdate: ((Double) -> Void)?
+
+    var hasAccelerometer: Bool {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        return _hasAccelerometer
+    }
+
+    var hasGyroscope: Bool {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        return _hasGyroscope
+    }
+
+    var hasLidAngle: Bool {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        return _hasLidAngle
+    }
 
     // Prevent deallocation while IOKit callbacks are active
     private var retainedSelf: SensorManager?
 
     /// Called on each new accelerometer sample (~100Hz)
-    var onAccelSample: ((AccelSample) -> Void)?
+    var onAccelSample: ((AccelSample) -> Void)? {
+        get {
+            stateLock.lock()
+            defer { stateLock.unlock() }
+            return _onAccelSample
+        }
+        set {
+            stateLock.lock()
+            _onAccelSample = newValue
+            stateLock.unlock()
+        }
+    }
 
     /// Called when lid angle updates (~10Hz)
-    var onLidAngleUpdate: ((Double) -> Void)?
+    var onLidAngleUpdate: ((Double) -> Void)? {
+        get {
+            stateLock.lock()
+            defer { stateLock.unlock() }
+            return _onLidAngleUpdate
+        }
+        set {
+            stateLock.lock()
+            _onLidAngleUpdate = newValue
+            stateLock.unlock()
+        }
+    }
 
     /// Latest lid angle in degrees (-1 if unavailable)
-    private(set) var currentLidAngle: Double = -1
+    var currentLidAngle: Double {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        return _currentLidAngle
+    }
 
     // MARK: - Lifecycle
 
     func start() {
-        retainedSelf = self  // prevent deallocation while callbacks are registered
-        startAccelerometer()
-        startLidAngleSensor()
+        let thread: Thread? = stateLock.withCriticalScope {
+            guard !isRunning else { return nil }
+            isRunning = true
+            retainedSelf = self  // prevent deallocation while callbacks are registered
+            workerReadySemaphore = DispatchSemaphore(value: 0)
+
+            let thread = Thread(target: self, selector: #selector(workerThreadMain), object: nil)
+            thread.name = "com.gooseneck.sensor-manager"
+            thread.qualityOfService = .userInitiated
+            workerThread = thread
+            return thread
+        }
+
+        guard let thread else { return }
+        thread.start()
+        workerReadySemaphore.wait()
+        perform(#selector(startOnWorkerThread), on: thread, with: nil, waitUntilDone: false)
     }
 
     func stop() {
-        stopAccelerometer()
-        stopLidAngleSensor()
-        retainedSelf = nil
+        let thread: Thread? = stateLock.withCriticalScope {
+            guard isRunning else {
+                retainedSelf = nil
+                return nil
+            }
+            isRunning = false
+            return workerThread
+        }
+
+        thread?.cancel()
+
+        if let thread {
+            perform(#selector(stopOnWorkerThread), on: thread, with: nil, waitUntilDone: true)
+        } else {
+            stopAccelerometer()
+            stopLidAngleSensor()
+        }
+
+        stateLock.withCriticalScope {
+            workerThread = nil
+            keepAlivePort = nil
+            retainedSelf = nil
+        }
     }
 
     deinit {
         stop()
+    }
+
+    @objc private func workerThreadMain() {
+        autoreleasepool {
+            let runLoop = RunLoop.current
+            let keepAlivePort = Port()
+            stateLock.withCriticalScope {
+                self.keepAlivePort = keepAlivePort
+            }
+            runLoop.add(keepAlivePort, forMode: .default)
+            workerReadySemaphore.signal()
+
+            while !Thread.current.isCancelled {
+                runLoop.run(mode: .default, before: .distantFuture)
+            }
+        }
+    }
+
+    @objc private func startOnWorkerThread() {
+        startAccelerometer()
+        startLidAngleSensor()
+    }
+
+    @objc private func stopOnWorkerThread() {
+        stopAccelerometer()
+        stopLidAngleSensor()
+        CFRunLoopStop(CFRunLoopGetCurrent())
     }
 
     // MARK: - Accelerometer
@@ -73,12 +187,14 @@ final class SensorManager: NSObject {
         let context = Unmanaged.passUnretained(self).toOpaque()
 
         IOHIDManagerRegisterDeviceMatchingCallback(manager, { ctx, _, _, device in
-            let mgr = Unmanaged<SensorManager>.fromOpaque(ctx!).takeUnretainedValue()
+            guard let ctx else { return }
+            let mgr = Unmanaged<SensorManager>.fromOpaque(ctx).takeUnretainedValue()
             mgr.accelDeviceMatched(device)
         }, context)
 
         IOHIDManagerRegisterDeviceRemovalCallback(manager, { ctx, _, _, device in
-            let mgr = Unmanaged<SensorManager>.fromOpaque(ctx!).takeUnretainedValue()
+            guard let ctx else { return }
+            let mgr = Unmanaged<SensorManager>.fromOpaque(ctx).takeUnretainedValue()
             mgr.accelDeviceRemoved(device)
         }, context)
 
@@ -93,7 +209,9 @@ final class SensorManager: NSObject {
     private func accelDeviceMatched(_ device: IOHIDDevice) {
         print("[SensorManager] Accelerometer device matched")
         self.accelDevice = device
-        self.hasAccelerometer = true
+        stateLock.withCriticalScope {
+            _hasAccelerometer = true
+        }
 
         let result = IOHIDDeviceOpen(device, IOOptionBits(kIOHIDOptionsTypeNone))
         if result != kIOReturnSuccess {
@@ -113,7 +231,8 @@ final class SensorManager: NSObject {
             buffer,
             HIDConstants.reportSize,
             { ctx, _, _, _, _, report, reportLength in
-                let mgr = Unmanaged<SensorManager>.fromOpaque(ctx!).takeUnretainedValue()
+                guard let ctx else { return }
+                let mgr = Unmanaged<SensorManager>.fromOpaque(ctx).takeUnretainedValue()
                 mgr.parseAccelReport(report: report, length: Int(reportLength))
             },
             context
@@ -123,7 +242,9 @@ final class SensorManager: NSObject {
     private func accelDeviceRemoved(_ device: IOHIDDevice) {
         print("[SensorManager] Accelerometer device removed")
         self.accelDevice = nil
-        self.hasAccelerometer = false
+        stateLock.withCriticalScope {
+            _hasAccelerometer = false
+        }
 
         if let buffer = accelReportBuffer {
             buffer.deallocate()
@@ -132,6 +253,11 @@ final class SensorManager: NSObject {
     }
 
     private func stopAccelerometer() {
+        // Deregister callback BEFORE closing the device or freeing the buffer
+        // to prevent IOKit from invoking a stale function pointer.
+        if let device = accelDevice, let buffer = accelReportBuffer {
+            IOHIDDeviceRegisterInputReportCallback(device, buffer, HIDConstants.reportSize, nil, nil)
+        }
         if let device = accelDevice {
             IOHIDDeviceClose(device, IOOptionBits(kIOHIDOptionsTypeNone))
             accelDevice = nil
@@ -145,7 +271,9 @@ final class SensorManager: NSObject {
             buffer.deallocate()
             accelReportBuffer = nil
         }
-        hasAccelerometer = false
+        stateLock.withCriticalScope {
+            _hasAccelerometer = false
+        }
     }
 
     // MARK: - Accelerometer Report Parsing
@@ -164,7 +292,8 @@ final class SensorManager: NSObject {
             timestamp: Date.timeIntervalSinceReferenceDate
         )
 
-        onAccelSample?(sample)
+        let callback = onAccelSample
+        callback?(sample)
     }
 
     private func readInt32LE(from ptr: UnsafePointer<UInt8>, at offset: Int) -> Int32 {
@@ -200,12 +329,16 @@ final class SensorManager: NSObject {
         if let deviceSet = IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice>,
            let device = deviceSet.first {
             self.lidAngleDevice = device
-            self.hasLidAngle = true
+            stateLock.withCriticalScope {
+                _hasLidAngle = true
+            }
 
             let openResult = IOHIDDeviceOpen(device, IOOptionBits(kIOHIDOptionsTypeNone))
             if openResult != kIOReturnSuccess {
                 print("[SensorManager] Failed to open lid angle device: \(openResult)")
-                self.hasLidAngle = false
+                stateLock.withCriticalScope {
+                    _hasLidAngle = false
+                }
                 return
             }
 
@@ -242,8 +375,11 @@ final class SensorManager: NSObject {
         let centidegrees = Int16(bitPattern: low | high)
         let degrees = Double(centidegrees) / 100.0
 
-        currentLidAngle = degrees
-        onLidAngleUpdate?(degrees)
+        stateLock.withCriticalScope {
+            _currentLidAngle = degrees
+        }
+        let callback = onLidAngleUpdate
+        callback?(degrees)
     }
 
     private func stopLidAngleSensor() {
@@ -259,6 +395,17 @@ final class SensorManager: NSObject {
             IOHIDManagerClose(manager, IOOptionBits(kIOHIDOptionsTypeNone))
             lidAngleManager = nil
         }
-        hasLidAngle = false
+        stateLock.withCriticalScope {
+            _hasLidAngle = false
+            _currentLidAngle = -1
+        }
+    }
+}
+
+private extension NSLock {
+    func withCriticalScope<T>(_ body: () -> T) -> T {
+        lock()
+        defer { unlock() }
+        return body()
     }
 }

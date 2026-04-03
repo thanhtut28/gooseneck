@@ -7,7 +7,7 @@
 - Release builds now fail closed if Polar URLs still point at sandbox hosts.
 
 ## Signing and Notarization
-- Ensure the Xcode project has a valid signing team and certificate for `PostureDesk`.
+- Ensure the Xcode project has a valid signing team and certificate for `GooseNeck`.
 - Archive the app with `make archive`.
 - Create a notarization zip with `make package`.
 - Submit with `make notarize NOTARY_PROFILE=<your-keychain-profile>`.

@@ -6,14 +6,13 @@ final class SignalProcessor {
 
     // Filters
     private var gravityFilter = GravityFilter()
-    private let ahrs = MahonyAHRS(kp: 4.0, ki: 0.0, sampleRate: 800.0)
-    private let bandpass = BandpassFilter(lowCutoff: 5.0, highCutoff: 45.0, sampleRate: 800.0)
-    private let fftAnalyzer = FFTAnalyzer(fftLength: 128, sampleRate: 800.0)
+    private let ahrs: MahonyAHRS
+    private let bandpass: BandpassFilter
+    private let fftAnalyzer: FFTAnalyzer
 
-    // Accumulation buffers (1 second at ~800Hz)
+    // Accumulation buffers (1 second at ~100Hz)
     private var dynamicSamples: [(dx: Double, dy: Double, dz: Double)] = []
     private var bandpassBuffer: [Double] = []  // Magnitude of bandpass-filtered dynamic accel
-    private var rawSamples: [AccelSample] = []
     private let lock = NSLock()
 
     // Latest processed values
@@ -26,8 +25,11 @@ final class SignalProcessor {
     private(set) var fftHigh: Double = 0
     private(set) var isActive: Bool = false
 
-    /// Activity threshold — any detectable vibration means user is present
-    private let activityThreshold: Double = 0.000005
+    init(sampleRate: Double = 100.0) {
+        ahrs = MahonyAHRS(kp: 4.0, ki: 0.0, sampleRate: sampleRate)
+        bandpass = BandpassFilter(lowCutoff: 5.0, highCutoff: 45.0, sampleRate: sampleRate)
+        fftAnalyzer = FFTAnalyzer(fftLength: 128, sampleRate: sampleRate)
+    }
 
     /// Process a raw accelerometer sample (~100Hz)
     func processSample(_ sample: AccelSample) {
@@ -41,7 +43,6 @@ final class SignalProcessor {
 
         // Store dynamic component for bandpass/FFT
         dynamicSamples.append((dx: result.dx, dy: result.dy, dz: result.dz))
-        rawSamples.append(sample)
 
         // Compute dynamic magnitude for bandpass input
         let dynamicMag = sqrt(result.dx * result.dx + result.dy * result.dy + result.dz * result.dz)
@@ -56,10 +57,8 @@ final class SignalProcessor {
         lock.lock()
         let samples = dynamicSamples
         let bpInput = bandpassBuffer
-        let raw = rawSamples
         dynamicSamples.removeAll(keepingCapacity: true)
         bandpassBuffer.removeAll(keepingCapacity: true)
-        rawSamples.removeAll(keepingCapacity: true)
         lock.unlock()
 
         guard !samples.isEmpty else { return }

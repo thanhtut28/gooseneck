@@ -8,7 +8,7 @@ enum TypingCalibrationState: Equatable {
 
 /// Monitors typing intensity over time and alerts when fatigue indicators appear.
 /// Uses a persisted rolling baseline so short sessions can start with a warm baseline.
-@Observable
+@MainActor @Observable
 final class FatigueMonitor {
 
     private(set) var currentIntensityPercent: Double = 0  // % above baseline
@@ -81,9 +81,13 @@ final class FatigueMonitor {
         wasActive = isActive
 
         guard isActive, typingRMS > minimumTypingRMS else {
-            currentIntensityPercent = 0
+            if currentIntensityPercent != 0 {
+                currentIntensityPercent = 0
+            }
             fatigueStartTime = nil
-            isFatigued = false
+            if isFatigued {
+                isFatigued = false
+            }
             hasSentNotificationForCurrentEpisode = false
             return
         }
@@ -94,13 +98,22 @@ final class FatigueMonitor {
 
         // Bootstrap: need minimum samples before we have a baseline
         if baselineRMS <= 0 {
-            calibrationState = .bootstrapping
+            if calibrationState != .bootstrapping {
+                calibrationState = .bootstrapping
+            }
             // Update bootstrap progress before early return
-            bootstrapProgress = min(1.0, Double(sessionSampleCount) / Double(bootstrapMinimumSamples))
+            let progress = min(1.0, Double(sessionSampleCount) / Double(bootstrapMinimumSamples))
+            if bootstrapProgress != progress {
+                bootstrapProgress = progress
+            }
             guard sessionSampleCount >= bootstrapMinimumSamples else { return }
             baselineRMS = sessionBaselineMean
-            calibrationState = .ready
-            bootstrapProgress = 1.0
+            if calibrationState != .ready {
+                calibrationState = .ready
+            }
+            if bootstrapProgress != 1.0 {
+                bootstrapProgress = 1.0
+            }
         }
 
         guard calibrationState == .ready else { return }
@@ -124,9 +137,17 @@ final class FatigueMonitor {
         }
 
         let recentAvg = recentSamples.reduce(0, +) / Double(recentSamples.count)
-        currentIntensityPercent = ((recentAvg - baselineRMS) / baselineRMS) * 100.0
-        peakIntensityPercent = max(peakIntensityPercent, currentIntensityPercent)
-        hasSessionTypingMetrics = true
+        let intensityPercent = min(100, ((recentAvg - baselineRMS) / baselineRMS) * 100.0)
+        if currentIntensityPercent != intensityPercent {
+            currentIntensityPercent = intensityPercent
+        }
+
+        if currentIntensityPercent > peakIntensityPercent {
+            peakIntensityPercent = currentIntensityPercent
+        }
+        if !hasSessionTypingMetrics {
+            hasSessionTypingMetrics = true
+        }
 
         // Track session average
         sessionIntensitySum += max(0, currentIntensityPercent)
@@ -151,16 +172,26 @@ final class FatigueMonitor {
         sessionBaselineMean = 0
         recentSamples.removeAll()
         intensityHistory.removeAll()
-        currentIntensityPercent = 0
-        peakIntensityPercent = 0
-        isFatigued = false
+        if currentIntensityPercent != 0 {
+            currentIntensityPercent = 0
+        }
+        if peakIntensityPercent != 0 {
+            peakIntensityPercent = 0
+        }
+        if isFatigued {
+            isFatigued = false
+        }
         fatigueStartTime = nil
         hasSentNotificationForCurrentEpisode = false
-        hasSessionTypingMetrics = false
+        if hasSessionTypingMetrics {
+            hasSessionTypingMetrics = false
+        }
         sessionIntensitySum = 0
         sessionIntensitySampleCount = 0
         wasActive = false
-        bootstrapProgress = 0
+        if bootstrapProgress != 0 {
+            bootstrapProgress = 0
+        }
 
         restorePersistedBaseline()
     }
@@ -182,11 +213,13 @@ final class FatigueMonitor {
             }
             if let start = fatigueStartTime,
                now.timeIntervalSince(start) >= fatigueSustainedDuration {
-                isFatigued = true
+                if !isFatigued {
+                    isFatigued = true
+                }
                 if !hasSentNotificationForCurrentEpisode {
                     NotificationManager.shared.send(
                         category: NotificationCategory.fatigue.rawValue,
-                        title: "PostureDesk",
+                        title: "GooseNeck",
                         body: String(format: "Your typing intensity is up %.0f%% from your session baseline. Your hands might need a rest.", currentIntensityPercent)
                     )
                     hasSentNotificationForCurrentEpisode = true
@@ -194,7 +227,9 @@ final class FatigueMonitor {
             }
         } else {
             fatigueStartTime = nil
-            isFatigued = false
+            if isFatigued {
+                isFatigued = false
+            }
             hasSentNotificationForCurrentEpisode = false
         }
     }

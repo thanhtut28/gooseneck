@@ -16,7 +16,7 @@ enum NotificationAction: String {
     case gotIt = "gotit"
 }
 
-/// Manages all PostureDesk notifications with throttling to prevent spam.
+/// Manages all GooseNeck notifications with throttling to prevent spam.
 final class NotificationManager {
 
     static let shared = NotificationManager()

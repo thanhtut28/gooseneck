@@ -1,6 +1,6 @@
 import SwiftData
 import XCTest
-@testable import PostureDesk
+@testable import GooseNeck
 
 @MainActor
 final class HistoryStoreTests: XCTestCase {

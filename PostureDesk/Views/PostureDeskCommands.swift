@@ -1,14 +1,14 @@
 import SwiftUI
 
-struct PostureDeskCommands: Commands {
+struct GooseNeckCommands: Commands {
     let viewModel: PostureViewModel
 
     var body: some Commands {
         // Replace the default app menu "About" item
         CommandGroup(replacing: .appInfo) {
-            Button("About PostureDesk") {
+            Button("About GooseNeck") {
                 NSApp.orderFrontStandardAboutPanel(options: [
-                    NSApplication.AboutPanelOptionKey.applicationName: "PostureDesk",
+                    NSApplication.AboutPanelOptionKey.applicationName: "GooseNeck",
                     NSApplication.AboutPanelOptionKey.applicationVersion: "1.0.0",
                     NSApplication.AboutPanelOptionKey.credits: NSAttributedString(
                         string: "Real-time posture monitoring using your MacBook's built-in sensors.",

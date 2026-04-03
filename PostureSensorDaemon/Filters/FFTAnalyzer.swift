@@ -4,7 +4,7 @@ import Foundation
 /// FFT-based frequency analysis using Apple's vDSP framework.
 /// Extracts energy in frequency bins for surface classification.
 final class FFTAnalyzer {
-    private let fftSetup: vDSP.FFT<DSPDoubleSplitComplex>
+    private let fftSetup: vDSP.FFT<DSPDoubleSplitComplex>?
     private let fftLength: Int
     private let log2n: vDSP_Length
     private let sampleRate: Double
@@ -19,13 +19,13 @@ final class FFTAnalyzer {
         self.sampleRate = sampleRate
         self.log2n = vDSP_Length(log2(Double(fftLength)))
 
-        fftSetup = vDSP.FFT(log2n: log2n, radix: .radix2, ofType: DSPDoubleSplitComplex.self)!
+        fftSetup = vDSP.FFT(log2n: log2n, radix: .radix2, ofType: DSPDoubleSplitComplex.self)
     }
 
     /// Analyze frequency content of a signal.
     /// Returns (lowBinEnergy, midBinEnergy, highBinEnergy) as ratios of total energy.
     func analyze(_ signal: [Double]) -> (low: Double, mid: Double, high: Double) {
-        guard signal.count >= fftLength else {
+        guard signal.count >= fftLength, let fft = fftSetup else {
             return (0, 0, 0)
         }
 
@@ -42,16 +42,20 @@ final class FFTAnalyzer {
         windowed.withUnsafeBufferPointer { inputPtr in
             realPart.withUnsafeMutableBufferPointer { realPtr in
                 imagPart.withUnsafeMutableBufferPointer { imagPtr in
+                    guard let realBase = realPtr.baseAddress,
+                          let imagBase = imagPtr.baseAddress,
+                          let inputBase = inputPtr.baseAddress else { return }
+
                     var splitComplex = DSPDoubleSplitComplex(
-                        realp: realPtr.baseAddress!,
-                        imagp: imagPtr.baseAddress!
+                        realp: realBase,
+                        imagp: imagBase
                     )
 
-                    inputPtr.baseAddress!.withMemoryRebound(to: DSPDoubleComplex.self, capacity: fftLength / 2) { complexPtr in
+                    inputBase.withMemoryRebound(to: DSPDoubleComplex.self, capacity: fftLength / 2) { complexPtr in
                         vDSP_ctozD(complexPtr, 2, &splitComplex, 1, vDSP_Length(fftLength / 2))
                     }
 
-                    fftSetup.transform(input: splitComplex, output: &splitComplex, direction: .forward)
+                    fft.transform(input: splitComplex, output: &splitComplex, direction: .forward)
                 }
             }
         }

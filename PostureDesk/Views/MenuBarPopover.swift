@@ -124,7 +124,7 @@ struct MenuBarPopover: View {
                 .font(.system(size: 11, weight: .medium, design: .rounded))
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                .accessibilityHint("Closes PostureDesk.")
+                .accessibilityHint("Closes GooseNeck.")
             }
             .padding(12)
         }

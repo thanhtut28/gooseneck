@@ -68,7 +68,7 @@ struct BreakTrackerUpdateResult {
 }
 
 /// Tracks user presence and work sessions, sends break reminders.
-@Observable
+@MainActor @Observable
 final class BreakTracker {
 
     private static let breakIntervalDefaultsKey = "breakIntervalMinutes"

@@ -244,7 +244,7 @@ struct SettingsView: View {
                         .foregroundStyle(DS.Colors.cardBorder)
 
                     HStack {
-                        Text("PostureDesk")
+                        Text("GooseNeck")
                             .font(.system(size: 15, weight: .semibold, design: .rounded))
                             .foregroundStyle(DS.Colors.textPrimary)
                         Spacer()
@@ -279,7 +279,7 @@ struct SettingsView: View {
                 }
             }
         } message: {
-            Text("This will deactivate your license and require re-activation to continue using PostureDesk.")
+            Text("This will deactivate your license and require re-activation to continue using GooseNeck.")
         }
     }
 

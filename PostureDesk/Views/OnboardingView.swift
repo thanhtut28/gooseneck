@@ -4,10 +4,12 @@ enum OnboardingStep: Int, CaseIterable {
     case welcome
     case accelerometer
     case lidAngle
+    case typingIntensity
     case surface
     case calibrate
     case island
     case activate
+    case complete
 }
 
 struct OnboardingView: View {
@@ -21,13 +23,18 @@ struct OnboardingView: View {
     @State private var licenseKey = ""
     @State private var direction: Edge = .trailing
     @State private var lidDetectionReady = false
+    @State private var typingDetected = false
+    @State private var typingCheckReady = false
+    @State private var consecutiveTypingSamples = 0
 
     var body: some View {
         VStack(spacing: 0) {
-            // Progress indicator
-            progressBar
-                .padding(.top, 16)
-                .padding(.bottom, 8)
+            // Progress indicator (hidden on completion step)
+            if step != .complete {
+                progressBar
+                    .padding(.top, 16)
+                    .padding(.bottom, 8)
+            }
 
             // Step content
             ZStack {
@@ -41,6 +48,9 @@ struct OnboardingView: View {
                 case .lidAngle:
                     lidAngleStep
                         .transition(slideTransition)
+                case .typingIntensity:
+                    typingIntensityStep
+                        .transition(slideTransition)
                 case .surface:
                     surfaceStep
                         .transition(slideTransition)
@@ -52,6 +62,9 @@ struct OnboardingView: View {
                         .transition(slideTransition)
                 case .activate:
                     activateStep
+                        .transition(slideTransition)
+                case .complete:
+                    completeStep
                         .transition(slideTransition)
                 }
             }
@@ -176,7 +189,7 @@ struct OnboardingView: View {
                 .frame(width: 120, height: 120)
 
             VStack(spacing: 10) {
-                Text("PostureDesk")
+                Text("GooseNeck")
                     .font(.system(size: 32, weight: .bold, design: .rounded))
                     .foregroundStyle(DS.Colors.textPrimary)
 
@@ -190,7 +203,7 @@ struct OnboardingView: View {
             Spacer()
 
             primaryButton("Get Started", hint: "Starts sensor detection and continues setup.") {
-                viewModel.start()
+                viewModel.sensorClient.connect()
                 advance()
             }
         }
@@ -240,7 +253,7 @@ struct OnboardingView: View {
                 detecting: avail == nil,
                 detectedText: "Motion sensor detected",
                 notFoundText: viewModel.sensorClient.connectionError ?? "Accelerometer unavailable. Apple Silicon Mac required.",
-                onRetry: { viewModel.start() }
+                onRetry: { viewModel.sensorClient.connect() }
             )
 
             Spacer()
@@ -322,7 +335,7 @@ struct OnboardingView: View {
                     Image(systemName: "info.circle.fill")
                         .font(.system(size: 14))
                         .foregroundStyle(DS.Colors.textSecondary)
-                    Text("Not available on your model — PostureDesk\nworks great with just the motion sensor")
+                    Text("Not available on your model — GooseNeck\nworks great with just the motion sensor")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(DS.Colors.textSecondary)
                         .lineSpacing(2)
@@ -347,7 +360,116 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Step 3: Surface
+    // MARK: - Step 3: Typing Intensity
+
+    private var typingIntensityStep: some View {
+        let snapshot = viewModel.sensorClient.latestSnapshot
+        let typingRMS = snapshot?.typingRMS ?? 0
+        let showResult = typingCheckReady
+
+        return VStack(spacing: 0) {
+            HStack {
+                backButton
+                Spacer()
+            }
+
+            Spacer()
+
+            // Visual
+            TypingTestVisual(
+                typingRMS: typingRMS,
+                isDetected: showResult && typingDetected
+            )
+            .frame(maxWidth: 320)
+
+            Spacer().frame(height: 24)
+
+            // Text
+            VStack(spacing: 8) {
+                Text("Typing Detection")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(DS.Colors.textPrimary)
+
+                Text("Detects keyboard activity through vibration\nto track typing fatigue over time")
+                    .font(DS.Font.body())
+                    .foregroundStyle(DS.Colors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+            }
+
+            Spacer().frame(height: 20)
+
+            // Status
+            if !showResult {
+                statusBadge(
+                    detected: false,
+                    detecting: true,
+                    detectedText: "",
+                    notFoundText: "",
+                    onRetry: {}
+                )
+            } else if typingDetected {
+                statusBadge(
+                    detected: true,
+                    detecting: false,
+                    detectedText: "Typing vibration detected",
+                    notFoundText: "",
+                    onRetry: {}
+                )
+            } else {
+                HStack(spacing: 8) {
+                    Image(systemName: "info.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(DS.Colors.textSecondary)
+                    Text("Available — will calibrate during use")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(DS.Colors.textSecondary)
+                }
+                .padding(12)
+                .background(DS.Colors.textMuted.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
+            }
+
+            Spacer()
+
+            primaryButton("Continue", enabled: showResult, hint: "Continues to surface selection.") {
+                advance()
+            }
+        }
+        .onAppear {
+            typingDetected = false
+            typingCheckReady = false
+            consecutiveTypingSamples = 0
+        }
+        .onChange(of: viewModel.sensorClient.latestSnapshot?.typingRMS) { _, rms in
+            guard !typingCheckReady else { return }
+            if let rms, rms > 0.0001 {
+                consecutiveTypingSamples += 1
+                if consecutiveTypingSamples >= 3 && !typingDetected {
+                    typingDetected = true
+                    // Premium delay before revealing result
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                            typingCheckReady = true
+                        }
+                    }
+                }
+            } else {
+                consecutiveTypingSamples = 0
+            }
+        }
+        .task {
+            // Timeout: if no typing after 10s, show fallback
+            try? await Task.sleep(for: .seconds(10))
+            guard !typingCheckReady else { return }
+            await MainActor.run {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                    typingCheckReady = true
+                }
+            }
+        }
+    }
+
+    // MARK: - Step 4: Surface
 
     private var surfaceStep: some View {
         VStack(spacing: 0) {
@@ -424,7 +546,7 @@ struct OnboardingView: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
-    // MARK: - Step 4: Calibrate (was Step 3)
+    // MARK: - Step 5: Calibrate
 
     private var calibrateStep: some View {
         let snapshot = viewModel.sensorClient.latestSnapshot
@@ -500,7 +622,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Step 5: Island Preview
+    // MARK: - Step 6: Island Preview
 
     private var islandStep: some View {
         @Bindable var vm = viewModel
@@ -563,7 +685,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Step 6: Activate
+    // MARK: - Step 7: Activate
 
     private var activateStep: some View {
         VStack(spacing: 0) {
@@ -581,7 +703,7 @@ struct OnboardingView: View {
                 .padding(.bottom, 8)
 
             VStack(spacing: 8) {
-                Text("Activate PostureDesk")
+                Text("Activate GooseNeck")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(DS.Colors.textPrimary)
 
@@ -613,7 +735,7 @@ struct OnboardingView: View {
                 .background(DS.Colors.accentInfo, in: RoundedRectangle(cornerRadius: 12))
             }
             .buttonStyle(.plain)
-            .accessibilityHint("Opens the Polar checkout page to buy a PostureDesk license for $9.99.")
+            .accessibilityHint("Opens the Polar checkout page to buy a GooseNeck license for $9.99.")
 
             // Divider
             HStack(spacing: 12) {
@@ -650,7 +772,7 @@ struct OnboardingView: View {
                                 await MainActor.run {
                                     viewModel.unlockMonitoring()
                                     viewModel.start()
-                                    isComplete = true
+                                    advance()
                                 }
                             }
                         }
@@ -732,6 +854,37 @@ struct OnboardingView: View {
                 }
                 .padding(12)
                 .background(DS.Colors.accentDanger.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
+            }
+        }
+    }
+
+    // MARK: - Step 7: Complete
+
+    private var completeStep: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 56))
+                .foregroundStyle(DS.Colors.accentGood)
+                .padding(.bottom, 16)
+
+            VStack(spacing: 10) {
+                Text("You're all set!")
+                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .foregroundStyle(DS.Colors.textPrimary)
+
+                Text("GooseNeck is now monitoring from your menu bar.\nLook for the goose icon at the top of your screen.")
+                    .font(DS.Font.body())
+                    .foregroundStyle(DS.Colors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+            }
+
+            Spacer()
+
+            primaryButton("Get Started", hint: "Closes setup and starts monitoring.") {
+                isComplete = true
             }
         }
     }

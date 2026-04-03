@@ -1,8 +1,8 @@
-name: PostureDesk
+name: GooseNeck
 options:
   deploymentTarget:
     macOS: "14.0"
-  bundleIdPrefix: com.posturedesk
+  bundleIdPrefix: com.gooseneck
   xcodeVersion: "16.0"
   generateEmptyDirectories: true
 
@@ -12,7 +12,7 @@ settings:
     MACOSX_DEPLOYMENT_TARGET: "14.0"
 
 targets:
-  PostureDesk:
+  GooseNeck:
     type: application
     platform: macOS
     sources:
@@ -27,7 +27,7 @@ targets:
         INFOPLIST_FILE: PostureDesk/Info.plist
         CODE_SIGN_ENTITLEMENTS: PostureDesk/PostureDesk.entitlements
         ENABLE_HARDENED_RUNTIME: YES
-        PRODUCT_BUNDLE_IDENTIFIER: com.posturedesk.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.gooseneck.app
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
         COMBINE_HIDPI_IMAGES: YES
@@ -41,14 +41,14 @@ targets:
           POLAR_API_BASE_URL: "https://api.polar.sh/v1/customer-portal/license-keys"
           POLAR_CHECKOUT_URL: "https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_DOGu45YJUcHzeFxGZw5EqT0L9gN3L9Qm2dTQn2Z4xHn/redirect"
           POLAR_ORGANIZATION_ID: "322cca40-cd2e-4d58-83e9-ec08ee2b0c19"
-  PostureDeskTests:
+  GooseNeckTests:
     type: bundle.unit-test
     platform: macOS
     sources:
       - path: PostureDeskTests
     dependencies:
-      - target: PostureDesk
+      - target: GooseNeck
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
-        PRODUCT_BUNDLE_IDENTIFIER: com.posturedesk.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.gooseneck.tests

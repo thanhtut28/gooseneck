@@ -1,6 +1,7 @@
 import XCTest
-@testable import PostureDesk
+@testable import GooseNeck
 
+@MainActor
 final class PostureAnalyzerAndSettingsTests: XCTestCase {
     private let breakIntervalKey = "breakIntervalMinutes"
     private let breakReminderCadenceKey = "breakReminderCadence"

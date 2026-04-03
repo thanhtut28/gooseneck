@@ -2,7 +2,7 @@ import Foundation
 
 /// Detects sustained posture drift from calibrated baseline.
 /// Uses a 90-second sliding window to distinguish gradual slouching from intentional adjustments.
-@Observable
+@MainActor @Observable
 final class PostureAnalyzer {
     private let notifyDriftEpisode: (Double) -> Void
 
@@ -28,7 +28,7 @@ final class PostureAnalyzer {
         notifyDriftEpisode: @escaping (Double) -> Void = { driftMagnitude in
             NotificationManager.shared.send(
                 category: NotificationCategory.posture.rawValue,
-                title: "PostureDesk",
+                title: "GooseNeck",
                 body: String(format: "You've shifted %.0f° from your baseline. Time for a quick readjust?", driftMagnitude)
             )
         }

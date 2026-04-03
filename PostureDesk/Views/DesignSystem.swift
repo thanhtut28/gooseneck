@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-// MARK: - PostureDesk Design System
+// MARK: - GooseNeck Design System
 // Monkeytype-inspired aesthetic, adaptive light/dark
 
 enum DS {

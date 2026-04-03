@@ -1,0 +1,706 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0F9E17DC760E6C8890D54AA5 /* PostureDeskCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D95DB58901EC2C90C13539D /* PostureDeskCommands.swift */; };
+		11D7782649BFB12541399DD0 /* SignalProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 323E31F7235A0653D0793A96 /* SignalProcessor.swift */; };
+		14586BFA453B50C9B17B4EFD /* PostureIslandWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8117119A510EE9DB2541B79 /* PostureIslandWindow.swift */; };
+		2A80508068EEFF2C2046ADFB /* PostureFigure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D95DBEB82535C9464C2377D /* PostureFigure.swift */; };
+		2CE5A927E9CF647933FC5B56 /* IOKitHIDConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F7A4B381CAA0CAA39E0DD0 /* IOKitHIDConstants.swift */; };
+		31384C16EEC377CA52D8F31A /* DirectSensorClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B165AD6CE21509DE103DB64 /* DirectSensorClient.swift */; };
+		337E05787356B4D8AF916298 /* PostureIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 826A9A4C9A9997E60721BC5E /* PostureIslandView.swift */; };
+		464CE6DC1B8D06BDAC79BD7F /* DisplayFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D147ECF21723D2CE8C387F8 /* DisplayFormatter.swift */; };
+		486383B962C9A3E6A60D9E53 /* MetricCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 080377A35DB5A07998831FC1 /* MetricCard.swift */; };
+		4C7C0C7C87B9547EFF916DF6 /* PostureAnalyzerAndSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7904908D5203C00B6946FC /* PostureAnalyzerAndSettingsTests.swift */; };
+		4FC4B57832D06DACE2C79F6D /* PostureIslandManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40A40223AC5994CF4E91196A /* PostureIslandManager.swift */; };
+		55E7C3BD21B5046D8E8E4BCA /* FormattingAndFatigueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C98272C02EB91256A02D1755 /* FormattingAndFatigueTests.swift */; };
+		58B1447728C9F03401A94C7F /* HistoryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D75CB817A013B1858FCBF2B /* HistoryStoreTests.swift */; };
+		71D7D55B0DBC5B3C7FDE6D0D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14547DA85B424238999F90BF /* SettingsView.swift */; };
+		76F5261058A1C1B450E77635 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26F6A97ACFB318DB714E970F /* DesignSystem.swift */; };
+		7F1C5F551FA50697D717CF63 /* CircularProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = B435F1C434A594EEB8D319B7 /* CircularProgressRing.swift */; };
+		7FA5E9FA9FCFE5B8CCB2F3A6 /* PostureViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE75DD19DB1965A8E2DE84B /* PostureViewModel.swift */; };
+		87CD23EFD44AB28CCFEE0E8C /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00FFD6EB98209756EE7E4EA /* NotificationManager.swift */; };
+		8F2A27FD18A1D15417FB77EF /* MahonyAHRS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AA80601E4B783F69768D568 /* MahonyAHRS.swift */; };
+		922631FFD9A630B845D28143 /* IslandVariant.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAB23BE854AAAA869B15BE39 /* IslandVariant.swift */; };
+		93FE75141D465AD2FA934191 /* SessionSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51AB9AFCB8C1CAF00537A0F4 /* SessionSummaryCard.swift */; };
+		99F79154AEEB571AC44F0B4A /* KalmanFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D2D86B508DE1F67EB3F906 /* KalmanFilter.swift */; };
+		A1385D424336F5FC16AF1103 /* LicenseManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 777B3CA1C94F0EE6D485B17C /* LicenseManagerTests.swift */; };
+		A770AD3283BBEBF401F7AE37 /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CFD268C9BDD677734F8C99D /* LicenseManager.swift */; };
+		AEFA32CD7B4298F73F22B39F /* MenuBarPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C44EC1538940156668CE73C /* MenuBarPopover.swift */; };
+		AF3835D3366E02993B13DB8F /* gooseneck-menubar.svg in Resources */ = {isa = PBXBuildFile; fileRef = C764314F6C3C117D09443147 /* gooseneck-menubar.svg */; };
+		B5B8C3A0407D271983CC6B56 /* TypingIntensityCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C27002E4901BE9045016F1 /* TypingIntensityCard.swift */; };
+		BA32BF8914928279F5C625BF /* TypingTestVisual.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15278C47C6C2DF367155D6BC /* TypingTestVisual.swift */; };
+		BCC0CA027BD9293C41A8DED8 /* SensorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5449C1AE3BF3879B8B4E98 /* SensorManager.swift */; };
+		BE721ACDFCC35ECBB4AC4732 /* BandpassFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99E51BB059DCC35E9DA9E23E /* BandpassFilter.swift */; };
+		C0785FD42F371D5A9B243892 /* IslandVariantPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58231AEA2F77C76DF13A721C /* IslandVariantPicker.swift */; };
+		C1B13F28CA3F6BF95C9D9B6B /* MainWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AD6E41D449D3FBBD211257C /* MainWindow.swift */; };
+		C4BD5BFA8227E2FAFDC4082E /* MacBookCoachMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12473BBC4CB98D4F94B4A95 /* MacBookCoachMark.swift */; };
+		C7E46EDD72CE6092D4E85A59 /* LiquidBlob.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF70FF52427AABACABC32E68 /* LiquidBlob.swift */; };
+		C861241743276EDA61F14AD6 /* BreakTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1C698E2D9414939E45AD631 /* BreakTracker.swift */; };
+		D178F901BDE0DBDDD6CD707D /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3DA99CCC9B165C48505D5EA /* DashboardView.swift */; };
+		D23294C95D5EBA7FE3F67B1D /* PostureDriftCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D0B8CCD14DC658BB68EC2EF /* PostureDriftCard.swift */; };
+		D746A769FAD51F3E6A8D8787 /* gooseneck-appicon.svg in Resources */ = {isa = PBXBuildFile; fileRef = EC877377AB944D3BA9DB87C7 /* gooseneck-appicon.svg */; };
+		DB20F9034650983A464436D2 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C04339BFA7EF02ECA606A6A /* KeychainStore.swift */; };
+		DE4BC0EA17E14FE350A38B65 /* PostureAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7064535A0C4E2BFFB2231623 /* PostureAnalyzer.swift */; };
+		E07DA3F8939310D9DBD2A527 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 15D38AE50E35DBEB7EE21161 /* Assets.xcassets */; };
+		E81ADB9638C29CA559E797B0 /* SessionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9D6B2C52B77DB8D00AC3A47 /* SessionRow.swift */; };
+		E9F53FB722ECF0D1A0B62DA2 /* FatigueMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B6592D3B1F05BDDD4C6DC36 /* FatigueMonitor.swift */; };
+		EB3C9ED82037C171D33B8C52 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD67B2F513597ACA97F6BED /* OnboardingView.swift */; };
+		EF461DAD8CE4A1D7B93A7AEC /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C5888665AA1052A6F5F5D71 /* HistoryView.swift */; };
+		F1E8782F24BABA0B246DB24F /* SensorTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2F47E2E3BC51A0E3CB2E23F /* SensorTypes.swift */; };
+		FAAE76EE0C0EADC577BFAAE5 /* SensorSnapshot+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 529FBB97C28716A3EEAFCE67 /* SensorSnapshot+Extensions.swift */; };
+		FD8C91FEC4D42C1FC25EC0CA /* PostureDeskApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EC0CD58735BD073EA8F339A /* PostureDeskApp.swift */; };
+		FEEBD8402ABB014560F28090 /* PostureIslandPillShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34238D0BB9E90D4CC792E5B2 /* PostureIslandPillShape.swift */; };
+		FF71AEC7918F02C9B11348DC /* FFTAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B357862D590AC12E72034F /* FFTAnalyzer.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D8555FEF698EF1C9F46C7CB2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AFC9D245FB2CAB2F114D5975 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E1EDC79865A5564D7D086E6C;
+			remoteInfo = GooseNeck;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		040EF6D4CACD2DC06F85DBF8 /* GooseNeck.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GooseNeck.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		080377A35DB5A07998831FC1 /* MetricCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCard.swift; sourceTree = "<group>"; };
+		09F7A4B381CAA0CAA39E0DD0 /* IOKitHIDConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOKitHIDConstants.swift; sourceTree = "<group>"; };
+		0AE75DD19DB1965A8E2DE84B /* PostureViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureViewModel.swift; sourceTree = "<group>"; };
+		0C5888665AA1052A6F5F5D71 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		0D147ECF21723D2CE8C387F8 /* DisplayFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayFormatter.swift; sourceTree = "<group>"; };
+		14547DA85B424238999F90BF /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		15278C47C6C2DF367155D6BC /* TypingTestVisual.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingTestVisual.swift; sourceTree = "<group>"; };
+		15D38AE50E35DBEB7EE21161 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1C04339BFA7EF02ECA606A6A /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		26F6A97ACFB318DB714E970F /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		2AA80601E4B783F69768D568 /* MahonyAHRS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MahonyAHRS.swift; sourceTree = "<group>"; };
+		2D95DB58901EC2C90C13539D /* PostureDeskCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureDeskCommands.swift; sourceTree = "<group>"; };
+		323E31F7235A0653D0793A96 /* SignalProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalProcessor.swift; sourceTree = "<group>"; };
+		34238D0BB9E90D4CC792E5B2 /* PostureIslandPillShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureIslandPillShape.swift; sourceTree = "<group>"; };
+		3B165AD6CE21509DE103DB64 /* DirectSensorClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectSensorClient.swift; sourceTree = "<group>"; };
+		3EC0CD58735BD073EA8F339A /* PostureDeskApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureDeskApp.swift; sourceTree = "<group>"; };
+		40A40223AC5994CF4E91196A /* PostureIslandManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureIslandManager.swift; sourceTree = "<group>"; };
+		4AD6E41D449D3FBBD211257C /* MainWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindow.swift; sourceTree = "<group>"; };
+		4D95DBEB82535C9464C2377D /* PostureFigure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureFigure.swift; sourceTree = "<group>"; };
+		51AB9AFCB8C1CAF00537A0F4 /* SessionSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSummaryCard.swift; sourceTree = "<group>"; };
+		529FBB97C28716A3EEAFCE67 /* SensorSnapshot+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SensorSnapshot+Extensions.swift"; sourceTree = "<group>"; };
+		58231AEA2F77C76DF13A721C /* IslandVariantPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandVariantPicker.swift; sourceTree = "<group>"; };
+		58B357862D590AC12E72034F /* FFTAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FFTAnalyzer.swift; sourceTree = "<group>"; };
+		5AD67B2F513597ACA97F6BED /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		5B6592D3B1F05BDDD4C6DC36 /* FatigueMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FatigueMonitor.swift; sourceTree = "<group>"; };
+		5D0B8CCD14DC658BB68EC2EF /* PostureDriftCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureDriftCard.swift; sourceTree = "<group>"; };
+		6F7904908D5203C00B6946FC /* PostureAnalyzerAndSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureAnalyzerAndSettingsTests.swift; sourceTree = "<group>"; };
+		7064535A0C4E2BFFB2231623 /* PostureAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureAnalyzer.swift; sourceTree = "<group>"; };
+		777B3CA1C94F0EE6D485B17C /* LicenseManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManagerTests.swift; sourceTree = "<group>"; };
+		7FA2CE555576F447ECCDAE3B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		826A9A4C9A9997E60721BC5E /* PostureIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureIslandView.swift; sourceTree = "<group>"; };
+		8CFD268C9BDD677734F8C99D /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
+		8D75CB817A013B1858FCBF2B /* HistoryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryStoreTests.swift; sourceTree = "<group>"; };
+		914FED7E29AA9F1FA99002D0 /* GooseNeckTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GooseNeckTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		99E51BB059DCC35E9DA9E23E /* BandpassFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BandpassFilter.swift; sourceTree = "<group>"; };
+		9C44EC1538940156668CE73C /* MenuBarPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPopover.swift; sourceTree = "<group>"; };
+		A2F47E2E3BC51A0E3CB2E23F /* SensorTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorTypes.swift; sourceTree = "<group>"; };
+		A8C27002E4901BE9045016F1 /* TypingIntensityCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingIntensityCard.swift; sourceTree = "<group>"; };
+		B435F1C434A594EEB8D319B7 /* CircularProgressRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularProgressRing.swift; sourceTree = "<group>"; };
+		B8117119A510EE9DB2541B79 /* PostureIslandWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureIslandWindow.swift; sourceTree = "<group>"; };
+		C3DA99CCC9B165C48505D5EA /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		C764314F6C3C117D09443147 /* gooseneck-menubar.svg */ = {isa = PBXFileReference; path = "gooseneck-menubar.svg"; sourceTree = "<group>"; };
+		C98272C02EB91256A02D1755 /* FormattingAndFatigueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormattingAndFatigueTests.swift; sourceTree = "<group>"; };
+		D1C698E2D9414939E45AD631 /* BreakTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakTracker.swift; sourceTree = "<group>"; };
+		D25AB30271162F93BD368248 /* PostureDesk.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PostureDesk.entitlements; sourceTree = "<group>"; };
+		DA5449C1AE3BF3879B8B4E98 /* SensorManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorManager.swift; sourceTree = "<group>"; };
+		DAB23BE854AAAA869B15BE39 /* IslandVariant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandVariant.swift; sourceTree = "<group>"; };
+		DF70FF52427AABACABC32E68 /* LiquidBlob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidBlob.swift; sourceTree = "<group>"; };
+		E00FFD6EB98209756EE7E4EA /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		EC877377AB944D3BA9DB87C7 /* gooseneck-appicon.svg */ = {isa = PBXFileReference; path = "gooseneck-appicon.svg"; sourceTree = "<group>"; };
+		F12473BBC4CB98D4F94B4A95 /* MacBookCoachMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBookCoachMark.swift; sourceTree = "<group>"; };
+		F6D2D86B508DE1F67EB3F906 /* KalmanFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KalmanFilter.swift; sourceTree = "<group>"; };
+		F9D6B2C52B77DB8D00AC3A47 /* SessionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRow.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0D90E8740DDCDE8E34BF85A5 /* PostureDeskTests */ = {
+			isa = PBXGroup;
+			children = (
+				C98272C02EB91256A02D1755 /* FormattingAndFatigueTests.swift */,
+				8D75CB817A013B1858FCBF2B /* HistoryStoreTests.swift */,
+				777B3CA1C94F0EE6D485B17C /* LicenseManagerTests.swift */,
+				6F7904908D5203C00B6946FC /* PostureAnalyzerAndSettingsTests.swift */,
+			);
+			path = PostureDeskTests;
+			sourceTree = "<group>";
+		};
+		31873D2640A26AC71A56C1EE /* History */ = {
+			isa = PBXGroup;
+			children = (
+				0C5888665AA1052A6F5F5D71 /* HistoryView.swift */,
+				F9D6B2C52B77DB8D00AC3A47 /* SessionRow.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
+		350AE4B0C37A427494BA9511 /* Island */ = {
+			isa = PBXGroup;
+			children = (
+				DAB23BE854AAAA869B15BE39 /* IslandVariant.swift */,
+				58231AEA2F77C76DF13A721C /* IslandVariantPicker.swift */,
+				34238D0BB9E90D4CC792E5B2 /* PostureIslandPillShape.swift */,
+				826A9A4C9A9997E60721BC5E /* PostureIslandView.swift */,
+				B8117119A510EE9DB2541B79 /* PostureIslandWindow.swift */,
+			);
+			path = Island;
+			sourceTree = "<group>";
+		};
+		3CB0AB028DE3ADA3511841DB /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				B435F1C434A594EEB8D319B7 /* CircularProgressRing.swift */,
+				C3DA99CCC9B165C48505D5EA /* DashboardView.swift */,
+				DF70FF52427AABACABC32E68 /* LiquidBlob.swift */,
+				080377A35DB5A07998831FC1 /* MetricCard.swift */,
+				5D0B8CCD14DC658BB68EC2EF /* PostureDriftCard.swift */,
+				4D95DBEB82535C9464C2377D /* PostureFigure.swift */,
+				51AB9AFCB8C1CAF00537A0F4 /* SessionSummaryCard.swift */,
+				A8C27002E4901BE9045016F1 /* TypingIntensityCard.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		3E171D015B7AB092B9AAA5ED /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				529FBB97C28716A3EEAFCE67 /* SensorSnapshot+Extensions.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		55C56276C1F1947415F0A789 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				D1C698E2D9414939E45AD631 /* BreakTracker.swift */,
+				3B165AD6CE21509DE103DB64 /* DirectSensorClient.swift */,
+				5B6592D3B1F05BDDD4C6DC36 /* FatigueMonitor.swift */,
+				1C04339BFA7EF02ECA606A6A /* KeychainStore.swift */,
+				8CFD268C9BDD677734F8C99D /* LicenseManager.swift */,
+				E00FFD6EB98209756EE7E4EA /* NotificationManager.swift */,
+				7064535A0C4E2BFFB2231623 /* PostureAnalyzer.swift */,
+				40A40223AC5994CF4E91196A /* PostureIslandManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		6C23E1758DACB4E9C50CDA20 = {
+			isa = PBXGroup;
+			children = (
+				99F9721E012525C097042E71 /* PostureDesk */,
+				0D90E8740DDCDE8E34BF85A5 /* PostureDeskTests */,
+				8B5EF28368187E2324128490 /* PostureSensorDaemon */,
+				F8CE30FAE9788FDC8F0F61DF /* Shared */,
+				E08345D4D4E5037F57DAA241 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		7FA9F07D9206C74BDAC808E8 /* Filters */ = {
+			isa = PBXGroup;
+			children = (
+				99E51BB059DCC35E9DA9E23E /* BandpassFilter.swift */,
+				58B357862D590AC12E72034F /* FFTAnalyzer.swift */,
+				F6D2D86B508DE1F67EB3F906 /* KalmanFilter.swift */,
+				2AA80601E4B783F69768D568 /* MahonyAHRS.swift */,
+			);
+			path = Filters;
+			sourceTree = "<group>";
+		};
+		87E6830E2E33FB756EF56972 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				0D147ECF21723D2CE8C387F8 /* DisplayFormatter.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		8B5EF28368187E2324128490 /* PostureSensorDaemon */ = {
+			isa = PBXGroup;
+			children = (
+				09F7A4B381CAA0CAA39E0DD0 /* IOKitHIDConstants.swift */,
+				DA5449C1AE3BF3879B8B4E98 /* SensorManager.swift */,
+				323E31F7235A0653D0793A96 /* SignalProcessor.swift */,
+				7FA9F07D9206C74BDAC808E8 /* Filters */,
+			);
+			path = PostureSensorDaemon;
+			sourceTree = "<group>";
+		};
+		9724369FACA885E8E4B328B2 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				26F6A97ACFB318DB714E970F /* DesignSystem.swift */,
+				4AD6E41D449D3FBBD211257C /* MainWindow.swift */,
+				9C44EC1538940156668CE73C /* MenuBarPopover.swift */,
+				5AD67B2F513597ACA97F6BED /* OnboardingView.swift */,
+				2D95DB58901EC2C90C13539D /* PostureDeskCommands.swift */,
+				3CB0AB028DE3ADA3511841DB /* Dashboard */,
+				31873D2640A26AC71A56C1EE /* History */,
+				350AE4B0C37A427494BA9511 /* Island */,
+				FF96E692232080A3CCBFCCD6 /* Onboarding */,
+				D9E60CA15658FF19B749F461 /* Settings */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		99F9721E012525C097042E71 /* PostureDesk */ = {
+			isa = PBXGroup;
+			children = (
+				7FA2CE555576F447ECCDAE3B /* Info.plist */,
+				D25AB30271162F93BD368248 /* PostureDesk.entitlements */,
+				3EC0CD58735BD073EA8F339A /* PostureDeskApp.swift */,
+				3E171D015B7AB092B9AAA5ED /* Models */,
+				D804EF9BA6407699E95482CF /* Resources */,
+				55C56276C1F1947415F0A789 /* Services */,
+				87E6830E2E33FB756EF56972 /* Utilities */,
+				DC83ED9FC633F0338B626A92 /* ViewModels */,
+				9724369FACA885E8E4B328B2 /* Views */,
+			);
+			path = PostureDesk;
+			sourceTree = "<group>";
+		};
+		D804EF9BA6407699E95482CF /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				15D38AE50E35DBEB7EE21161 /* Assets.xcassets */,
+				EC877377AB944D3BA9DB87C7 /* gooseneck-appicon.svg */,
+				C764314F6C3C117D09443147 /* gooseneck-menubar.svg */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		D9E60CA15658FF19B749F461 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				14547DA85B424238999F90BF /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		DC83ED9FC633F0338B626A92 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				0AE75DD19DB1965A8E2DE84B /* PostureViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		E08345D4D4E5037F57DAA241 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				040EF6D4CACD2DC06F85DBF8 /* GooseNeck.app */,
+				914FED7E29AA9F1FA99002D0 /* GooseNeckTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F8CE30FAE9788FDC8F0F61DF /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				A2F47E2E3BC51A0E3CB2E23F /* SensorTypes.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		FF96E692232080A3CCBFCCD6 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				F12473BBC4CB98D4F94B4A95 /* MacBookCoachMark.swift */,
+				15278C47C6C2DF367155D6BC /* TypingTestVisual.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		18CC7784E18F460D302B8E2D /* GooseNeckTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A5623EFEDA010EAD27A1629B /* Build configuration list for PBXNativeTarget "GooseNeckTests" */;
+			buildPhases = (
+				BCCE2098618EA61A7ABC6C4B /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				930D802B4DE765BD20457226 /* PBXTargetDependency */,
+			);
+			name = GooseNeckTests;
+			packageProductDependencies = (
+			);
+			productName = GooseNeckTests;
+			productReference = 914FED7E29AA9F1FA99002D0 /* GooseNeckTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		E1EDC79865A5564D7D086E6C /* GooseNeck */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6594262A37F2FCB3B5C08419 /* Build configuration list for PBXNativeTarget "GooseNeck" */;
+			buildPhases = (
+				80687235E4D5B14A2315A307 /* Sources */,
+				9E45127E102B009E057C633E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GooseNeck;
+			packageProductDependencies = (
+			);
+			productName = GooseNeck;
+			productReference = 040EF6D4CACD2DC06F85DBF8 /* GooseNeck.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AFC9D245FB2CAB2F114D5975 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 7528961929FCA08D68AE6CA0 /* Build configuration list for PBXProject "GooseNeck" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 6C23E1758DACB4E9C50CDA20;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = E08345D4D4E5037F57DAA241 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E1EDC79865A5564D7D086E6C /* GooseNeck */,
+				18CC7784E18F460D302B8E2D /* GooseNeckTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9E45127E102B009E057C633E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E07DA3F8939310D9DBD2A527 /* Assets.xcassets in Resources */,
+				D746A769FAD51F3E6A8D8787 /* gooseneck-appicon.svg in Resources */,
+				AF3835D3366E02993B13DB8F /* gooseneck-menubar.svg in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		80687235E4D5B14A2315A307 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BE721ACDFCC35ECBB4AC4732 /* BandpassFilter.swift in Sources */,
+				C861241743276EDA61F14AD6 /* BreakTracker.swift in Sources */,
+				7F1C5F551FA50697D717CF63 /* CircularProgressRing.swift in Sources */,
+				D178F901BDE0DBDDD6CD707D /* DashboardView.swift in Sources */,
+				76F5261058A1C1B450E77635 /* DesignSystem.swift in Sources */,
+				31384C16EEC377CA52D8F31A /* DirectSensorClient.swift in Sources */,
+				464CE6DC1B8D06BDAC79BD7F /* DisplayFormatter.swift in Sources */,
+				FF71AEC7918F02C9B11348DC /* FFTAnalyzer.swift in Sources */,
+				E9F53FB722ECF0D1A0B62DA2 /* FatigueMonitor.swift in Sources */,
+				EF461DAD8CE4A1D7B93A7AEC /* HistoryView.swift in Sources */,
+				2CE5A927E9CF647933FC5B56 /* IOKitHIDConstants.swift in Sources */,
+				922631FFD9A630B845D28143 /* IslandVariant.swift in Sources */,
+				C0785FD42F371D5A9B243892 /* IslandVariantPicker.swift in Sources */,
+				99F79154AEEB571AC44F0B4A /* KalmanFilter.swift in Sources */,
+				DB20F9034650983A464436D2 /* KeychainStore.swift in Sources */,
+				A770AD3283BBEBF401F7AE37 /* LicenseManager.swift in Sources */,
+				C7E46EDD72CE6092D4E85A59 /* LiquidBlob.swift in Sources */,
+				C4BD5BFA8227E2FAFDC4082E /* MacBookCoachMark.swift in Sources */,
+				8F2A27FD18A1D15417FB77EF /* MahonyAHRS.swift in Sources */,
+				C1B13F28CA3F6BF95C9D9B6B /* MainWindow.swift in Sources */,
+				AEFA32CD7B4298F73F22B39F /* MenuBarPopover.swift in Sources */,
+				486383B962C9A3E6A60D9E53 /* MetricCard.swift in Sources */,
+				87CD23EFD44AB28CCFEE0E8C /* NotificationManager.swift in Sources */,
+				EB3C9ED82037C171D33B8C52 /* OnboardingView.swift in Sources */,
+				DE4BC0EA17E14FE350A38B65 /* PostureAnalyzer.swift in Sources */,
+				FD8C91FEC4D42C1FC25EC0CA /* PostureDeskApp.swift in Sources */,
+				0F9E17DC760E6C8890D54AA5 /* PostureDeskCommands.swift in Sources */,
+				D23294C95D5EBA7FE3F67B1D /* PostureDriftCard.swift in Sources */,
+				2A80508068EEFF2C2046ADFB /* PostureFigure.swift in Sources */,
+				4FC4B57832D06DACE2C79F6D /* PostureIslandManager.swift in Sources */,
+				FEEBD8402ABB014560F28090 /* PostureIslandPillShape.swift in Sources */,
+				337E05787356B4D8AF916298 /* PostureIslandView.swift in Sources */,
+				14586BFA453B50C9B17B4EFD /* PostureIslandWindow.swift in Sources */,
+				7FA5E9FA9FCFE5B8CCB2F3A6 /* PostureViewModel.swift in Sources */,
+				BCC0CA027BD9293C41A8DED8 /* SensorManager.swift in Sources */,
+				FAAE76EE0C0EADC577BFAAE5 /* SensorSnapshot+Extensions.swift in Sources */,
+				F1E8782F24BABA0B246DB24F /* SensorTypes.swift in Sources */,
+				E81ADB9638C29CA559E797B0 /* SessionRow.swift in Sources */,
+				93FE75141D465AD2FA934191 /* SessionSummaryCard.swift in Sources */,
+				71D7D55B0DBC5B3C7FDE6D0D /* SettingsView.swift in Sources */,
+				11D7782649BFB12541399DD0 /* SignalProcessor.swift in Sources */,
+				B5B8C3A0407D271983CC6B56 /* TypingIntensityCard.swift in Sources */,
+				BA32BF8914928279F5C625BF /* TypingTestVisual.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BCCE2098618EA61A7ABC6C4B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				55E7C3BD21B5046D8E8E4BCA /* FormattingAndFatigueTests.swift in Sources */,
+				58B1447728C9F03401A94C7F /* HistoryStoreTests.swift in Sources */,
+				A1385D424336F5FC16AF1103 /* LicenseManagerTests.swift in Sources */,
+				4C7C0C7C87B9547EFF916DF6 /* PostureAnalyzerAndSettingsTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		930D802B4DE765BD20457226 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E1EDC79865A5564D7D086E6C /* GooseNeck */;
+			targetProxy = D8555FEF698EF1C9F46C7CB2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		02FAAC9F19DE83D3DE49C723 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gooseneck.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GooseNeck.app/Contents/MacOS/GooseNeck";
+			};
+			name = Release;
+		};
+		7F8D400B296933DA89A6395A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.gooseneck.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GooseNeck.app/Contents/MacOS/GooseNeck";
+			};
+			name = Debug;
+		};
+		8887968AED2AFC92FD5A473B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PostureDesk/PostureDesk.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = PostureDesk/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MARKETING_VERSION = 1.0.0;
+				POLAR_API_BASE_URL = "https://api.polar.sh/v1/customer-portal/license-keys";
+				POLAR_CHECKOUT_URL = "https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_DOGu45YJUcHzeFxGZw5EqT0L9gN3L9Qm2dTQn2Z4xHn/redirect";
+				POLAR_ORGANIZATION_ID = "322cca40-cd2e-4d58-83e9-ec08ee2b0c19";
+				PRODUCT_BUNDLE_IDENTIFIER = com.gooseneck.app;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		D6F8640BA5BCEC7528DC0815 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Release;
+		};
+		E64B86D3400B4443767F11A5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Debug;
+		};
+		F081689720E8F4899F7C9461 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PostureDesk/PostureDesk.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = PostureDesk/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MARKETING_VERSION = 1.0.0;
+				POLAR_API_BASE_URL = "https://sandbox-api.polar.sh/v1/customer-portal/license-keys";
+				POLAR_CHECKOUT_URL = "https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_DOGu45YJUcHzeFxGZw5EqT0L9gN3L9Qm2dTQn2Z4xHn/redirect";
+				POLAR_ORGANIZATION_ID = "322cca40-cd2e-4d58-83e9-ec08ee2b0c19";
+				PRODUCT_BUNDLE_IDENTIFIER = com.gooseneck.app;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6594262A37F2FCB3B5C08419 /* Build configuration list for PBXNativeTarget "GooseNeck" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F081689720E8F4899F7C9461 /* Debug */,
+				8887968AED2AFC92FD5A473B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7528961929FCA08D68AE6CA0 /* Build configuration list for PBXProject "GooseNeck" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E64B86D3400B4443767F11A5 /* Debug */,
+				D6F8640BA5BCEC7528DC0815 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A5623EFEDA010EAD27A1629B /* Build configuration list for PBXNativeTarget "GooseNeckTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7F8D400B296933DA89A6395A /* Debug */,
+				02FAAC9F19DE83D3DE49C723 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AFC9D245FB2CAB2F114D5975 /* Project object */;
+}

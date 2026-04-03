@@ -1,6 +1,7 @@
 import XCTest
-@testable import PostureDesk
+@testable import GooseNeck
 
+@MainActor
 final class FormattingAndFatigueTests: XCTestCase {
     private let baselineKey = "typingBaselineRMS"
     private let sampleCountKey = "typingBaselineSampleCount"

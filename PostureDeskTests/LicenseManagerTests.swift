@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import PostureDesk
+@testable import GooseNeck
 
 @MainActor
 final class LicenseManagerTests: XCTestCase {

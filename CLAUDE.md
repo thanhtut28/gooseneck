@@ -1,11 +1,11 @@
-# PostureDesk
+# GooseNeck
 
 Real-time posture and ergonomic coach for Apple Silicon MacBooks. Menu bar app that uses hidden hardware sensors (accelerometer, lid angle) to monitor posture drift, track breaks, and detect typing fatigue — no webcam needed.
 
 ## Quick Reference
 
 ```bash
-make generate      # xcodegen → PostureDesk.xcodeproj
+make generate      # xcodegen → GooseNeck.xcodeproj
 make build         # generate + xcodebuild Debug
 make run           # build + open .app
 make clean         # remove build artifacts
@@ -18,7 +18,7 @@ make clean         # remove build artifacts
 Single-process direct sensor runtime:
 
 ```
-PostureDesk.app (SwiftUI menu bar app)
+GooseNeck.app (SwiftUI menu bar app)
     ↕ in-process IOKit HID callbacks
 AppleSPUHIDDevice (BMI286 accelerometer + lid angle sensor)
 ```
@@ -30,8 +30,8 @@ AppleSPUHIDDevice (BMI286 accelerometer + lid angle sensor)
 ## Project Structure
 
 ```
-PostureDesk/          ← Main app target (SwiftUI menu bar app)
-  PostureDeskApp.swift    Entry point, MenuBarExtra, onboarding
+GooseNeck/          ← Main app target (SwiftUI menu bar app)
+  GooseNeckApp.swift    Entry point, MenuBarExtra, onboarding
   ViewModels/             PostureViewModel (central service hub)
   Services/               Direct sensor client, analyzers, notifications
   Views/                  MenuBarPopover, Dashboard/, History/, Settings/
@@ -50,7 +50,7 @@ Shared/               ← Shared app types
 ## Build System
 
 - **XcodeGen** (`project.yml`) generates the Xcode project — run `make generate` after changing targets/settings
-- One target: `PostureDesk` (app), plus `PostureDeskTests`
+- One target: `GooseNeck` (app), plus `GooseNeckTests`
 - The app target compiles the shared sensor pipeline from `PostureSensorDaemon/`
 - Frameworks: IOKit, Accelerate (vDSP for FFT)
 - No third-party dependencies
@@ -78,5 +78,5 @@ Shared/               ← Shared app types
 - **Private APIs:** IOKit HID access to `AppleSPUHIDDevice` is undocumented — may break with macOS updates. Not App Store eligible.
 - **Sensor variance:** Not all MacBook models expose lid angle sensor. Accelerometer report format may differ across models.
 - **Sandbox disabled** in the app target (required for IOKit HID access)
-- **Tests available** via `xcodebuild test` and the `PostureDeskTests` target
+- **Tests available** via `xcodebuild test` and the `GooseNeckTests` target
 - Design spec lives at `docs/superpowers/specs/2026-03-27-posture-desk-design.md`

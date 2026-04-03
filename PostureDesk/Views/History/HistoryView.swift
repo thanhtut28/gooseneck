@@ -57,7 +57,7 @@ struct HistoryView: View {
                 .font(DS.Font.metric(28))
                 .foregroundStyle(DS.Colors.textPrimary)
 
-            Text("your posture insights will appear here\nas you use PostureDesk throughout the day")
+            Text("your posture insights will appear here\nas you use GooseNeck throughout the day")
                 .font(DS.Font.body())
                 .foregroundStyle(DS.Colors.textMuted)
                 .multilineTextAlignment(.center)
@@ -156,8 +156,8 @@ struct HistoryView: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                if value == 0 && emptyText != nil {
-                    Text(emptyText!)
+                if value == 0, let emptyText {
+                    Text(emptyText)
                         .font(DS.Font.metric(28))
                         .foregroundStyle(DS.Colors.textPrimary)
                 } else {
@@ -335,8 +335,8 @@ struct HistoryView: View {
     private func groupSessionsByDate(_ sessions: [SessionRecord]) -> [SessionGroup] {
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
-        let yesterday = cal.date(byAdding: .day, value: -1, to: today)!
-        let weekAgo = cal.date(byAdding: .day, value: -7, to: today)!
+        let yesterday = cal.date(byAdding: .day, value: -1, to: today) ?? today
+        let weekAgo = cal.date(byAdding: .day, value: -7, to: today) ?? today
 
         var todaySessions: [SessionRecord] = []
         var yesterdaySessions: [SessionRecord] = []
