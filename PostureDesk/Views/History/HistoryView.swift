@@ -77,7 +77,7 @@ struct HistoryView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("this week")
                     .font(DS.Font.label())
-                    .foregroundStyle(DS.Colors.textMuted)
+                    .foregroundStyle(DS.Colors.textSecondary)
                     .textCase(.uppercase)
                     .tracking(1.5)
 
@@ -91,7 +91,7 @@ struct HistoryView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("total active")
                         .font(DS.Font.caption())
-                        .foregroundStyle(DS.Colors.textMuted)
+                        .foregroundStyle(DS.Colors.textSecondary)
                         .textCase(.uppercase)
                         .tracking(1.0)
 
@@ -166,7 +166,7 @@ struct HistoryView: View {
 
                 Text(label)
                     .font(DS.Font.caption())
-                    .foregroundStyle(DS.Colors.textMuted)
+                    .foregroundStyle(DS.Colors.textSecondary)
                     .textCase(.uppercase)
                     .tracking(0.5)
             }
@@ -206,7 +206,7 @@ struct HistoryView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("daily active time")
                 .font(DS.Font.label())
-                .foregroundStyle(DS.Colors.textMuted)
+                .foregroundStyle(DS.Colors.textSecondary)
                 .textCase(.uppercase)
                 .tracking(1.5)
 
@@ -306,15 +306,15 @@ struct HistoryView: View {
         return VStack(alignment: .leading, spacing: 12) {
             Text("recent sessions")
                 .font(DS.Font.label())
-                .foregroundStyle(DS.Colors.textMuted)
+                .foregroundStyle(DS.Colors.textSecondary)
                 .textCase(.uppercase)
                 .tracking(1.5)
 
-            LazyVStack(spacing: 16) {
+            LazyVStack(spacing: 8) {
                 ForEach(grouped, id: \.label) { group in
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 6) {
                         Text(group.label)
-                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
                             .foregroundStyle(DS.Colors.textSecondary)
                             .padding(.leading, 4)
 
