@@ -175,7 +175,6 @@ final class PostureViewModel {
         isStarted = true
 
         NotificationManager.shared.notificationsEnabled = notificationsEnabled
-        NotificationManager.shared.requestPermission()
         postureAnalyzer.driftThreshold = driftThreshold
         sensorClient.connect()
 
@@ -225,26 +224,28 @@ final class PostureViewModel {
         }
     }
 
-    /// Calibrate posture baseline from current readings.
+    /// Recalibrate posture baseline from current readings.
+    /// Does NOT reset the session — surface changes and recalibrations are mid-session events.
     @discardableResult
     func calibrate() -> Bool {
         guard let snapshot = sensorClient.latestSnapshot else { return false }
 
-        let now = Date()
         postureAnalyzer.calibrate(pitch: snapshot.pitch, lidAngle: snapshot.lidAngle)
-        breakTracker.resetSession(at: now)
-        fatigueMonitor.resetSession()
-        finalizeCurrentSession(endedAt: now)
         showSurfaceNudge = false
         nudgeSustainedSince = nil
 
-        if !isPaused, isUserPresent {
-            startNewSession(at: now)
-            updateCurrentSession()
-        }
-
         updateIconState()
         return true
+    }
+
+    /// Switch surface mid-session. Logs the change, updates thresholds, recalibrates baseline.
+    func changeSurface(to newSurface: Surface) {
+        let previous = selectedSurface
+        selectedSurface = newSurface
+        if previous != newSurface {
+            currentSession?.recordSurfaceChange(to: newSurface)
+        }
+        calibrate()
     }
 
     func recordBreak() {
@@ -287,11 +288,8 @@ final class PostureViewModel {
 
     /// User confirmed they moved — switch surface and recalibrate.
     func acceptSurfaceNudge(to surface: Surface) {
-        selectedSurface = surface
-        showSurfaceNudge = false
-        nudgeSustainedSince = nil
         nudgeDismissedAt = Date()
-        calibrate()
+        changeSurface(to: surface)
     }
 
     /// User dismissed the nudge.
@@ -475,7 +473,6 @@ final class PostureViewModel {
         session.totalActiveMinutes = breakTracker.totalActiveSeconds / 60
         session.postureAlertCount = postureAlertCount
         session.breaksTaken = breakTracker.breaksTaken
-        session.surface = selectedSurface
         session.typingIntensityAvailable = fatigueMonitor.hasSessionTypingMetrics
         session.avgTypingIntensity = fatigueMonitor.hasSessionTypingMetrics ? max(0, fatigueMonitor.sessionAverageIntensity) : 0
         session.peakTypingIntensity = fatigueMonitor.hasSessionTypingMetrics ? max(0, fatigueMonitor.peakIntensityPercent) : 0

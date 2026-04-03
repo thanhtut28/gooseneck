@@ -71,7 +71,7 @@ struct MenuBarPopover: View {
                 .buttonStyle(.bordered)
                 .controlSize(.small)
                 .accessibilityLabel("Took a break")
-                .accessibilityHint("Marks a break as taken and resets the break countdown.")
+                .accessibilityHint("Marks the break as taken and resets the countdown.")
             }
             .padding(12)
 
@@ -111,7 +111,7 @@ struct MenuBarPopover: View {
                     NSApp.setActivationPolicy(.regular)
                     NSApp.activate(ignoringOtherApps: true)
                 } label: {
-                    Image(systemName: "macwindow")
+                    Image(systemName: "rectangle.3.group")
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
@@ -205,13 +205,16 @@ struct MenuBarPopover: View {
     }
 
     private var surfacePicker: some View {
-        @Bindable var vm = viewModel
+        let surfaceBinding = Binding<Surface>(
+            get: { viewModel.selectedSurface },
+            set: { viewModel.changeSurface(to: $0) }
+        )
         return HStack {
             Text("Surface")
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
             Spacer()
-            Picker("", selection: $vm.selectedSurface) {
+            Picker("", selection: surfaceBinding) {
                 Text("Desk").tag(Surface.desk)
                 Text("Lap").tag(Surface.lap)
                 Text("Couch").tag(Surface.couch)

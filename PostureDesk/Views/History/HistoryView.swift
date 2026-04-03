@@ -108,7 +108,7 @@ struct HistoryView: View {
                 Spacer()
             }
             .padding(24)
-            .dsGlass()
+            .dsCard()
 
             // Bento Grid
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DS.Spacing.sectionGap) {
@@ -173,7 +173,7 @@ struct HistoryView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .dsGlass()
+        .dsCard()
     }
 
     private var weekDateRange: String {
@@ -203,7 +203,10 @@ struct HistoryView: View {
     // MARK: - Weekly Chart
 
     private func weeklyChart(using history: HistorySnapshot) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
+        let maxMinutes = history.dailySummaries.map(\.activeMinutes).max() ?? 0
+        let yMax = max(maxMinutes + 10, 30) // ensure a minimum range with padding
+
+        return VStack(alignment: .leading, spacing: 16) {
             Text("daily active time")
                 .font(DS.Font.label())
                 .foregroundStyle(DS.Colors.textSecondary)
@@ -253,7 +256,7 @@ struct HistoryView: View {
                                     .font(DS.Font.caption())
                                     .foregroundStyle(DS.Colors.textMuted)
                                 
-                                Text("\(day.activeMinutes)m active")
+                                Text("\(DisplayFormatter.sessionDuration(minutes: day.activeMinutes)) active")
                                     .font(.system(size: 14, weight: .bold, design: .rounded))
                                     .foregroundStyle(DS.Colors.textPrimary)
                                 
@@ -264,13 +267,12 @@ struct HistoryView: View {
                                 }
                             }
                             .padding(12)
-                            .background(DS.Colors.cardBg.opacity(0.7).blendMode(.overlay))
-                            .dsGlass(cornerRadius: 12)
-                            .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
+                            .background(DS.Colors.cardBg, in: RoundedRectangle(cornerRadius: 12))
                         }
                 }
             }
             .chartXSelection(value: $selectedDate)
+            .chartYScale(domain: 0...yMax)
             .chartXAxis {
                 AxisMarks(values: .stride(by: .day)) { _ in
                     AxisValueLabel(format: .dateTime.weekday(.abbreviated))
@@ -284,7 +286,7 @@ struct HistoryView: View {
                         .foregroundStyle(DS.Colors.textMuted.opacity(0.2))
                     AxisValueLabel {
                         if let mins = value.as(Int.self) {
-                            Text("\(mins)m")
+                            Text(DisplayFormatter.sessionDuration(minutes: mins))
                                 .font(.system(size: 10, weight: .medium, design: .rounded))
                                 .foregroundStyle(DS.Colors.textMuted)
                         }
@@ -295,7 +297,7 @@ struct HistoryView: View {
             .padding(.top, 8)
         }
         .padding(24)
-        .dsGlass()
+        .dsCard()
     }
 
     // MARK: - Session List
@@ -310,7 +312,7 @@ struct HistoryView: View {
                 .textCase(.uppercase)
                 .tracking(1.5)
 
-            LazyVStack(spacing: 8) {
+            LazyVStack(spacing: 10) {
                 ForEach(grouped, id: \.label) { group in
                     VStack(alignment: .leading, spacing: 6) {
                         Text(group.label)

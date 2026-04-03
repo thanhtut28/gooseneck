@@ -38,10 +38,23 @@ private struct IslandVariantCard: View {
     let variant: IslandVariant
     let isSelected: Bool
 
-    private var pillBg: Color { colorScheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.06) }
-    private var dotColor: Color { colorScheme == .dark ? Color.white.opacity(0.35) : Color.black.opacity(0.3) }
+    private var pillBg: Color {
+        if isSelected {
+            return colorScheme == .dark ? Color.white.opacity(0.10) : Color.black.opacity(0.08)
+        }
+        return colorScheme == .dark ? Color.white.opacity(0.05) : Color.black.opacity(0.05)
+    }
+    private var dotColor: Color {
+        isSelected
+            ? (colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.4))
+            : (colorScheme == .dark ? Color.white.opacity(0.25) : Color.black.opacity(0.2))
+    }
     private var labelColor: Color { colorScheme == .dark ? Color.white.opacity(0.25) : Color.black.opacity(0.2) }
-    private var valueColor: Color { colorScheme == .dark ? Color.white.opacity(0.5) : Color.black.opacity(0.45) }
+    private var valueColor: Color {
+        isSelected
+            ? (colorScheme == .dark ? Color.white.opacity(0.7) : Color.black.opacity(0.6))
+            : (colorScheme == .dark ? Color.white.opacity(0.4) : Color.black.opacity(0.35))
+    }
     private var chipBg: Color { colorScheme == .dark ? Color.white.opacity(0.04) : Color.black.opacity(0.04) }
 
     var body: some View {
@@ -70,11 +83,16 @@ private struct IslandVariantCard: View {
             }
         }
         .padding(10)
+        .padding(2) // inset so thick stroke doesn't clip
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(
-                    isSelected ? DS.Colors.accentInfo.opacity(0.4) : DS.Colors.cardBorder.opacity(0.5),
-                    lineWidth: isSelected ? 1.5 : 1
+                .fill(isSelected ? DS.Colors.accentInfo.opacity(0.06) : Color.clear)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(
+                    isSelected ? DS.Colors.accentInfo.opacity(0.7) : DS.Colors.cardBorder.opacity(0.6),
+                    lineWidth: isSelected ? 2.5 : 1
                 )
         )
         .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))

@@ -34,6 +34,7 @@
 		AEFA32CD7B4298F73F22B39F /* MenuBarPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C44EC1538940156668CE73C /* MenuBarPopover.swift */; };
 		AF3835D3366E02993B13DB8F /* gooseneck-menubar.svg in Resources */ = {isa = PBXBuildFile; fileRef = C764314F6C3C117D09443147 /* gooseneck-menubar.svg */; };
 		B5B8C3A0407D271983CC6B56 /* TypingIntensityCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C27002E4901BE9045016F1 /* TypingIntensityCard.swift */; };
+		B9B0811F83117B2F1235680F /* SessionSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC221E2658B4EC631A9390B7 /* SessionSeeder.swift */; };
 		BA32BF8914928279F5C625BF /* TypingTestVisual.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15278C47C6C2DF367155D6BC /* TypingTestVisual.swift */; };
 		BCC0CA027BD9293C41A8DED8 /* SensorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5449C1AE3BF3879B8B4E98 /* SensorManager.swift */; };
 		BE721ACDFCC35ECBB4AC4732 /* BandpassFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99E51BB059DCC35E9DA9E23E /* BandpassFilter.swift */; };
@@ -111,6 +112,7 @@
 		A8C27002E4901BE9045016F1 /* TypingIntensityCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingIntensityCard.swift; sourceTree = "<group>"; };
 		B435F1C434A594EEB8D319B7 /* CircularProgressRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularProgressRing.swift; sourceTree = "<group>"; };
 		B8117119A510EE9DB2541B79 /* PostureIslandWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureIslandWindow.swift; sourceTree = "<group>"; };
+		BC221E2658B4EC631A9390B7 /* SessionSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSeeder.swift; sourceTree = "<group>"; };
 		C3DA99CCC9B165C48505D5EA /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		C764314F6C3C117D09443147 /* gooseneck-menubar.svg */ = {isa = PBXFileReference; path = "gooseneck-menubar.svg"; sourceTree = "<group>"; };
 		C98272C02EB91256A02D1755 /* FormattingAndFatigueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormattingAndFatigueTests.swift; sourceTree = "<group>"; };
@@ -223,6 +225,7 @@
 			isa = PBXGroup;
 			children = (
 				0D147ECF21723D2CE8C387F8 /* DisplayFormatter.swift */,
+				BC221E2658B4EC631A9390B7 /* SessionSeeder.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -449,6 +452,7 @@
 				FAAE76EE0C0EADC577BFAAE5 /* SensorSnapshot+Extensions.swift in Sources */,
 				F1E8782F24BABA0B246DB24F /* SensorTypes.swift in Sources */,
 				E81ADB9638C29CA559E797B0 /* SessionRow.swift in Sources */,
+				B9B0811F83117B2F1235680F /* SessionSeeder.swift in Sources */,
 				93FE75141D465AD2FA934191 /* SessionSummaryCard.swift in Sources */,
 				71D7D55B0DBC5B3C7FDE6D0D /* SettingsView.swift in Sources */,
 				11D7782649BFB12541399DD0 /* SignalProcessor.swift in Sources */,

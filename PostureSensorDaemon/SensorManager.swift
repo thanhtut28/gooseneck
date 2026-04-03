@@ -124,10 +124,9 @@ final class SensorManager: NSObject {
             return workerThread
         }
 
-        thread?.cancel()
-
         if let thread {
             perform(#selector(stopOnWorkerThread), on: thread, with: nil, waitUntilDone: true)
+            thread.cancel()
         } else {
             stopAccelerometer()
             stopLidAngleSensor()

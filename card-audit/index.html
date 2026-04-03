@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GooseNeck — Card System Audit</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+  :root {
+    /* GooseNeck design tokens — dark mode */
+    --bg: #0E0E12;
+    --card-bg: #16161A;
+    --card-border: rgba(255,255,255,0.06);
+    --text-primary: #FAFAFA;
+    --text-secondary: #A1A1AA;
+    --text-muted: #52525B;
+    --accent-good: #34D399;
+    --accent-warn: #FBBF24;
+    --accent-danger: #F87171;
+    --accent-info: #818CF8;
+    --card-radius: 20px;
+    --card-padding: 24px;
+    --section-gap: 20px;
+    --page-inset: 32px;
+
+    /* Glass tokens */
+    --glass-bg: rgba(255,255,255,0.04);
+    --glass-border-top: rgba(255,255,255,0.12);
+    --glass-border-bot: rgba(255,255,255,0.0);
+    --glass-shadow: rgba(0,0,0,0.2);
+
+    /* Material tokens (thinMaterial fallback) */
+    --material-bg: rgba(255,255,255,0.06);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: #08080C;
+    color: var(--text-primary);
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ─── HEADER ─── */
+  .audit-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(8,8,12,0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .audit-header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+  }
+
+  .audit-header h1 span {
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-left: 8px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ─── MODE TOGGLE ─── */
+  .mode-toggle {
+    display: flex;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 3px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .mode-btn {
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+  }
+
+  .mode-btn.active {
+    background: var(--accent-info);
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(129,140,248,0.3);
+  }
+
+  .mode-btn:hover:not(.active) {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-primary);
+  }
+
+  /* ─── LAYOUT ─── */
+  .audit-body {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px;
+  }
+
+  .screen-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .screen-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.04);
+  }
+
+  .screen-section {
+    margin-bottom: 56px;
+  }
+
+  /* ─── ANNOTATION BADGES ─── */
+  .annotation {
+    position: absolute;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    z-index: 10;
+    pointer-events: none;
+    white-space: nowrap;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  .annotation.issue {
+    background: rgba(248,113,113,0.15);
+    color: var(--accent-danger);
+    border: 1px solid rgba(248,113,113,0.2);
+  }
+
+  .annotation.fixed {
+    background: rgba(52,211,153,0.15);
+    color: var(--accent-good);
+    border: 1px solid rgba(52,211,153,0.2);
+  }
+
+  .annotation.info {
+    background: rgba(129,140,248,0.15);
+    color: var(--accent-info);
+    border: 1px solid rgba(129,140,248,0.2);
+  }
+
+  /* Hide annotations based on mode */
+  body.mode-current .annotation.fixed,
+  body.mode-unified .annotation.issue { opacity: 0; transform: translateY(-4px); }
+  body.mode-current .annotation.issue,
+  body.mode-unified .annotation.fixed { opacity: 1; transform: translateY(0); }
+
+  /* ─── CARD STYLES ─── */
+
+  /* DSCard: solid background + gradient border + shadow */
+  .ds-card {
+    padding: var(--card-padding);
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    border: 1.5px solid transparent;
+    border-image: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02), rgba(255,255,255,0.0)) 1;
+    box-shadow: 0 4px 12px var(--glass-shadow);
+    position: relative;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Use proper border-radius with pseudo for gradient border */
+  .ds-card {
+    border: none;
+    position: relative;
+  }
+  .ds-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--card-radius);
+    padding: 1.5px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02), rgba(255,255,255,0.0));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* MetricCard: thinMaterial + 16px radius — the inconsistent one */
+  .metric-card-current {
+    padding: 20px;
+    background: var(--material-bg);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border-radius: 16px;
+    border: none;
+    position: relative;
+    min-height: 160px;
+    box-shadow: 0 4px 10px var(--glass-shadow);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .metric-card-current::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    padding: 1.5px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02), rgba(255,255,255,0.0));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.8;
+    pointer-events: none;
+  }
+
+  /* DSGlass: the unified target */
+  .ds-glass {
+    padding: var(--card-padding);
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-radius: var(--card-radius);
+    border: none;
+    position: relative;
+    box-shadow: 0 4px 12px var(--glass-shadow);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .ds-glass::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--card-radius);
+    padding: 1.5px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03), rgba(255,255,255,0.0));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Session row glass (compact) */
+  .session-row-glass {
+    padding: 8px 12px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-radius: 10px;
+    position: relative;
+  }
+  .session-row-glass::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.0));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* ─── TRANSITION CLASSES for mode switching ─── */
+  /* When in "unified" mode, morph metric-card-current INTO ds-glass */
+  body.mode-unified .metric-card-current {
+    background: var(--glass-bg);
+    border-radius: var(--card-radius);
+    padding: var(--card-padding);
+  }
+  body.mode-unified .metric-card-current::before {
+    border-radius: var(--card-radius);
+    background: linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03), rgba(255,255,255,0.0));
+    opacity: 1;
+  }
+
+  /* When in "unified" mode, morph ds-card INTO ds-glass */
+  body.mode-unified .ds-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+  }
+  body.mode-unified .ds-card::before {
+    background: linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03), rgba(255,255,255,0.0));
+  }
+
+  /* ─── DASHBOARD LAYOUT ─── */
+  .dashboard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--section-gap);
+  }
+
+  .hero-card {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .posture-figure {
+    width: 80px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .posture-figure svg {
+    width: 60px;
+    height: 90px;
+  }
+
+  .hero-info { flex: 1; }
+  .hero-info h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+  }
+  .hero-info p {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    opacity: 0.6;
+    margin-top: 4px;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .glass-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: default;
+    transition: background 0.2s;
+  }
+
+  .drift-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--section-gap);
+  }
+
+  .card-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .metric-value {
+    font-size: 38px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1;
+  }
+  .metric-unit {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-left: 2px;
+  }
+  .metric-sub {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .center-bar {
+    width: 100%;
+    height: 3px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 2px;
+    position: relative;
+    margin: 12px 0 8px;
+  }
+  .center-bar .fill {
+    position: absolute;
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+  .center-bar .tick {
+    position: absolute;
+    left: 50%;
+    top: -2px;
+    width: 1px;
+    height: 7px;
+    background: var(--text-muted);
+    opacity: 0.4;
+    transform: translateX(-50%);
+  }
+
+  /* Session card */
+  .session-time {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .session-time .big {
+    font-size: 52px;
+    font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+  .session-time .unit {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.8s ease;
+  }
+
+  .status-dots {
+    display: flex;
+    gap: 14px;
+    margin-top: 4px;
+  }
+  .status-dot {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+  .status-dot .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+
+  /* Typing card */
+  .level-bars {
+    display: flex;
+    gap: 3px;
+    margin: 8px 0;
+  }
+  .level-bar {
+    width: 16px;
+    height: 3px;
+    border-radius: 1px;
+    transition: background 0.3s;
+  }
+
+  .sparkline-area {
+    width: 100%;
+    height: 80px;
+    margin-top: 8px;
+  }
+
+  /* ─── HISTORY LAYOUT ─── */
+  .featured-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .bento-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--section-gap);
+  }
+
+  .bento-card {
+    padding: 16px;
+  }
+
+  .bento-value {
+    font-size: 26px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-primary);
+  }
+
+  .trend-badge {
+    display: inline-flex;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* Chart placeholder */
+  .chart-placeholder {
+    width: 100%;
+    height: 200px;
+    position: relative;
+    margin-top: 8px;
+  }
+
+  .chart-placeholder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Session rows */
+  .session-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .session-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .session-row-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .session-row-left .title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .session-row-left .sub {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  .mini-stats {
+    display: flex;
+    gap: 10px;
+  }
+  .mini-stat {
+    text-align: center;
+  }
+  .mini-stat .val {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .mini-stat .lbl {
+    font-size: 9px;
+    color: var(--text-muted);
+  }
+
+  /* ─── SETTINGS LAYOUT ─── */
+  .settings-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--section-gap);
+  }
+
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .setting-row .label {
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+  .setting-row .value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .fake-slider {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    position: relative;
+    margin-top: 8px;
+  }
+  .fake-slider .fill {
+    height: 100%;
+    background: var(--accent-info);
+    border-radius: 2px;
+  }
+  .fake-slider .thumb {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+
+  .setting-hint {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: var(--card-border);
+  }
+
+  /* ─── LEGEND ─── */
+  .legend {
+    display: flex;
+    gap: 24px;
+    margin-top: 24px;
+    padding: 20px 24px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .legend-swatch {
+    width: 32px;
+    height: 20px;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+
+  .legend-swatch.solid {
+    background: var(--card-bg);
+    border: 1.5px solid rgba(255,255,255,0.08);
+  }
+
+  .legend-swatch.material {
+    background: var(--material-bg);
+    backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(255,255,255,0.08);
+  }
+
+  .legend-swatch.glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(255,255,255,0.06);
+  }
+
+  .legend-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+
+  .legend-text .name {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1px;
+  }
+
+  /* ─── DIFF INDICATOR ─── */
+  .card-wrapper {
+    position: relative;
+  }
+
+  .card-wrapper .diff-ring {
+    position: absolute;
+    inset: -3px;
+    border-radius: calc(var(--card-radius) + 3px);
+    border: 2px dashed transparent;
+    pointer-events: none;
+    transition: all 0.5s ease;
+  }
+
+  body.mode-current .card-wrapper.inconsistent .diff-ring {
+    border-color: rgba(248,113,113,0.3);
+  }
+
+  body.mode-unified .card-wrapper.inconsistent .diff-ring {
+    border-color: rgba(52,211,153,0.25);
+  }
+
+  /* Modifier label on cards */
+  .modifier-tag {
+    position: absolute;
+    top: -10px;
+    right: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    z-index: 5;
+    transition: all 0.4s ease;
+  }
+
+  body.mode-current .modifier-tag.current { opacity: 1; }
+  body.mode-current .modifier-tag.unified { opacity: 0; }
+  body.mode-unified .modifier-tag.current { opacity: 0; }
+  body.mode-unified .modifier-tag.unified { opacity: 1; }
+
+  .modifier-tag.ds-card-tag {
+    background: rgba(129,140,248,0.15);
+    color: var(--accent-info);
+  }
+  .modifier-tag.material-tag {
+    background: rgba(251,191,36,0.15);
+    color: var(--accent-warn);
+  }
+  .modifier-tag.glass-tag {
+    background: rgba(52,211,153,0.15);
+    color: var(--accent-good);
+  }
+
+  /* ─── AMBIENT ─── */
+  .ambient-glow {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 0.8s ease;
+  }
+  .glow-1 { background: var(--accent-info); top: -200px; right: -100px; }
+  .glow-2 { background: var(--accent-good); bottom: -200px; left: -100px; }
+
+  body.mode-unified .glow-1 { opacity: 0.06; }
+  body.mode-unified .glow-2 { opacity: 0.05; }
+
+  /* ─── SUMMARY BANNER ─── */
+  .summary-banner {
+    padding: 24px 28px;
+    border-radius: 16px;
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.5s ease;
+  }
+
+  body.mode-current .summary-banner {
+    background: rgba(248,113,113,0.06);
+    border: 1px solid rgba(248,113,113,0.12);
+  }
+
+  body.mode-unified .summary-banner {
+    background: rgba(52,211,153,0.06);
+    border: 1px solid rgba(52,211,153,0.12);
+  }
+
+  .summary-banner h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    transition: color 0.4s;
+  }
+
+  body.mode-current .summary-banner h3 { color: var(--accent-danger); }
+  body.mode-unified .summary-banner h3 { color: var(--accent-good); }
+
+  .summary-banner p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .summary-text-current,
+  .summary-text-unified {
+    transition: opacity 0.4s ease, max-height 0.4s ease;
+    overflow: hidden;
+  }
+
+  body.mode-current .summary-text-unified { opacity: 0; max-height: 0; }
+  body.mode-current .summary-text-current { opacity: 1; max-height: 200px; }
+  body.mode-unified .summary-text-current { opacity: 0; max-height: 0; }
+  body.mode-unified .summary-text-unified { opacity: 1; max-height: 200px; }
+</style>
+</head>
+<body class="mode-current">
+
+<div class="ambient-glow glow-1"></div>
+<div class="ambient-glow glow-2"></div>
+
+<!-- HEADER -->
+<header class="audit-header">
+  <h1>GooseNeck <span>Card System Audit</span></h1>
+  <div class="mode-toggle">
+    <button class="mode-btn active" data-mode="current" onclick="setMode('current')">Current</button>
+    <button class="mode-btn" data-mode="unified" onclick="setMode('unified')">Unified Glass</button>
+  </div>
+</header>
+
+<main class="audit-body">
+
+  <!-- SUMMARY -->
+  <div class="summary-banner">
+    <div class="summary-text-current">
+      <h3>3 card systems, inconsistent radii &amp; backgrounds</h3>
+      <p>Dashboard uses <code style="color:var(--accent-info)">dsCard()</code> (solid #16161A),
+         MetricCard uses <code style="color:var(--accent-warn)">thinMaterial</code> (frosted, 16px radius),
+         History uses <code style="color:var(--accent-good)">dsGlass()</code> (vibrancy, 20px radius).
+         Dashed outlines highlight the mismatches.</p>
+    </div>
+    <div class="summary-text-unified">
+      <h3>One material language: dsGlass() everywhere</h3>
+      <p>All cards converge to <code style="color:var(--accent-good)">dsGlass()</code> — translucent background,
+         consistent 20px radius, gradient border stroke. On macOS 26+, this becomes native
+         <code style="color:var(--accent-good)">.glassEffect(.regular)</code>. Solid <code>dsCard()</code> remains as the pre-Tahoe fallback only.</p>
+    </div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-swatch solid"></div>
+      <div class="legend-text"><span class="name">dsCard()</span>Solid #16161A · r20</div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch material"></div>
+      <div class="legend-text"><span class="name">thinMaterial</span>Frosted glass · r16</div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch glass"></div>
+      <div class="legend-text"><span class="name">dsGlass()</span>Translucent · r20</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ -->
+  <!-- DASHBOARD SCREEN               -->
+  <!-- ═══════════════════════════════ -->
+  <div class="screen-section" style="margin-top:40px">
+    <div class="screen-label">Dashboard</div>
+    <div class="dashboard-grid">
+
+      <!-- Hero Card -->
+      <div class="card-wrapper">
+        <span class="modifier-tag ds-card-tag current">dsCard()</span>
+        <span class="modifier-tag glass-tag unified">dsGlass()</span>
+        <div class="ds-card hero-card">
+          <div class="posture-figure">
+            <svg viewBox="0 0 60 90" fill="none">
+              <circle cx="30" cy="14" r="10" fill="var(--accent-good)" opacity="0.3"/>
+              <path d="M30 26 C20 30, 16 50, 18 70 L42 70 C44 50, 40 30, 30 26Z" fill="var(--accent-good)" opacity="0.15" stroke="var(--accent-good)" stroke-width="1" stroke-opacity="0.4"/>
+              <line x1="18" y1="70" x2="22" y2="88" stroke="var(--accent-good)" stroke-width="1.5" stroke-opacity="0.3" stroke-linecap="round"/>
+              <line x1="42" y1="70" x2="38" y2="88" stroke="var(--accent-good)" stroke-width="1.5" stroke-opacity="0.3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="hero-info">
+            <h2>posture looks good</h2>
+            <p>47m active · desk</p>
+          </div>
+          <div class="hero-actions">
+            <div class="glass-btn">⊕ Recalibrate</div>
+            <div class="glass-btn">⏸ Pause</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drift Cards Row -->
+      <div class="drift-row">
+        <!-- Lid Angle — dsCard -->
+        <div class="card-wrapper">
+          <span class="modifier-tag ds-card-tag current">dsCard()</span>
+          <span class="modifier-tag glass-tag unified">dsGlass()</span>
+          <div class="ds-card" style="min-height:160px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div class="card-label">LID ANGLE</div>
+            <div>
+              <span class="metric-value" style="color:var(--accent-good)">+2.3</span>
+              <span class="metric-unit">°</span>
+            </div>
+            <div class="center-bar">
+              <div class="fill" style="background:var(--accent-good); width:18%; left:50%;position:absolute;"></div>
+              <div class="tick"></div>
+            </div>
+            <div class="metric-sub">lid opening</div>
+          </div>
+        </div>
+
+        <!-- Tilt — dsCard -->
+        <div class="card-wrapper">
+          <span class="modifier-tag ds-card-tag current">dsCard()</span>
+          <span class="modifier-tag glass-tag unified">dsGlass()</span>
+          <div class="ds-card" style="min-height:160px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div class="card-label">TILT</div>
+            <div>
+              <span class="metric-value" style="color:var(--accent-warn)">-5.1</span>
+              <span class="metric-unit">°</span>
+            </div>
+            <div class="center-bar">
+              <div class="fill" style="background:var(--accent-warn); width:32%; right:50%; position:absolute;"></div>
+              <div class="tick"></div>
+            </div>
+            <div class="metric-sub">leaning back</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Session Summary — dsCard -->
+      <div class="card-wrapper">
+        <span class="modifier-tag ds-card-tag current">dsCard()</span>
+        <span class="modifier-tag glass-tag unified">dsGlass()</span>
+        <div class="ds-card">
+          <div style="display:flex; justify-content:space-between; margin-bottom:16px;">
+            <div class="card-label">SESSION</div>
+            <div class="glass-btn" style="padding:5px 12px; font-size:11px;">✓ Took a Break</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:24px;">
+            <div class="session-time">
+              <span class="big">47</span><span class="unit">m</span>
+            </div>
+            <div style="flex:1;">
+              <div class="progress-track">
+                <div class="progress-fill" style="width:65%; background:var(--accent-good);"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-top:8px;">
+                <span style="font-size:12px; font-weight:500; color:var(--accent-good);">next break in 11m</span>
+                <span style="font-size:11px; font-family:'JetBrains Mono',monospace; color:var(--text-muted);">65%</span>
+              </div>
+            </div>
+          </div>
+          <div class="status-dots">
+            <div class="status-dot"><div class="dot" style="background:var(--accent-good);"></div>active</div>
+            <div class="status-dot"><div class="dot" style="background:var(--accent-info);"></div>desk</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Typing Intensity — dsCard -->
+      <div class="card-wrapper">
+        <span class="modifier-tag ds-card-tag current">dsCard()</span>
+        <span class="modifier-tag glass-tag unified">dsGlass()</span>
+        <div class="ds-card">
+          <div style="display:flex; gap:24px;">
+            <div style="flex:1;">
+              <div class="card-label" style="margin-bottom:12px;">TYPING</div>
+              <div style="display:flex; align-items:baseline; gap:2px;">
+                <span style="font-size:16px; color:var(--text-muted);">+</span>
+                <span class="metric-value" style="color:var(--accent-warn); font-size:34px;">23</span>
+                <span class="metric-unit">%</span>
+                <span style="font-size:13px; font-weight:600; color:var(--accent-warn); margin-left:6px;">light</span>
+              </div>
+              <div class="level-bars">
+                <div class="level-bar" style="background:var(--accent-good);"></div>
+                <div class="level-bar" style="background:var(--accent-good);"></div>
+                <div class="level-bar" style="background:var(--accent-warn); opacity:0.7;"></div>
+                <div class="level-bar" style="background:rgba(255,255,255,0.04);"></div>
+                <div class="level-bar" style="background:rgba(255,255,255,0.04);"></div>
+                <div class="level-bar" style="background:rgba(255,255,255,0.04);"></div>
+                <div class="level-bar" style="background:rgba(255,255,255,0.04);"></div>
+                <div class="level-bar" style="background:rgba(255,255,255,0.04);"></div>
+                <div class="level-bar" style="background:rgba(255,255,255,0.04);"></div>
+                <div class="level-bar" style="background:rgba(255,255,255,0.04);"></div>
+              </div>
+              <div class="metric-sub">vs session baseline</div>
+            </div>
+          </div>
+          <div class="sparkline-area">
+            <svg viewBox="0 0 400 80" preserveAspectRatio="none" style="width:100%;height:100%;">
+              <defs>
+                <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="var(--accent-warn)" stop-opacity="0.15"/>
+                  <stop offset="100%" stop-color="var(--accent-warn)" stop-opacity="0.02"/>
+                </linearGradient>
+              </defs>
+              <path d="M0,60 C30,55 60,50 100,42 C140,34 170,38 200,30 C230,22 260,35 300,28 C340,21 370,25 400,20 L400,80 L0,80 Z" fill="url(#sparkGrad)"/>
+              <path d="M0,60 C30,55 60,50 100,42 C140,34 170,38 200,30 C230,22 260,35 300,28 C340,21 370,25 400,20" fill="none" stroke="var(--accent-warn)" stroke-width="1.5" stroke-opacity="0.6" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ -->
+  <!-- HISTORY SCREEN                  -->
+  <!-- ═══════════════════════════════ -->
+  <div class="screen-section">
+    <div class="screen-label">History</div>
+    <div class="dashboard-grid">
+
+      <!-- Featured: total active — dsGlass -->
+      <div class="card-wrapper">
+        <span class="modifier-tag glass-tag current" style="opacity:1 !important;">dsGlass()</span>
+        <span class="modifier-tag glass-tag unified">dsGlass()</span>
+        <div class="ds-glass featured-card">
+          <div>
+            <div class="card-label" style="margin-bottom:8px;">TOTAL ACTIVE</div>
+            <div style="display:flex; align-items:baseline; gap:12px;">
+              <span class="metric-value" style="font-size:46px; color:var(--text-primary);">3h 24m</span>
+              <span style="font-size:13px; font-weight:600; color:var(--accent-good);">+18%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bento Grid — dsGlass -->
+      <div class="bento-grid">
+        <div class="card-wrapper">
+          <span class="modifier-tag glass-tag current" style="opacity:1 !important;">dsGlass()</span>
+          <span class="modifier-tag glass-tag unified">dsGlass()</span>
+          <div class="ds-glass bento-card">
+            <div style="height:12px;"></div>
+            <div class="bento-value">7</div>
+            <div class="metric-sub" style="margin-top:4px;">SESSIONS</div>
+          </div>
+        </div>
+        <div class="card-wrapper">
+          <span class="modifier-tag glass-tag current" style="opacity:1 !important;">dsGlass()</span>
+          <span class="modifier-tag glass-tag unified">dsGlass()</span>
+          <div class="ds-glass bento-card">
+            <div style="display:flex; justify-content:flex-end;">
+              <span class="trend-badge" style="background:rgba(52,211,153,0.15); color:var(--accent-good);">↓25% fewer</span>
+            </div>
+            <div class="bento-value">3</div>
+            <div class="metric-sub" style="margin-top:4px;">POSTURE ALERTS</div>
+          </div>
+        </div>
+        <div class="card-wrapper">
+          <span class="modifier-tag glass-tag current" style="opacity:1 !important;">dsGlass()</span>
+          <span class="modifier-tag glass-tag unified">dsGlass()</span>
+          <div class="ds-glass bento-card">
+            <div style="height:12px;"></div>
+            <div class="bento-value">12</div>
+            <div class="metric-sub" style="margin-top:4px;">BREAKS TAKEN</div>
+          </div>
+        </div>
+        <div class="card-wrapper">
+          <span class="modifier-tag glass-tag current" style="opacity:1 !important;">dsGlass()</span>
+          <span class="modifier-tag glass-tag unified">dsGlass()</span>
+          <div class="ds-glass bento-card">
+            <div style="height:12px;"></div>
+            <div class="bento-value">29<span style="font-size:14px;color:var(--text-muted);">m</span></div>
+            <div class="metric-sub" style="margin-top:4px;">AVG SESSION</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly Chart — dsGlass -->
+      <div class="card-wrapper">
+        <span class="modifier-tag glass-tag current" style="opacity:1 !important;">dsGlass()</span>
+        <span class="modifier-tag glass-tag unified">dsGlass()</span>
+        <div class="ds-glass">
+          <div class="card-label" style="margin-bottom:16px;">DAILY ACTIVE TIME</div>
+          <div class="chart-placeholder">
+            <svg viewBox="0 0 600 200" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="var(--accent-info)" stop-opacity="0.4"/>
+                  <stop offset="100%" stop-color="var(--accent-info)" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <!-- Grid lines -->
+              <line x1="0" y1="50" x2="600" y2="50" stroke="var(--text-muted)" stroke-opacity="0.08" stroke-dasharray="4,4"/>
+              <line x1="0" y1="100" x2="600" y2="100" stroke="var(--text-muted)" stroke-opacity="0.08" stroke-dasharray="4,4"/>
+              <line x1="0" y1="150" x2="600" y2="150" stroke="var(--text-muted)" stroke-opacity="0.08" stroke-dasharray="4,4"/>
+              <!-- Area -->
+              <path d="M0,180 C50,160 100,100 150,80 C200,60 250,90 300,70 C350,50 400,40 450,55 C500,70 550,30 600,20 L600,200 L0,200 Z" fill="url(#chartGrad)"/>
+              <!-- Line -->
+              <path d="M0,180 C50,160 100,100 150,80 C200,60 250,90 300,70 C350,50 400,40 450,55 C500,70 550,30 600,20" fill="none" stroke="var(--accent-info)" stroke-width="3" stroke-linecap="round"/>
+              <!-- Points -->
+              <circle cx="0" cy="180" r="5" fill="var(--accent-info)"/>
+              <circle cx="100" cy="100" r="5" fill="var(--accent-info)"/>
+              <circle cx="200" cy="75" r="5" fill="var(--accent-info)"/>
+              <circle cx="300" cy="70" r="5" fill="var(--accent-info)"/>
+              <circle cx="400" cy="45" r="5" fill="var(--accent-info)"/>
+              <circle cx="500" cy="62" r="5" fill="var(--accent-warn)"/>
+              <circle cx="600" cy="20" r="5" fill="var(--accent-info)"/>
+              <!-- Day labels -->
+              <text x="0" y="196" font-size="10" fill="var(--text-muted)" font-family="DM Sans, sans-serif" font-weight="500">Mon</text>
+              <text x="95" y="196" font-size="10" fill="var(--text-muted)" font-family="DM Sans, sans-serif" font-weight="500">Tue</text>
+              <text x="195" y="196" font-size="10" fill="var(--text-muted)" font-family="DM Sans, sans-serif" font-weight="500">Wed</text>
+              <text x="293" y="196" font-size="10" fill="var(--text-muted)" font-family="DM Sans, sans-serif" font-weight="500">Thu</text>
+              <text x="395" y="196" font-size="10" fill="var(--text-muted)" font-family="DM Sans, sans-serif" font-weight="500">Fri</text>
+              <text x="495" y="196" font-size="10" fill="var(--text-muted)" font-family="DM Sans, sans-serif" font-weight="500">Sat</text>
+              <text x="589" y="196" font-size="10" fill="var(--text-muted)" font-family="DM Sans, sans-serif" font-weight="500">Sun</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Session Rows — dsGlass(cornerRadius: 10) -->
+      <div>
+        <div class="card-label" style="margin-bottom:12px;">RECENT SESSIONS</div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:6px; padding-left:4px;">Today</div>
+        <div class="session-rows">
+          <div class="card-wrapper">
+            <div class="session-row-glass session-row">
+              <div class="session-row-left">
+                <div class="title">Apr 3, 2:15 PM</div>
+                <div class="sub">47m · DESK</div>
+              </div>
+              <div class="mini-stats">
+                <div class="mini-stat"><div class="val" style="color:var(--accent-warn);">2</div><div class="lbl">alerts</div></div>
+                <div class="mini-stat"><div class="val" style="color:var(--accent-info);">3</div><div class="lbl">breaks</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card-wrapper">
+            <div class="session-row-glass session-row">
+              <div class="session-row-left">
+                <div class="title">Apr 3, 9:30 AM</div>
+                <div class="sub">1h 12m · DESK</div>
+              </div>
+              <div class="mini-stats">
+                <div class="mini-stat"><div class="val" style="color:var(--text-muted);">0</div><div class="lbl">alerts</div></div>
+                <div class="mini-stat"><div class="val" style="color:var(--accent-info);">5</div><div class="lbl">breaks</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ -->
+  <!-- SETTINGS SCREEN                 -->
+  <!-- ═══════════════════════════════ -->
+  <div class="screen-section">
+    <div class="screen-label">Settings</div>
+    <div class="settings-stack">
+
+      <div>
+        <div class="card-label" style="margin-bottom:12px;">MONITORING</div>
+        <div class="card-wrapper">
+          <span class="modifier-tag ds-card-tag current">dsCard()</span>
+          <span class="modifier-tag glass-tag unified">dsGlass()</span>
+          <div class="ds-card">
+            <div class="setting-row">
+              <span class="label">Drift Sensitivity</span>
+              <span class="value" style="font-family:'JetBrains Mono',monospace; font-size:12px;">10°</span>
+            </div>
+            <div class="fake-slider">
+              <div class="fill" style="width:25%;"></div>
+              <div class="thumb" style="left:25%;"></div>
+            </div>
+            <div class="setting-hint">Lower = more sensitive to posture changes</div>
+            <div style="height:16px;"></div>
+            <div class="setting-row">
+              <span class="label">Surface</span>
+              <span class="value">Desk ▾</span>
+            </div>
+            <div class="divider" style="margin:16px 0;"></div>
+            <div class="setting-row">
+              <span class="label">Fatigue Threshold</span>
+              <span class="value" style="font-family:'JetBrains Mono',monospace; font-size:12px;">+30%</span>
+            </div>
+            <div class="fake-slider">
+              <div class="fill" style="width:50%;"></div>
+              <div class="thumb" style="left:50%;"></div>
+            </div>
+            <div class="setting-hint">Higher = more tolerance before fatigue alert</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card-label" style="margin-bottom:12px;">BREAKS</div>
+        <div class="card-wrapper">
+          <span class="modifier-tag ds-card-tag current">dsCard()</span>
+          <span class="modifier-tag glass-tag unified">dsGlass()</span>
+          <div class="ds-card">
+            <div class="setting-row">
+              <span class="label">Break Interval</span>
+              <span class="value">30 min ▾</span>
+            </div>
+            <div style="height:16px;"></div>
+            <div class="setting-row">
+              <span class="label">Reminder Cadence</span>
+              <span class="value">Gentle ▾</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card-label" style="margin-bottom:12px;">NOTIFICATIONS</div>
+        <div class="card-wrapper">
+          <span class="modifier-tag ds-card-tag current">dsCard()</span>
+          <span class="modifier-tag glass-tag unified">dsGlass()</span>
+          <div class="ds-card">
+            <div class="setting-row">
+              <span class="label">Notifications</span>
+              <span class="value" style="color:var(--accent-good);">☑</span>
+            </div>
+            <div style="padding-left:20px; margin-top:12px; display:flex; flex-direction:column; gap:12px;">
+              <div class="setting-row"><span class="label" style="font-size:12px;">Posture alerts</span><span class="value" style="color:var(--accent-good);">☑</span></div>
+              <div class="setting-row"><span class="label" style="font-size:12px;">Break reminders</span><span class="value" style="color:var(--accent-good);">☑</span></div>
+              <div class="setting-row"><span class="label" style="font-size:12px;">Typing fatigue</span><span class="value" style="color:var(--accent-good);">☑</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<script>
+  function setMode(mode) {
+    document.body.className = `mode-${mode}`;
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+  }
+
+  // Keyboard shortcut: 1 = current, 2 = unified
+  document.addEventListener('keydown', e => {
+    if (e.key === '1') setMode('current');
+    if (e.key === '2') setMode('unified');
+  });
+</script>
+
+</body>
+</html>

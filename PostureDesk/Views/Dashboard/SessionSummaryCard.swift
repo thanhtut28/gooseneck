@@ -41,12 +41,8 @@ struct SessionSummaryCard: View {
                 Button {
                     viewModel.recordBreak()
                 } label: {
-                    HStack(spacing: 5) {
-                        Image(systemName: "checkmark.circle")
-                            .font(.system(size: 10, weight: .medium))
-                        Text("Took a Break")
-                            .font(.system(size: 11, weight: .medium, design: .rounded))
-                    }
+                    Text("Took a Break")
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundStyle(DS.Colors.textPrimary.opacity(0.8))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)

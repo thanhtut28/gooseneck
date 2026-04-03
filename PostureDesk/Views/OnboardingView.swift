@@ -608,6 +608,9 @@ struct OnboardingView: View {
                     withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                         calibrationDone = viewModel.calibrate()
                     }
+                    if calibrationDone {
+                        NotificationManager.shared.requestPermission()
+                    }
                 }
                 .accessibilityHint("Sets your current sitting posture as the monitoring baseline.")
             }

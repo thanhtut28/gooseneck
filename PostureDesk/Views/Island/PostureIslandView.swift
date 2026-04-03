@@ -12,19 +12,21 @@ struct PostureIslandView: View {
     @State private var isHovering = false
     @State private var hoverTask: Task<Void, Never>?
     @State private var contentVisible = false
+    @State private var hoverScale: CGFloat = 1.0
+    @State private var surfaceBadgeScale: CGFloat = 1.0
 
     private let sideExtension: CGFloat = 80
-    private let collapsedHeightPadding: CGFloat = 2
+    private let collapsedHeightPadding: CGFloat = 0
 
     private var barHeight: CGFloat { notchHeight + collapsedHeightPadding }
     private var totalWidth: CGFloat { notchWidth + sideExtension * 2 }
 
     // iOS Dynamic Island spring parameters
     private var expandSpring: Animation {
-        .spring(response: 0.42, dampingFraction: 0.72)
+        .spring(response: 0.4, dampingFraction: 0.65, blendDuration: 0.02)
     }
     private var collapseSpring: Animation {
-        .spring(response: 0.32, dampingFraction: 0.84)
+        .spring(response: 0.32, dampingFraction: 0.86)
     }
 
     /// Whether the island is revealed (not hidden by a space transition).
@@ -41,6 +43,7 @@ struct PostureIslandView: View {
             }
         }
         .onHover { handleHover($0) }
+        .onDisappear { hoverTask?.cancel() }
         .opacity(isRevealed ? 1 : 0)
         .scaleEffect(
             x: isRevealed ? 1.0 : 0.85,
@@ -91,18 +94,7 @@ struct PostureIslandView: View {
             )
         )
         .animation(isExpanded ? expandSpring : collapseSpring, value: isExpanded)
-        .background {
-            PostureIslandPillShape(
-                topCornerRadius: isExpanded ? 12 : 6,
-                bottomCornerRadius: isExpanded ? 24 : 14
-            )
-            .fill(Color.black)
-            .opacity(isExpanded ? 0.55 : isHovering ? 0.3 : 0)
-            .blur(radius: isExpanded ? 24 : isHovering ? 14 : 0)
-            .offset(y: isExpanded ? 8 : isHovering ? 3 : 0)
-            .animation(isExpanded ? expandSpring : collapseSpring, value: isExpanded)
-            .animation(isExpanded ? expandSpring : collapseSpring, value: isHovering)
-        }
+        .scaleEffect(hoverScale, anchor: .top)
     }
 
     // MARK: - Left Indicator (status dot only)
@@ -145,13 +137,7 @@ struct PostureIslandView: View {
 
                 Spacer()
 
-                Text(viewModel.selectedSurface.label.lowercased())
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(islandSecondaryText)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(islandChrome)
-                    .clipShape(Capsule())
+                surfaceBadge()
             }
             .padding(.horizontal, 4)
 
@@ -190,24 +176,40 @@ struct PostureIslandView: View {
 
             // Action buttons
             HStack(spacing: 8) {
-                Button {
-                    if viewModel.sensorClient.connectionError == nil {
-                        viewModel.calibrate()
-                    } else {
-                        viewModel.start()
+                if viewModel.breakTracker.isBreakOverdue {
+                    Button {
+                        viewModel.recordBreak()
+                    } label: {
+                        Text("Took a Break")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(islandSecondaryText)
+                            .frame(maxWidth: .infinity)
+                            .padding(8)
+                            .background(islandChrome)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
-                } label: {
-                    Text(sensorActionTitle)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(islandSecondaryText)
-                        .frame(maxWidth: .infinity)
-                        .padding(8)
-                        .background(islandChrome)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Took a Break")
+                } else {
+                    Button {
+                        if viewModel.sensorClient.connectionError == nil {
+                            viewModel.calibrate()
+                        } else {
+                            viewModel.start()
+                        }
+                    } label: {
+                        Text(sensorActionTitle)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(islandSecondaryText)
+                            .frame(maxWidth: .infinity)
+                            .padding(8)
+                            .background(islandChrome)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(sensorActionTitle)
+                    .accessibilityHint(sensorActionHint)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(sensorActionTitle)
-                .accessibilityHint(sensorActionHint)
 
                 Button {
                     if viewModel.isPaused {
@@ -244,6 +246,39 @@ struct PostureIslandView: View {
         .padding(12)
         .background(islandChrome)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    // MARK: - Surface Badge
+
+    private func cycleSurface() {
+        let surfaces: [Surface] = [.desk, .lap, .couch]
+        let currentIndex = surfaces.firstIndex(of: viewModel.selectedSurface) ?? 0
+        let nextSurface = surfaces[(currentIndex + 1) % surfaces.count]
+        viewModel.changeSurface(to: nextSurface)
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) {
+            surfaceBadgeScale = 1.15
+        }
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.6).delay(0.12)) {
+            surfaceBadgeScale = 1.0
+        }
+    }
+
+    private func surfaceBadge(fontSize: CGFloat = 11, hPad: CGFloat = 8, vPad: CGFloat = 3) -> some View {
+        Button {
+            cycleSurface()
+        } label: {
+            Text(viewModel.selectedSurface.label.lowercased())
+                .font(.system(size: fontSize, weight: .medium, design: .rounded))
+                .foregroundStyle(islandSecondaryText)
+                .padding(.horizontal, hPad)
+                .padding(.vertical, vPad)
+                .background(islandChrome)
+                .clipShape(Capsule())
+                .contentTransition(.interpolate)
+        }
+        .buttonStyle(.plain)
+        .scaleEffect(surfaceBadgeScale)
+        .accessibilityLabel("Surface: \(viewModel.selectedSurface.label). Tap to switch.")
     }
 
     // MARK: - Surface Nudge Banner
@@ -314,13 +349,7 @@ struct PostureIslandView: View {
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
                             .foregroundStyle(islandPrimaryText)
                         Spacer()
-                        Text(viewModel.selectedSurface.label.lowercased())
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundStyle(islandSecondaryText)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(islandChrome)
-                            .clipShape(Capsule())
+                        surfaceBadge(fontSize: 10, hPad: 6, vPad: 2)
                     }
 
                     if viewModel.showSurfaceNudge {
@@ -350,24 +379,40 @@ struct PostureIslandView: View {
                     }
 
                     HStack(spacing: 8) {
-                        Button {
-                            if viewModel.sensorClient.connectionError == nil {
-                                viewModel.calibrate()
-                            } else {
-                                viewModel.start()
+                        if viewModel.breakTracker.isBreakOverdue {
+                            Button {
+                                viewModel.recordBreak()
+                            } label: {
+                                Text("Took a Break")
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundStyle(islandSecondaryText)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(8)
+                                    .background(islandChrome)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
-                        } label: {
-                            Text(sensorActionTitle)
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(islandSecondaryText)
-                                .frame(maxWidth: .infinity)
-                                .padding(8)
-                                .background(islandChrome)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Took a Break")
+                        } else {
+                            Button {
+                                if viewModel.sensorClient.connectionError == nil {
+                                    viewModel.calibrate()
+                                } else {
+                                    viewModel.start()
+                                }
+                            } label: {
+                                Text(sensorActionTitle)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundStyle(islandSecondaryText)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(8)
+                                    .background(islandChrome)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(sensorActionTitle)
+                            .accessibilityHint(sensorActionHint)
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(sensorActionTitle)
-                        .accessibilityHint(sensorActionHint)
 
                         Button {
                             if viewModel.isPaused {
@@ -414,16 +459,8 @@ struct PostureIslandView: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
         .contentShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
-        .background {
-            RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .fill(Color.black)
-                .opacity(isExpanded ? 0.55 : isHovering ? 0.3 : 0)
-                .blur(radius: isExpanded ? 24 : isHovering ? 14 : 0)
-                .offset(y: isExpanded ? 8 : isHovering ? 3 : 0)
-                .animation(isExpanded ? expandSpring : collapseSpring, value: isExpanded)
-                .animation(isExpanded ? expandSpring : collapseSpring, value: isHovering)
-        }
         .animation(isExpanded ? expandSpring : collapseSpring, value: isExpanded)
+        .scaleEffect(hoverScale)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.showSurfaceNudge)
         .padding(.top, 6)
     }
@@ -435,29 +472,40 @@ struct PostureIslandView: View {
 
         if hovering {
             isHovering = true
+            // Phase 1: smooth pill breathe — tactile feedback
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) {
+                hoverScale = 1.04
+            }
+            viewModel.islandManager.updateShadow(radius: 20, opacity: 0.35, offsetY: 4)
+            // Phase 2: delayed expand — scale grows further
             hoverTask = Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(200))
+                try? await Task.sleep(for: .milliseconds(320))
                 guard !Task.isCancelled, isHovering else { return }
                 withAnimation(expandSpring) {
                     isExpanded = true
+                    hoverScale = 1.06
                 }
-                // Content appears slightly after the shape starts morphing
+                viewModel.islandManager.updateShadow(radius: 25, opacity: 0.4, offsetY: 6)
                 try? await Task.sleep(for: .milliseconds(80))
                 guard !Task.isCancelled else { return }
                 contentVisible = true
             }
         } else {
+            isHovering = false
             hoverTask = Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(350))
-                guard !Task.isCancelled else { return }
-                // Content fades first, then shape collapses
-                contentVisible = false
-                try? await Task.sleep(for: .milliseconds(100))
-                guard !Task.isCancelled else { return }
-                withAnimation(collapseSpring) {
-                    isHovering = false
-                    isExpanded = false
+                if contentVisible {
+                    try? await Task.sleep(for: .milliseconds(350))
+                    guard !Task.isCancelled else { return }
+                    contentVisible = false
+                    try? await Task.sleep(for: .milliseconds(100))
+                    guard !Task.isCancelled else { return }
                 }
+                withAnimation(collapseSpring) {
+                    contentVisible = false
+                    isExpanded = false
+                    hoverScale = 1.0
+                }
+                viewModel.islandManager.updateShadow(radius: 16, opacity: 0.3, offsetY: 3)
             }
         }
     }

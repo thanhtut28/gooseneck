@@ -14,7 +14,7 @@ enum DS {
             let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
             return isDark
                 ? NSColor.white.withAlphaComponent(0.06)
-                : NSColor.black.withAlphaComponent(0.08)
+                : NSColor.black.withAlphaComponent(0.12)
         })
 
         static let textPrimary = adaptive(light: "18181B", dark: "FAFAFA")
@@ -153,8 +153,8 @@ struct DSCard: ViewModifier {
             )
             // Subtle drop shadow for depth
             .shadow(
-                color: Color.black.opacity(colorScheme == .dark ? 0.2 : 0.05),
-                radius: 12, x: 0, y: 4
+                color: Color.black.opacity(colorScheme == .dark ? 0.2 : 0.08),
+                radius: colorScheme == .dark ? 12 : 8, x: 0, y: 4
             )
     }
 }
@@ -221,25 +221,26 @@ struct DSGlassCircle: ViewModifier {
 }
 
 struct DSGlassButton: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+    private let radius: CGFloat = 10
+
     func body(content: Content) -> some View {
         if #available(macOS 26, *) {
             content
-                .glassEffect(.regular.interactive(), in: .capsule)
+                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: radius))
         } else {
             content
-                .background(.thinMaterial, in: Capsule())
+                .background(DS.Colors.cardBg, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
                 .overlay(
-                    Capsule()
+                    RoundedRectangle(cornerRadius: radius, style: .continuous)
                         .stroke(
-                            LinearGradient(
-                                colors: [Color.white.opacity(0.15), Color.clear],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
+                            colorScheme == .dark
+                                ? LinearGradient(colors: [Color.white.opacity(0.15), Color.clear], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                : LinearGradient(colors: [DS.Colors.cardBorder], startPoint: .top, endPoint: .bottom),
                             lineWidth: 1
                         )
                 )
-                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.06 : 0.03), radius: 2, x: 0, y: 1)
         }
     }
 }
