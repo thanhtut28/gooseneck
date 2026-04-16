@@ -1,3 +1,4 @@
+import Sparkle
 import SwiftUI
 
 struct GooseNeckCommands: Commands {
@@ -18,6 +19,12 @@ struct GooseNeckCommands: Commands {
                         ]
                     )
                 ])
+            }
+        }
+
+        CommandGroup(after: .appInfo) {
+            Button("Check for Updates\u{2026}") {
+                GooseNeckApp.sharedUpdater?.checkForUpdates()
             }
         }
 

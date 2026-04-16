@@ -4,7 +4,7 @@ import Foundation
 /// Uses a 90-second sliding window to distinguish gradual slouching from intentional adjustments.
 @MainActor @Observable
 final class PostureAnalyzer {
-    private let notifyDriftEpisode: (Double) -> Void
+    private let notifyDriftEpisode: @MainActor (Double) -> Void
 
     private(set) var currentDrift: Double = 0       // Signed combined drift
     private(set) var driftMagnitude: Double = 0     // Absolute combined drift for threshold
@@ -25,7 +25,7 @@ final class PostureAnalyzer {
     var driftThreshold: Double = 10.0
 
     init(
-        notifyDriftEpisode: @escaping (Double) -> Void = { driftMagnitude in
+        notifyDriftEpisode: @MainActor @escaping (Double) -> Void = { driftMagnitude in
             NotificationManager.shared.send(
                 category: NotificationCategory.posture.rawValue,
                 title: "GooseNeck",
@@ -100,11 +100,6 @@ final class PostureAnalyzer {
         let ratio = Double(aboveThresholdCount) / Double(driftHistory.count)
         guard ratio > 0.7 else { return false }
 
-        let firstHalf = driftHistory.prefix(driftHistory.count / 2)
-        let secondHalf = driftHistory.suffix(driftHistory.count / 2)
-        let firstAvg = firstHalf.map(\.drift).reduce(0, +) / Double(firstHalf.count)
-        let secondAvg = secondHalf.map(\.drift).reduce(0, +) / Double(secondHalf.count)
-
-        return secondAvg > firstAvg
+        return true
     }
 }

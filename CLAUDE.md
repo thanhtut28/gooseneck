@@ -63,11 +63,11 @@ Shared/               ← Shared app types
 - **IOKit callbacks:** `Unmanaged.passUnretained` + `toOpaque()` for C function pointer context
 - **Persistence:** SwiftData (`SessionRecord`, `CalibrationProfile`, `UserSettings`) — all local, no cloud sync
 - **UI:** Dark mode only, design tokens in `DesignSystem.swift` (colors, fonts, spacing, card modifier)
-- **Notifications:** Per-category throttling via `NotificationManager` singleton (posture 15min, break 5min, fatigue 30min)
+- **Notifications:** Per-category throttling via `NotificationManager` singleton (posture 15min, break 30s guard, fatigue 30min); break repeat cadence managed by `BreakTracker`
 
 ## Key Algorithms
 
-- **Drift detection** (`PostureAnalyzer`): 90-sec sliding window, fires if drift > threshold AND >70% of samples above 80% threshold AND monotonically increasing (second-half > first-half avg)
+- **Drift detection** (`PostureAnalyzer`): 90-sec sliding window, fires if drift > threshold AND >70% of samples above 80% threshold
 - **Orientation** (`MahonyAHRS`): Quaternion complementary filter, accelerometer-only (kp=4.0), outputs pitch/roll
 - **Typing detection** (`BandpassFilter`): Cascaded Butterworth 5-45Hz, RMS of bandpass output = typing intensity
 - **Presence** (`BreakTracker`): `CGEventSource.secondsSinceLastEventType` for system idle, 30-sec away threshold

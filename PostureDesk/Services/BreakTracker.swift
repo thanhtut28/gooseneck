@@ -90,6 +90,7 @@ final class BreakTracker {
     var breakReminderCadence: BreakReminderCadence = BreakTracker.loadBreakReminderCadence() {
         didSet {
             UserDefaults.standard.set(breakReminderCadence.rawValue, forKey: Self.breakReminderCadenceDefaultsKey)
+            lastBreakReminderSecondMark = nil
         }
     }
 
@@ -157,6 +158,11 @@ final class BreakTracker {
             lastActivityTime = time
         }
         isBreakOverdue = false
+        lastBreakReminderSecondMark = nil
+    }
+
+    /// Reset reminder cadence so the next overdue tick fires immediately.
+    func resetReminderCadence() {
         lastBreakReminderSecondMark = nil
     }
 

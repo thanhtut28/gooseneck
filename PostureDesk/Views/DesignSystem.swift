@@ -151,6 +151,7 @@ struct DSCard: ViewModifier {
                         lineWidth: 1.5
                     )
             )
+            .compositingGroup()
             // Subtle drop shadow for depth
             .shadow(
                 color: Color.black.opacity(colorScheme == .dark ? 0.2 : 0.08),

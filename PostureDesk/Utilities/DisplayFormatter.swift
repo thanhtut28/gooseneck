@@ -9,7 +9,7 @@ enum DisplayFormatter {
         let minutes = (seconds % 3600) / 60
 
         if hours > 0 {
-            return "\(hours)h \(minutes)m"
+            return minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h"
         }
 
         return "\(minutes)m"
@@ -20,7 +20,7 @@ enum DisplayFormatter {
         let hours = minutes / 60
         let mins = minutes % 60
         if hours > 0 {
-            return "\(hours)h \(mins)m"
+            return mins > 0 ? "\(hours)h \(mins)m" : "\(hours)h"
         }
         return "\(minutes)m"
     }

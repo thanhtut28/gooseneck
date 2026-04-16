@@ -50,7 +50,7 @@ struct HistoryView: View {
             Image(systemName: "moon.zzz.fill")
                 .font(.system(size: 48, weight: .light))
                 .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.white)
+                .foregroundStyle(DS.Colors.textSecondary)
                 .padding(.bottom, 12)
 
             Text("no sessions yet")
@@ -76,7 +76,7 @@ struct HistoryView: View {
         return VStack(alignment: .leading, spacing: DS.Spacing.sectionGap) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("this week")
-                    .font(DS.Font.label())
+                    .font(DS.Font.rowTitle())
                     .foregroundStyle(DS.Colors.textSecondary)
                     .textCase(.uppercase)
                     .tracking(1.5)
@@ -95,14 +95,13 @@ struct HistoryView: View {
                         .textCase(.uppercase)
                         .tracking(1.0)
 
-                    HStack(alignment: .firstTextBaseline, spacing: 12) {
-                        AnimatedDurationFormatter(minutes: thisWeek.activeMinutes, font: DS.Font.metric(48), color: DS.Colors.textPrimary)
+                    AnimatedDurationFormatter(minutes: thisWeek.activeMinutes, font: DS.Font.metric(48), color: DS.Colors.textPrimary)
 
-                        if lastWeek.activeMinutes > 0 {
-                            Text(trendText(current: thisWeek.activeMinutes, previous: lastWeek.activeMinutes))
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                .foregroundStyle(thisWeek.activeMinutes >= lastWeek.activeMinutes ? DS.Colors.accentGood : DS.Colors.accentDanger)
-                        }
+                    let trend = trendText(current: thisWeek.activeMinutes, previous: lastWeek.activeMinutes)
+                    if !trend.isEmpty {
+                        Text("\(trend) from last week")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyle(thisWeek.activeMinutes >= lastWeek.activeMinutes ? DS.Colors.accentGood : DS.Colors.accentDanger)
                     }
                 }
                 Spacer()
@@ -120,7 +119,7 @@ struct HistoryView: View {
                 bentoCard(
                     value: thisWeek.alertCount,
                     label: "posture alerts",
-                    trend: lastWeek.alertCount > 0 ? alertTrendText(current: thisWeek.alertCount, previous: lastWeek.alertCount) : nil,
+                    trend: (thisWeek.alertCount > 0 && lastWeek.alertCount > 0) ? alertTrendText(current: thisWeek.alertCount, previous: lastWeek.alertCount) : nil,
                     trendPositive: thisWeek.alertCount <= lastWeek.alertCount
                 )
 
@@ -185,17 +184,22 @@ struct HistoryView: View {
     }
 
     private func trendText(current: Int, previous: Int) -> String {
-        guard previous > 0 else { return "" }
+        guard current > 0, previous > 0 else { return "" }
         let change = Int(round(Double(current - previous) / Double(previous) * 100))
-        if change == 0 { return "same" }
+        if change == 0 { return "" }
         return change > 0 ? "+\(change)%" : "\(change)%"
+    }
+
+    private func isSelected(_ date: Date) -> Bool {
+        guard let selectedDate else { return false }
+        return Calendar.current.isDate(date, inSameDayAs: selectedDate)
     }
 
     /// For alerts, fewer = better. Show as "↓25% fewer" or "↑25% more"
     private func alertTrendText(current: Int, previous: Int) -> String {
-        guard previous > 0 else { return "" }
+        guard current > 0, previous > 0 else { return "" }
         let change = Int(round(Double(current - previous) / Double(previous) * 100))
-        if change == 0 { return "same" }
+        if change == 0 { return "" }
         if change < 0 { return "↓\(abs(change))% fewer" }
         return "↑\(change)% more"
     }
@@ -222,7 +226,8 @@ struct HistoryView: View {
                 .foregroundStyle(
                     LinearGradient(
                         colors: [
-                            DS.Colors.accentInfo.opacity(0.4),
+                            DS.Colors.accentInfo.opacity(0.3),
+                            DS.Colors.accentInfo.opacity(0.12),
                             DS.Colors.accentInfo.opacity(0.0)
                         ],
                         startPoint: .top,
@@ -236,14 +241,26 @@ struct HistoryView: View {
                 )
                 .interpolationMethod(.catmullRom)
                 .foregroundStyle(DS.Colors.accentInfo)
-                .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+                .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
 
                 PointMark(
                     x: .value("Day", day.date, unit: .day),
                     y: .value("Minutes", day.activeMinutes)
                 )
                 .foregroundStyle(day.alertRate > 2 ? DS.Colors.accentWarn : DS.Colors.accentInfo)
-                .symbolSize(80)
+                .symbolSize(isSelected(day.date) ? 35 : 20)
+                .symbol {
+                    let color = day.alertRate > 2 ? DS.Colors.accentWarn : DS.Colors.accentInfo
+                    if isSelected(day.date) {
+                        Circle()
+                            .fill(color)
+                            .frame(width: 6, height: 6)
+                    } else {
+                        Circle()
+                            .strokeBorder(color, lineWidth: 1.5)
+                            .frame(width: 5, height: 5)
+                    }
+                }
 
                 if let selectedDate,
                    Calendar.current.isDate(day.date, inSameDayAs: selectedDate) {
@@ -255,11 +272,11 @@ struct HistoryView: View {
                                 Text(day.date.formatted(.dateTime.weekday(.wide).month().day()))
                                     .font(DS.Font.caption())
                                     .foregroundStyle(DS.Colors.textMuted)
-                                
+
                                 Text("\(DisplayFormatter.sessionDuration(minutes: day.activeMinutes)) active")
                                     .font(.system(size: 14, weight: .bold, design: .rounded))
                                     .foregroundStyle(DS.Colors.textPrimary)
-                                
+
                                 if day.alertRate > 0 {
                                     Text("\(String(format: "%.1f", day.alertRate)) alerts/hr")
                                         .font(.system(size: 12, weight: .medium, design: .rounded))
@@ -268,9 +285,13 @@ struct HistoryView: View {
                             }
                             .padding(12)
                             .background(DS.Colors.cardBg, in: RoundedRectangle(cornerRadius: 12))
+                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(DS.Colors.textMuted.opacity(0.15), lineWidth: 1))
+                            .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+                            .transition(.opacity.combined(with: .scale(scale: 0.95)))
                         }
                 }
             }
+            .animation(.easeOut(duration: 0.2), value: selectedDate)
             .chartXSelection(value: $selectedDate)
             .chartYScale(domain: 0...yMax)
             .chartXAxis {
@@ -442,7 +463,7 @@ private struct AnimatableDurationText: View, Animatable {
         let mins = Int(minutes)
         let h = mins / 60
         let m = mins % 60
-        if h > 0 { Text("\(h)h \(m)m") }
+        if h > 0 { Text(m > 0 ? "\(h)h \(m)m" : "\(h)h") }
         else { Text("\(m)m") }
     }
 }
@@ -672,7 +693,7 @@ enum HistoryStore {
         let bucketRangeStart = window.bucketRangeStart
         let nextWeekStart = window.nextWeekStart
 
-        return FetchDescriptor<SessionRecord>(
+        var descriptor = FetchDescriptor<SessionRecord>(
             predicate: #Predicate<SessionRecord> { session in
                 session.totalActiveMinutes > 0
                     && session.startedAt < nextWeekStart
@@ -680,6 +701,8 @@ enum HistoryStore {
             },
             sortBy: [SortDescriptor(\SessionRecord.startedAt)]
         )
+        descriptor.fetchLimit = 500
+        return descriptor
     }
 }
 

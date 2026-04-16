@@ -13,10 +13,17 @@ struct PostureIslandView: View {
     @State private var hoverTask: Task<Void, Never>?
     @State private var contentVisible = false
     @State private var hoverScale: CGFloat = 1.0
+
     @State private var surfaceBadgeScale: CGFloat = 1.0
 
     private let sideExtension: CGFloat = 80
     private let collapsedHeightPadding: CGFloat = 0
+    private let baseWindowHeight: CGFloat = 240
+    private var windowHeight: CGFloat {
+        isExpanded && viewModel.showSurfaceNudge ? baseWindowHeight + 100 : baseWindowHeight
+    }
+    private let floatingPillHeight: CGFloat = 32
+    private let floatingTopPadding: CGFloat = 6
 
     private var barHeight: CGFloat { notchHeight + collapsedHeightPadding }
     private var totalWidth: CGFloat { notchWidth + sideExtension * 2 }
@@ -42,7 +49,25 @@ struct PostureIslandView: View {
                 floatingLayout
             }
         }
-        .onHover { handleHover($0) }
+        .onContinuousHover { phase in
+            switch phase {
+            case .active(let location):
+                // Only trigger hover when cursor is within the visible island area.
+                // The window frame extends far below the collapsed bar —
+                // without this check, the full frame acts as a hover trigger.
+                let maxY: CGFloat = isExpanded ? windowHeight : (hasNotch ? barHeight : floatingTopPadding + floatingPillHeight)
+                let inBounds = location.y >= 0 && location.y <= maxY
+                if inBounds && !isHovering {
+                    handleHover(true)
+                } else if !inBounds && isHovering {
+                    handleHover(false)
+                }
+            case .ended:
+                if isHovering { handleHover(false) }
+            @unknown default:
+                break
+            }
+        }
         .onDisappear { hoverTask?.cancel() }
         .opacity(isRevealed ? 1 : 0)
         .scaleEffect(
@@ -51,7 +76,7 @@ struct PostureIslandView: View {
             anchor: .top
         )
         .animation(.spring(response: 0.4, dampingFraction: 0.75), value: isRevealed)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .frame(width: notchWidth + 180, height: windowHeight, alignment: .top)
     }
 
     // MARK: - Notch Layout
@@ -69,29 +94,34 @@ struct PostureIslandView: View {
                 rightIndicator
                     .frame(width: sideExtension, height: barHeight)
             }
+            .contentShape(Rectangle())
 
-            // Expanded body — morphs out from the pill
-            if isExpanded {
-                expandedBody
-                    .opacity(contentVisible ? 1 : 0)
-                    .scaleEffect(contentVisible ? 1 : 0.92, anchor: .top)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.8).delay(0.06), value: contentVisible)
-                    .transition(.opacity.animation(.easeOut(duration: 0.12)))
-            }
+            // Expanded body — always in tree, height-animated to avoid
+            // structural view mutations that trigger NSHostingView
+            // updateAnimatedWindowSize re-entrancy crash.
+            expandedBody
+                .frame(height: isExpanded ? nil : 0, alignment: .top)
+                .clipped()
+                .opacity(isExpanded && contentVisible ? 1 : 0)
+                .scaleEffect(contentVisible ? 1 : 0.92, anchor: .top)
+                .allowsHitTesting(isExpanded)
+                .animation(.spring(response: 0.3, dampingFraction: 0.8).delay(0.06), value: contentVisible)
         }
         .frame(width: totalWidth)
-        .background(islandBackground)
         .clipShape(
             PostureIslandPillShape(
                 topCornerRadius: isExpanded ? 12 : 6,
                 bottomCornerRadius: isExpanded ? 24 : 14
             )
         )
-        .contentShape(
-            PostureIslandPillShape(
-                topCornerRadius: isExpanded ? 12 : 6,
-                bottomCornerRadius: isExpanded ? 24 : 14
-            )
+        .background(
+            islandBackground
+                .clipShape(
+                    PostureIslandPillShape(
+                        topCornerRadius: isExpanded ? 12 : 6,
+                        bottomCornerRadius: isExpanded ? 24 : 14
+                    )
+                )
         )
         .animation(isExpanded ? expandSpring : collapseSpring, value: isExpanded)
         .scaleEffect(hoverScale, anchor: .top)
@@ -142,10 +172,11 @@ struct PostureIslandView: View {
             .padding(.horizontal, 4)
 
             // Lid-angle nudge
-            if viewModel.showSurfaceNudge {
-                surfaceNudgeBanner
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            }
+            surfaceNudgeBanner
+                .frame(height: viewModel.showSurfaceNudge ? nil : 0, alignment: .top)
+                .clipped()
+                .opacity(viewModel.showSurfaceNudge ? 1 : 0)
+                .allowsHitTesting(viewModel.showSurfaceNudge)
 
             // Metric widget cards (variant-driven)
             HStack(spacing: 8) {
@@ -157,7 +188,7 @@ struct PostureIslandView: View {
                         .tracking(0.5)
                     Text(expandedCard1Value)
                         .font(.system(size: 20, weight: .bold, design: .rounded).monospacedDigit())
-                        .foregroundStyle(islandPrimaryText)
+                        .foregroundStyle(expandedCard1ValueColor)
                         .contentTransition(.numericText())
                 }
 
@@ -169,7 +200,7 @@ struct PostureIslandView: View {
                         .tracking(0.5)
                     Text(expandedCard2Value)
                         .font(.system(size: 20, weight: .bold, design: .rounded).monospacedDigit())
-                        .foregroundStyle(islandPrimaryText)
+                        .foregroundStyle(expandedCard2ValueColor)
                         .contentTransition(.numericText())
                 }
             }
@@ -326,7 +357,7 @@ struct PostureIslandView: View {
             .accessibilityLabel("Dismiss surface suggestion")
         }
         .padding(10)
-        .background(Color.white.opacity(0.06))
+        .background(islandChrome)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
@@ -335,93 +366,71 @@ struct PostureIslandView: View {
     private var floatingLayout: some View {
         let width: CGFloat = isExpanded ? 240 : 120
         let nudgeExtra: CGFloat = viewModel.showSurfaceNudge ? 100 : 0
-        let height: CGFloat = isExpanded ? 180 + nudgeExtra : 32
+        let height: CGFloat = isExpanded ? 180 + nudgeExtra : floatingPillHeight
         let radius: CGFloat = isExpanded ? 20 : height / 2
 
-        return VStack(spacing: 0) {
-            if isExpanded {
-                VStack(spacing: 8) {
-                    HStack {
-                        Circle()
-                            .fill(statusColor)
-                            .frame(width: 8, height: 8)
-                        Text(statusText)
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                            .foregroundStyle(islandPrimaryText)
-                        Spacer()
-                        surfaceBadge(fontSize: 10, hPad: 6, vPad: 2)
+        return ZStack(alignment: .top) {
+            // Collapsed pill content
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(statusColor)
+                    .frame(width: 8, height: 8)
+                    .shadow(color: statusColor.opacity(0.5), radius: 4)
+                Text(minimalRightValue)
+                    .font(.system(size: 12, weight: .medium, design: .rounded).monospacedDigit())
+                    .foregroundStyle(statusColor)
+            }
+            .padding(.horizontal, 12)
+            .frame(height: floatingPillHeight)
+            .opacity(isExpanded ? 0 : 1)
+            .allowsHitTesting(!isExpanded)
+
+            // Expanded card content
+            VStack(spacing: 8) {
+                HStack {
+                    Circle()
+                        .fill(statusColor)
+                        .frame(width: 8, height: 8)
+                    Text(statusText)
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(islandPrimaryText)
+                    Spacer()
+                    surfaceBadge(fontSize: 10, hPad: 6, vPad: 2)
+                }
+
+                surfaceNudgeBanner
+                    .frame(height: viewModel.showSurfaceNudge ? nil : 0, alignment: .top)
+                    .clipped()
+                    .opacity(viewModel.showSurfaceNudge ? 1 : 0)
+                    .allowsHitTesting(viewModel.showSurfaceNudge)
+
+                HStack(spacing: 8) {
+                    widgetCard {
+                        Text(expandedCard1Label)
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(islandSecondaryText)
+                            .textCase(.uppercase)
+                        Text(expandedCard1Value)
+                            .font(.system(size: 16, weight: .bold, design: .rounded).monospacedDigit())
+                            .foregroundStyle(expandedCard1ValueColor)
                     }
-
-                    if viewModel.showSurfaceNudge {
-                        surfaceNudgeBanner
-                            .transition(.move(edge: .top).combined(with: .opacity))
+                    widgetCard {
+                        Text(expandedCard2Label)
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(islandSecondaryText)
+                            .textCase(.uppercase)
+                        Text(expandedCard2Value)
+                            .font(.system(size: 16, weight: .bold, design: .rounded).monospacedDigit())
+                            .foregroundStyle(expandedCard2ValueColor)
                     }
+                }
 
-                    HStack(spacing: 8) {
-                        widgetCard {
-                            Text(expandedCard1Label)
-                                .font(.system(size: 9, weight: .medium))
-                                .foregroundStyle(islandSecondaryText)
-                                .textCase(.uppercase)
-                            Text(expandedCard1Value)
-                                .font(.system(size: 16, weight: .bold, design: .rounded).monospacedDigit())
-                                .foregroundStyle(islandPrimaryText)
-                        }
-                        widgetCard {
-                            Text(expandedCard2Label)
-                                .font(.system(size: 9, weight: .medium))
-                                .foregroundStyle(islandSecondaryText)
-                                .textCase(.uppercase)
-                            Text(expandedCard2Value)
-                                .font(.system(size: 16, weight: .bold, design: .rounded).monospacedDigit())
-                                .foregroundStyle(islandPrimaryText)
-                        }
-                    }
-
-                    HStack(spacing: 8) {
-                        if viewModel.breakTracker.isBreakOverdue {
-                            Button {
-                                viewModel.recordBreak()
-                            } label: {
-                                Text("Took a Break")
-                                    .font(.system(size: 11, weight: .medium))
-                                    .foregroundStyle(islandSecondaryText)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(8)
-                                    .background(islandChrome)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("Took a Break")
-                        } else {
-                            Button {
-                                if viewModel.sensorClient.connectionError == nil {
-                                    viewModel.calibrate()
-                                } else {
-                                    viewModel.start()
-                                }
-                            } label: {
-                                Text(sensorActionTitle)
-                                    .font(.system(size: 11, weight: .medium))
-                                    .foregroundStyle(islandSecondaryText)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(8)
-                                    .background(islandChrome)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(sensorActionTitle)
-                            .accessibilityHint(sensorActionHint)
-                        }
-
+                HStack(spacing: 8) {
+                    if viewModel.breakTracker.isBreakOverdue {
                         Button {
-                            if viewModel.isPaused {
-                                viewModel.resumeMonitoring()
-                            } else {
-                                viewModel.pauseMonitoring()
-                            }
+                            viewModel.recordBreak()
                         } label: {
-                            Text(viewModel.isPaused ? "Resume" : "Pause")
+                            Text("Took a Break")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(islandSecondaryText)
                                 .frame(maxWidth: .infinity)
@@ -430,39 +439,64 @@ struct PostureIslandView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel(viewModel.isPaused ? "Resume monitoring" : "Pause monitoring")
+                        .accessibilityLabel("Took a Break")
+                    } else {
+                        Button {
+                            if viewModel.sensorClient.connectionError == nil {
+                                viewModel.calibrate()
+                            } else {
+                                viewModel.start()
+                            }
+                        } label: {
+                            Text(sensorActionTitle)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(islandSecondaryText)
+                                .frame(maxWidth: .infinity)
+                                .padding(8)
+                                .background(islandChrome)
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(sensorActionTitle)
+                        .accessibilityHint(sensorActionHint)
                     }
+
+                    Button {
+                        if viewModel.isPaused {
+                            viewModel.resumeMonitoring()
+                        } else {
+                            viewModel.pauseMonitoring()
+                        }
+                    } label: {
+                        Text(viewModel.isPaused ? "Resume" : "Pause")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(islandSecondaryText)
+                            .frame(maxWidth: .infinity)
+                            .padding(8)
+                            .background(islandChrome)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(viewModel.isPaused ? "Resume monitoring" : "Pause monitoring")
                 }
-                .padding(14)
-                .opacity(contentVisible ? 1 : 0)
-                .scaleEffect(contentVisible ? 1 : 0.92, anchor: .top)
-                .animation(.spring(response: 0.3, dampingFraction: 0.8).delay(0.06), value: contentVisible)
-                .transition(.opacity.animation(.easeOut(duration: 0.12)))
-            } else {
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(statusColor)
-                        .frame(width: 8, height: 8)
-                        .shadow(color: statusColor.opacity(0.5), radius: 4)
-                    Text(minimalRightValue)
-                        .font(.system(size: 12, weight: .medium, design: .rounded).monospacedDigit())
-                        .foregroundStyle(statusColor)
-                }
-                .padding(.horizontal, 12)
-                .transition(.opacity.animation(.easeOut(duration: 0.1)))
             }
+            .padding(14)
+            .opacity(isExpanded && contentVisible ? 1 : 0)
+            .scaleEffect(contentVisible ? 1 : 0.92, anchor: .top)
+            .allowsHitTesting(isExpanded)
+            .animation(.spring(response: 0.3, dampingFraction: 0.8).delay(0.06), value: contentVisible)
         }
         .frame(width: width, height: height)
+        .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
         .background(
             islandBackground.opacity(0.9)
                 .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
         )
-        .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
-        .contentShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
         .animation(isExpanded ? expandSpring : collapseSpring, value: isExpanded)
         .scaleEffect(hoverScale)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.showSurfaceNudge)
-        .padding(.top, 6)
+        .padding(.top, floatingTopPadding)
     }
 
     // MARK: - Hover
@@ -472,11 +506,10 @@ struct PostureIslandView: View {
 
         if hovering {
             isHovering = true
-            // Phase 1: smooth pill breathe — tactile feedback
-            withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) {
+            // Phase 1: smooth pill breathe
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
                 hoverScale = 1.04
             }
-            viewModel.islandManager.updateShadow(radius: 20, opacity: 0.35, offsetY: 4)
             // Phase 2: delayed expand — scale grows further
             hoverTask = Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(320))
@@ -485,7 +518,6 @@ struct PostureIslandView: View {
                     isExpanded = true
                     hoverScale = 1.06
                 }
-                viewModel.islandManager.updateShadow(radius: 25, opacity: 0.4, offsetY: 6)
                 try? await Task.sleep(for: .milliseconds(80))
                 guard !Task.isCancelled else { return }
                 contentVisible = true
@@ -505,7 +537,6 @@ struct PostureIslandView: View {
                     isExpanded = false
                     hoverScale = 1.0
                 }
-                viewModel.islandManager.updateShadow(radius: 16, opacity: 0.3, offsetY: 3)
             }
         }
     }
@@ -555,6 +586,37 @@ struct PostureIslandView: View {
         case .tiltAngle: return viewModel.postureAnalyzer.pitchDrift
         case .sessionTime: return Double(viewModel.breakTracker.totalActiveSeconds)
         case .typingIntensity: return viewModel.fatigueMonitor.currentIntensityPercent
+        }
+    }
+
+    // MARK: - Drift Colors (matches dashboard PostureDriftCard / TiltCard)
+
+    private func driftColor(for axisProgress: Double) -> Color {
+        if axisProgress > 0.8 { return DS.Colors.accentWarn }
+        if axisProgress > 0.5 { return DS.Colors.textSecondary }
+        return DS.Colors.accentGood
+    }
+
+    private var tiltDriftProgress: Double {
+        min(abs(viewModel.postureAnalyzer.pitchDrift) / viewModel.postureAnalyzer.driftThreshold, 1.0)
+    }
+
+    private var lidAngleDriftProgress: Double {
+        min(abs(viewModel.postureAnalyzer.lidAngleDrift) / viewModel.postureAnalyzer.driftThreshold, 1.0)
+    }
+
+    private var expandedCard1ValueColor: Color {
+        switch variant {
+        case .sessionTime: return driftColor(for: tiltDriftProgress)
+        default: return islandPrimaryText
+        }
+    }
+
+    private var expandedCard2ValueColor: Color {
+        switch variant {
+        case .sessionTime: return driftColor(for: lidAngleDriftProgress)
+        case .typingIntensity: return driftColor(for: tiltDriftProgress)
+        default: return islandPrimaryText
         }
     }
 

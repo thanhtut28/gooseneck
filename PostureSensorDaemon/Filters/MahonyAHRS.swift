@@ -77,6 +77,10 @@ final class MahonyAHRS {
 
         // Normalize quaternion
         let qnorm = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3)
+        guard qnorm > 1e-10 else {
+            q0 = 1.0; q1 = 0.0; q2 = 0.0; q3 = 0.0
+            return
+        }
         q0 /= qnorm; q1 /= qnorm; q2 /= qnorm; q3 /= qnorm
     }
 

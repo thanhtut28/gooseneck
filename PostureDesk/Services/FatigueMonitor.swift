@@ -136,8 +136,11 @@ final class FatigueMonitor {
             recentSamples.removeFirst(recentSamples.count - recentWindowSize)
         }
 
+        guard !recentSamples.isEmpty else { return }
         let recentAvg = recentSamples.reduce(0, +) / Double(recentSamples.count)
-        let intensityPercent = min(100, ((recentAvg - baselineRMS) / baselineRMS) * 100.0)
+        let intensityPercent = baselineRMS > 0
+            ? min(100, ((recentAvg - baselineRMS) / baselineRMS) * 100.0)
+            : 0.0
         if currentIntensityPercent != intensityPercent {
             currentIntensityPercent = intensityPercent
         }
@@ -156,7 +159,7 @@ final class FatigueMonitor {
         // Intensity history for sparkline (5 min)
         intensityHistory.append(max(0, currentIntensityPercent))
         if intensityHistory.count > 300 {
-            intensityHistory.removeFirst(intensityHistory.count - 300)
+            intensityHistory = Array(intensityHistory.suffix(300))
         }
 
         // Sustained fatigue detection

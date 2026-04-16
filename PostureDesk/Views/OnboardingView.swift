@@ -2,6 +2,7 @@ import SwiftUI
 
 enum OnboardingStep: Int, CaseIterable {
     case welcome
+    case privacyTerms
     case accelerometer
     case lidAngle
     case typingIntensity
@@ -26,21 +27,19 @@ struct OnboardingView: View {
     @State private var typingDetected = false
     @State private var typingCheckReady = false
     @State private var consecutiveTypingSamples = 0
+    @State private var showPrivacySheet = false
+    @State private var showTermsSheet = false
 
     var body: some View {
         VStack(spacing: 0) {
-            // Progress indicator (hidden on completion step)
-            if step != .complete {
-                progressBar
-                    .padding(.top, 16)
-                    .padding(.bottom, 8)
-            }
-
             // Step content
             ZStack {
                 switch step {
                 case .welcome:
                     welcomeStep
+                        .transition(slideTransition)
+                case .privacyTerms:
+                    privacyTermsStep
                         .transition(slideTransition)
                 case .accelerometer:
                     accelerometerStep
@@ -103,43 +102,6 @@ struct OnboardingView: View {
 
     // MARK: - Progress Bar
 
-    private var progressBar: some View {
-        HStack(spacing: 0) {
-            ForEach(OnboardingStep.allCases, id: \.rawValue) { s in
-                if s.rawValue > 0 {
-                    // Connecting line
-                    Rectangle()
-                        .fill(s.rawValue <= step.rawValue ? DS.Colors.accentGood.opacity(0.5) : DS.Colors.textMuted.opacity(0.12))
-                        .frame(height: 1.5)
-                        .animation(.easeInOut(duration: 0.3), value: step)
-                }
-
-                // Step dot
-                Circle()
-                    .fill(dotColor(for: s))
-                    .frame(
-                        width: s == step ? 10 : 7,
-                        height: s == step ? 10 : 7
-                    )
-                    .overlay {
-                        if s.rawValue < step.rawValue {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 5, weight: .bold))
-                                .foregroundStyle(.white)
-                        }
-                    }
-                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: step)
-            }
-        }
-        .padding(.horizontal, 40)
-    }
-
-    private func dotColor(for s: OnboardingStep) -> Color {
-        if s.rawValue < step.rawValue { return DS.Colors.accentGood }
-        if s == step { return DS.Colors.accentInfo }
-        return DS.Colors.textMuted.opacity(0.2)
-    }
-
     // MARK: - Back Button
 
     private var backButton: some View {
@@ -185,7 +147,9 @@ struct OnboardingView: View {
         VStack(spacing: 20) {
             Spacer()
 
-            LiquidOrbView(color: DS.Colors.accentInfo, driftOffset: 0)
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
                 .frame(width: 120, height: 120)
 
             VStack(spacing: 10) {
@@ -202,14 +166,133 @@ struct OnboardingView: View {
 
             Spacer()
 
-            primaryButton("Get Started", hint: "Starts sensor detection and continues setup.") {
-                viewModel.sensorClient.connect()
+            primaryButton("Get Started", hint: "Review privacy and terms before setup.") {
                 advance()
             }
         }
     }
 
-    // MARK: - Step 1: Accelerometer
+    // MARK: - Step 1: Privacy & Terms
+
+    private var privacyTermsStep: some View {
+        VStack(spacing: 0) {
+            HStack {
+                backButton
+                Spacer()
+            }
+
+            Spacer()
+
+            Image(systemName: "hand.raised.fill")
+                .font(.system(size: 36))
+                .foregroundStyle(DS.Colors.accentInfo)
+                .padding(.bottom, 8)
+
+            VStack(spacing: 8) {
+                Text("Privacy & Terms")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(DS.Colors.textPrimary)
+
+                Text("Your data stays on your Mac.\nReview our policies below.")
+                    .font(DS.Font.body())
+                    .foregroundStyle(DS.Colors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+            }
+
+            Spacer().frame(height: 20)
+
+            // Two highlight cards side by side
+            HStack(alignment: .top, spacing: 12) {
+                legalHighlightCard(
+                    title: "Privacy",
+                    icon: "lock.shield",
+                    highlights: LegalContent.privacyHighlights,
+                    action: { showPrivacySheet = true }
+                )
+                legalHighlightCard(
+                    title: "Terms",
+                    icon: "doc.text",
+                    highlights: LegalContent.termsHighlights,
+                    action: { showTermsSheet = true }
+                )
+            }
+
+            Spacer()
+
+            primaryButton("I Agree & Continue", hint: "Accept privacy policy and terms of service to continue setup.") {
+                UserDefaults.standard.set(true, forKey: "termsAccepted")
+                UserDefaults.standard.set(Date().timeIntervalSinceReferenceDate, forKey: "termsAcceptedAt")
+                viewModel.sensorClient.connect()
+                advance()
+            }
+        }
+        .sheet(isPresented: $showPrivacySheet) {
+            LegalDocumentSheet(title: "Privacy Policy", content: LegalContent.privacyFullText, isPresented: $showPrivacySheet)
+        }
+        .sheet(isPresented: $showTermsSheet) {
+            LegalDocumentSheet(title: "Terms of Service", content: LegalContent.termsFullText, isPresented: $showTermsSheet)
+        }
+    }
+
+    private func legalHighlightCard(
+        title: String,
+        icon: String,
+        highlights: [(icon: String, text: String)],
+        action: @escaping () -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Header
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(DS.Colors.accentInfo)
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(DS.Colors.textPrimary)
+            }
+
+            // Bullet items
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(Array(highlights.enumerated()), id: \.offset) { _, item in
+                    HStack(alignment: .top, spacing: 6) {
+                        Image(systemName: item.icon)
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(DS.Colors.textMuted)
+                            .frame(width: 14, height: 14)
+                        Text(item.text)
+                            .font(.system(size: 10.5, weight: .regular, design: .rounded))
+                            .foregroundStyle(DS.Colors.textSecondary)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+
+            Spacer(minLength: 0)
+
+            // Read full link
+            Button(action: action) {
+                HStack(spacing: 4) {
+                    Text("Read full \(title.lowercased())")
+                        .font(.system(size: 10.5, weight: .medium, design: .rounded))
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 8, weight: .semibold))
+                }
+                .foregroundStyle(DS.Colors.accentInfo)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(DS.Colors.cardBg, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(DS.Colors.cardBorder, lineWidth: 1)
+        )
+    }
+
+    // MARK: - Step 2: Accelerometer
 
     private var accelerometerStep: some View {
         let avail = viewModel.sensorClient.sensorAvailability
@@ -512,37 +595,40 @@ struct OnboardingView: View {
     private func surfaceOption(_ surface: Surface, icon: String, description: String) -> some View {
         let isSelected = viewModel.selectedSurface == surface
 
-        return VStack(spacing: 10) {
-            Image(systemName: icon)
-                .font(.system(size: 28))
-                .foregroundStyle(isSelected ? DS.Colors.accentInfo : DS.Colors.textMuted)
-
-            Text(surface.label)
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundStyle(DS.Colors.textPrimary)
-
-            Text(description)
-                .font(.system(size: 11, weight: .regular, design: .rounded))
-                .foregroundStyle(DS.Colors.textSecondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 20)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(isSelected ? DS.Colors.accentInfo.opacity(0.08) : DS.Colors.cardBg)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(isSelected ? DS.Colors.accentInfo : DS.Colors.cardBorder, lineWidth: isSelected ? 1.5 : 1)
-        )
-        .contentShape(RoundedRectangle(cornerRadius: 14))
-        .onTapGesture {
+        return Button {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                 viewModel.selectedSurface = surface
             }
+        } label: {
+            VStack(spacing: 10) {
+                Image(systemName: icon)
+                    .font(.system(size: 28))
+                    .foregroundStyle(isSelected ? DS.Colors.accentInfo : DS.Colors.textMuted)
+
+                Text(surface.label)
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundStyle(DS.Colors.textPrimary)
+
+                Text(description)
+                    .font(.system(size: 11, weight: .regular, design: .rounded))
+                    .foregroundStyle(DS.Colors.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 20)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(isSelected ? DS.Colors.accentInfo.opacity(0.08) : DS.Colors.cardBg)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(isSelected ? DS.Colors.accentInfo : DS.Colors.cardBorder, lineWidth: isSelected ? 1.5 : 1)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 14))
         }
+        .buttonStyle(.plain)
         .accessibilityLabel(surface.label)
+        .accessibilityHint(description)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
@@ -725,7 +811,7 @@ struct OnboardingView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "cart")
                             .font(.system(size: 13))
-                        Text("Buy a License — $9.99")
+                        Text("Buy a License — $14.99")
                             .font(.system(size: 14, weight: .semibold, design: .rounded))
                     }
                     Text("One-time purchase · Unlimited updates")
@@ -738,7 +824,7 @@ struct OnboardingView: View {
                 .background(DS.Colors.accentInfo, in: RoundedRectangle(cornerRadius: 12))
             }
             .buttonStyle(.plain)
-            .accessibilityHint("Opens the Polar checkout page to buy a GooseNeck license for $9.99.")
+            .accessibilityHint("Opens the Polar checkout page to buy a GooseNeck license for $14.99.")
 
             // Divider
             HStack(spacing: 12) {

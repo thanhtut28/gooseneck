@@ -10,6 +10,7 @@
 		0F9E17DC760E6C8890D54AA5 /* PostureDeskCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D95DB58901EC2C90C13539D /* PostureDeskCommands.swift */; };
 		11D7782649BFB12541399DD0 /* SignalProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 323E31F7235A0653D0793A96 /* SignalProcessor.swift */; };
 		14586BFA453B50C9B17B4EFD /* PostureIslandWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8117119A510EE9DB2541B79 /* PostureIslandWindow.swift */; };
+		194AF61F1FDB0476B4D883CD /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 0FCD0299600730EAABDAD200 /* Sparkle */; };
 		2A80508068EEFF2C2046ADFB /* PostureFigure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D95DBEB82535C9464C2377D /* PostureFigure.swift */; };
 		2CE5A927E9CF647933FC5B56 /* IOKitHIDConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F7A4B381CAA0CAA39E0DD0 /* IOKitHIDConstants.swift */; };
 		31384C16EEC377CA52D8F31A /* DirectSensorClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B165AD6CE21509DE103DB64 /* DirectSensorClient.swift */; };
@@ -19,12 +20,15 @@
 		4C7C0C7C87B9547EFF916DF6 /* PostureAnalyzerAndSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7904908D5203C00B6946FC /* PostureAnalyzerAndSettingsTests.swift */; };
 		4FC4B57832D06DACE2C79F6D /* PostureIslandManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40A40223AC5994CF4E91196A /* PostureIslandManager.swift */; };
 		55E7C3BD21B5046D8E8E4BCA /* FormattingAndFatigueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C98272C02EB91256A02D1755 /* FormattingAndFatigueTests.swift */; };
+		57B37185BCEF8D57B1EC7F4F /* LegalDocumentSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B914EE15D268D77019434DE /* LegalDocumentSheet.swift */; };
 		58B1447728C9F03401A94C7F /* HistoryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D75CB817A013B1858FCBF2B /* HistoryStoreTests.swift */; };
 		71D7D55B0DBC5B3C7FDE6D0D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14547DA85B424238999F90BF /* SettingsView.swift */; };
 		76F5261058A1C1B450E77635 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26F6A97ACFB318DB714E970F /* DesignSystem.swift */; };
+		7B891C048DBDD7324BA30657 /* LegalContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA7791E9772A6635E277C650 /* LegalContent.swift */; };
 		7F1C5F551FA50697D717CF63 /* CircularProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = B435F1C434A594EEB8D319B7 /* CircularProgressRing.swift */; };
 		7FA5E9FA9FCFE5B8CCB2F3A6 /* PostureViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE75DD19DB1965A8E2DE84B /* PostureViewModel.swift */; };
 		87CD23EFD44AB28CCFEE0E8C /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00FFD6EB98209756EE7E4EA /* NotificationManager.swift */; };
+		8F288B2BC63793650519D30E /* SoftwareUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09163022EF389A727D4CAB28 /* SoftwareUpdater.swift */; };
 		8F2A27FD18A1D15417FB77EF /* MahonyAHRS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AA80601E4B783F69768D568 /* MahonyAHRS.swift */; };
 		922631FFD9A630B845D28143 /* IslandVariant.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAB23BE854AAAA869B15BE39 /* IslandVariant.swift */; };
 		93FE75141D465AD2FA934191 /* SessionSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51AB9AFCB8C1CAF00537A0F4 /* SessionSummaryCard.swift */; };
@@ -34,7 +38,6 @@
 		AEFA32CD7B4298F73F22B39F /* MenuBarPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C44EC1538940156668CE73C /* MenuBarPopover.swift */; };
 		AF3835D3366E02993B13DB8F /* gooseneck-menubar.svg in Resources */ = {isa = PBXBuildFile; fileRef = C764314F6C3C117D09443147 /* gooseneck-menubar.svg */; };
 		B5B8C3A0407D271983CC6B56 /* TypingIntensityCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C27002E4901BE9045016F1 /* TypingIntensityCard.swift */; };
-		B9B0811F83117B2F1235680F /* SessionSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC221E2658B4EC631A9390B7 /* SessionSeeder.swift */; };
 		BA32BF8914928279F5C625BF /* TypingTestVisual.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15278C47C6C2DF367155D6BC /* TypingTestVisual.swift */; };
 		BCC0CA027BD9293C41A8DED8 /* SensorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5449C1AE3BF3879B8B4E98 /* SensorManager.swift */; };
 		BE721ACDFCC35ECBB4AC4732 /* BandpassFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99E51BB059DCC35E9DA9E23E /* BandpassFilter.swift */; };
@@ -73,6 +76,7 @@
 /* Begin PBXFileReference section */
 		040EF6D4CACD2DC06F85DBF8 /* GooseNeck.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GooseNeck.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		080377A35DB5A07998831FC1 /* MetricCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCard.swift; sourceTree = "<group>"; };
+		09163022EF389A727D4CAB28 /* SoftwareUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareUpdater.swift; sourceTree = "<group>"; };
 		09F7A4B381CAA0CAA39E0DD0 /* IOKitHIDConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOKitHIDConstants.swift; sourceTree = "<group>"; };
 		0AE75DD19DB1965A8E2DE84B /* PostureViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureViewModel.swift; sourceTree = "<group>"; };
 		0C5888665AA1052A6F5F5D71 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
@@ -83,6 +87,7 @@
 		1C04339BFA7EF02ECA606A6A /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		26F6A97ACFB318DB714E970F /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		2AA80601E4B783F69768D568 /* MahonyAHRS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MahonyAHRS.swift; sourceTree = "<group>"; };
+		2B914EE15D268D77019434DE /* LegalDocumentSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalDocumentSheet.swift; sourceTree = "<group>"; };
 		2D95DB58901EC2C90C13539D /* PostureDeskCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureDeskCommands.swift; sourceTree = "<group>"; };
 		323E31F7235A0653D0793A96 /* SignalProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalProcessor.swift; sourceTree = "<group>"; };
 		34238D0BB9E90D4CC792E5B2 /* PostureIslandPillShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureIslandPillShape.swift; sourceTree = "<group>"; };
@@ -112,10 +117,10 @@
 		A8C27002E4901BE9045016F1 /* TypingIntensityCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingIntensityCard.swift; sourceTree = "<group>"; };
 		B435F1C434A594EEB8D319B7 /* CircularProgressRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularProgressRing.swift; sourceTree = "<group>"; };
 		B8117119A510EE9DB2541B79 /* PostureIslandWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureIslandWindow.swift; sourceTree = "<group>"; };
-		BC221E2658B4EC631A9390B7 /* SessionSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSeeder.swift; sourceTree = "<group>"; };
 		C3DA99CCC9B165C48505D5EA /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		C764314F6C3C117D09443147 /* gooseneck-menubar.svg */ = {isa = PBXFileReference; path = "gooseneck-menubar.svg"; sourceTree = "<group>"; };
 		C98272C02EB91256A02D1755 /* FormattingAndFatigueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormattingAndFatigueTests.swift; sourceTree = "<group>"; };
+		CA7791E9772A6635E277C650 /* LegalContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalContent.swift; sourceTree = "<group>"; };
 		D1C698E2D9414939E45AD631 /* BreakTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakTracker.swift; sourceTree = "<group>"; };
 		D25AB30271162F93BD368248 /* PostureDesk.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PostureDesk.entitlements; sourceTree = "<group>"; };
 		DA5449C1AE3BF3879B8B4E98 /* SensorManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorManager.swift; sourceTree = "<group>"; };
@@ -127,6 +132,17 @@
 		F6D2D86B508DE1F67EB3F906 /* KalmanFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KalmanFilter.swift; sourceTree = "<group>"; };
 		F9D6B2C52B77DB8D00AC3A47 /* SessionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRow.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2C604DBB69B36F2F46B6EEAA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				194AF61F1FDB0476B4D883CD /* Sparkle in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		0D90E8740DDCDE8E34BF85A5 /* PostureDeskTests */ = {
@@ -195,6 +211,7 @@
 				E00FFD6EB98209756EE7E4EA /* NotificationManager.swift */,
 				7064535A0C4E2BFFB2231623 /* PostureAnalyzer.swift */,
 				40A40223AC5994CF4E91196A /* PostureIslandManager.swift */,
+				09163022EF389A727D4CAB28 /* SoftwareUpdater.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -225,7 +242,6 @@
 			isa = PBXGroup;
 			children = (
 				0D147ECF21723D2CE8C387F8 /* DisplayFormatter.swift */,
-				BC221E2658B4EC631A9390B7 /* SessionSeeder.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -320,6 +336,8 @@
 		FF96E692232080A3CCBFCCD6 /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
+				CA7791E9772A6635E277C650 /* LegalContent.swift */,
+				2B914EE15D268D77019434DE /* LegalDocumentSheet.swift */,
 				F12473BBC4CB98D4F94B4A95 /* MacBookCoachMark.swift */,
 				15278C47C6C2DF367155D6BC /* TypingTestVisual.swift */,
 			);
@@ -353,6 +371,7 @@
 			buildPhases = (
 				80687235E4D5B14A2315A307 /* Sources */,
 				9E45127E102B009E057C633E /* Resources */,
+				2C604DBB69B36F2F46B6EEAA /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -360,6 +379,7 @@
 			);
 			name = GooseNeck;
 			packageProductDependencies = (
+				0FCD0299600730EAABDAD200 /* Sparkle */,
 			);
 			productName = GooseNeck;
 			productReference = 040EF6D4CACD2DC06F85DBF8 /* GooseNeck.app */;
@@ -385,6 +405,9 @@
 			);
 			mainGroup = 6C23E1758DACB4E9C50CDA20;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				90817FD8AB788B518304EE23 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E08345D4D4E5037F57DAA241 /* Products */;
 			projectDirPath = "";
@@ -429,6 +452,8 @@
 				C0785FD42F371D5A9B243892 /* IslandVariantPicker.swift in Sources */,
 				99F79154AEEB571AC44F0B4A /* KalmanFilter.swift in Sources */,
 				DB20F9034650983A464436D2 /* KeychainStore.swift in Sources */,
+				7B891C048DBDD7324BA30657 /* LegalContent.swift in Sources */,
+				57B37185BCEF8D57B1EC7F4F /* LegalDocumentSheet.swift in Sources */,
 				A770AD3283BBEBF401F7AE37 /* LicenseManager.swift in Sources */,
 				C7E46EDD72CE6092D4E85A59 /* LiquidBlob.swift in Sources */,
 				C4BD5BFA8227E2FAFDC4082E /* MacBookCoachMark.swift in Sources */,
@@ -452,10 +477,10 @@
 				FAAE76EE0C0EADC577BFAAE5 /* SensorSnapshot+Extensions.swift in Sources */,
 				F1E8782F24BABA0B246DB24F /* SensorTypes.swift in Sources */,
 				E81ADB9638C29CA559E797B0 /* SessionRow.swift in Sources */,
-				B9B0811F83117B2F1235680F /* SessionSeeder.swift in Sources */,
 				93FE75141D465AD2FA934191 /* SessionSummaryCard.swift in Sources */,
 				71D7D55B0DBC5B3C7FDE6D0D /* SettingsView.swift in Sources */,
 				11D7782649BFB12541399DD0 /* SignalProcessor.swift in Sources */,
+				8F288B2BC63793650519D30E /* SoftwareUpdater.swift in Sources */,
 				B5B8C3A0407D271983CC6B56 /* TypingIntensityCard.swift in Sources */,
 				BA32BF8914928279F5C625BF /* TypingTestVisual.swift in Sources */,
 			);
@@ -522,14 +547,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = PostureDesk/PostureDesk.entitlements;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)";
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = PostureDesk/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MARKETING_VERSION = 1.0.0;
 				POLAR_API_BASE_URL = "https://api.polar.sh/v1/customer-portal/license-keys";
-				POLAR_CHECKOUT_URL = "https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_DOGu45YJUcHzeFxGZw5EqT0L9gN3L9Qm2dTQn2Z4xHn/redirect";
+				POLAR_CHECKOUT_URL = "https://api.polar.sh/v1/checkout-links/polar_cl_DOGu45YJUcHzeFxGZw5EqT0L9gN3L9Qm2dTQn2Z4xHn/redirect";
 				POLAR_ORGANIZATION_ID = "322cca40-cd2e-4d58-83e9-ec08ee2b0c19";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gooseneck.app;
 				SDKROOT = macosx;
@@ -705,6 +732,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		90817FD8AB788B518304EE23 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0FCD0299600730EAABDAD200 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 90817FD8AB788B518304EE23 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AFC9D245FB2CAB2F114D5975 /* Project object */;
 }

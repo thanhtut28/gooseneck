@@ -41,7 +41,6 @@ struct MacBookFrontView: View {
                 .frame(width: 8, height: 8)
                 .shadow(color: highlightColor.opacity(0.8), radius: 6)
                 .offset(y: 38)
-                .scaleEffect(isDetected ? 1.0 : 0.7 + 0.3 * glowPhase)
 
             // Live value badge
             if let value = liveValue {
@@ -197,7 +196,6 @@ struct MacBookSideView: View {
                 .frame(width: 8, height: 8)
                 .shadow(color: highlightColor.opacity(0.8), radius: 6)
                 .offset(x: -24, y: 16)
-                .scaleEffect(isDetected ? 1.0 : 0.7 + 0.3 * glowPhase)
 
             // Live angle badge
             if let value = liveValue {
@@ -328,8 +326,6 @@ struct MacBookSideView: View {
 
 /// Static mockup of the Posture Island for the onboarding preview step.
 struct IslandPreviewMockup: View {
-    @Environment(\.colorScheme) private var scheme
-
     var body: some View {
         VStack(spacing: 0) {
             // Top bar indicators
@@ -364,7 +360,7 @@ struct IslandPreviewMockup: View {
                 HStack {
                     Text("Good Posture")
                         .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundStyle(DS.Colors.textPrimary)
+                        .foregroundStyle(.white)
                     Spacer()
                 }
                 .padding(.horizontal, 4)
@@ -376,10 +372,10 @@ struct IslandPreviewMockup: View {
 
                 Text("Recalibrate")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(DS.Colors.textSecondary)
+                    .foregroundStyle(.white.opacity(0.6))
                     .frame(maxWidth: .infinity)
                     .padding(8)
-                    .background(DS.Colors.cardBorder.opacity(0.6))
+                    .background(Color.white.opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             .padding(.horizontal, 18)
@@ -387,7 +383,7 @@ struct IslandPreviewMockup: View {
             .padding(.bottom, 12)
         }
         .frame(width: 240)
-        .background(DS.Colors.cardBg)
+        .background(Color.black)
         .clipShape(
             PostureIslandPillShape(
                 topCornerRadius: 10,
@@ -395,7 +391,7 @@ struct IslandPreviewMockup: View {
             )
         )
         .shadow(
-            color: Color.black.opacity(scheme == .dark ? 0.4 : 0.15),
+            color: Color.black.opacity(0.4),
             radius: 16, y: 8
         )
     }
@@ -404,15 +400,15 @@ struct IslandPreviewMockup: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
                 .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(DS.Colors.textSecondary.opacity(0.75))
+                .foregroundStyle(.white.opacity(0.5))
                 .tracking(0.5)
             Text(value)
                 .font(.system(size: 20, weight: .bold, design: .rounded).monospacedDigit())
-                .foregroundStyle(DS.Colors.textPrimary)
+                .foregroundStyle(.white)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
-        .background(DS.Colors.cardBorder.opacity(0.6))
+        .background(Color.white.opacity(0.12))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }

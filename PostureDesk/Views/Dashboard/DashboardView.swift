@@ -6,6 +6,10 @@ struct DashboardView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: DS.Spacing.sectionGap) {
+                if viewModel.systemNotificationsMuted {
+                    notificationWarningBanner
+                }
+
                 // Hero: posture figure + status
                 heroSection
 
@@ -152,5 +156,47 @@ struct DashboardView: View {
 
     private var sensorError: String? {
         viewModel.sensorClient.connectionError
+    }
+
+    // MARK: - Notification Warning
+
+    private var notificationWarningBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "bell.slash.fill")
+                .font(.system(size: 16))
+                .foregroundStyle(DS.Colors.accentDanger)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Notifications are off in System Settings")
+                    .font(DS.Font.label())
+                    .foregroundStyle(DS.Colors.textPrimary)
+                Text("GooseNeck can't alert you about posture, breaks, or fatigue. Turn off notifications in Settings \u{2192} Notifications to hide this banner.")
+                    .font(DS.Font.caption())
+                    .foregroundStyle(DS.Colors.textSecondary)
+            }
+
+            Spacer()
+
+            Button {
+                if let url = URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings") {
+                    NSWorkspace.shared.open(url)
+                }
+            } label: {
+                Text("Open Settings")
+                    .font(DS.Font.label())
+                    .foregroundStyle(DS.Colors.accentDanger)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(DS.Colors.accentDanger.opacity(0.15), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(16)
+        .background(DS.Colors.accentDanger.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: DS.Spacing.cardRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.Spacing.cardRadius, style: .continuous)
+                .strokeBorder(DS.Colors.accentDanger.opacity(0.2), lineWidth: 1)
+        )
     }
 }

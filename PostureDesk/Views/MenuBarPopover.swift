@@ -211,8 +211,8 @@ struct MenuBarPopover: View {
         )
         return HStack {
             Text("Surface")
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundStyle(.primary)
             Spacer()
             Picker("", selection: surfaceBinding) {
                 Text("Desk").tag(Surface.desk)

@@ -1,9 +1,9 @@
 import Foundation
 
 enum IslandVariant: Int, CaseIterable, Identifiable {
-    case lidAngle = 0
-    case tiltAngle = 1
-    case sessionTime = 2
+    case sessionTime = 0
+    case lidAngle = 1
+    case tiltAngle = 2
     case typingIntensity = 3
 
     var id: Int { rawValue }

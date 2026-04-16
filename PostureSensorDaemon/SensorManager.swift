@@ -126,7 +126,6 @@ final class SensorManager: NSObject {
 
         if let thread {
             perform(#selector(stopOnWorkerThread), on: thread, with: nil, waitUntilDone: true)
-            thread.cancel()
         } else {
             stopAccelerometer()
             stopLidAngleSensor()
@@ -167,6 +166,7 @@ final class SensorManager: NSObject {
     @objc private func stopOnWorkerThread() {
         stopAccelerometer()
         stopLidAngleSensor()
+        Thread.current.cancel()
         CFRunLoopStop(CFRunLoopGetCurrent())
     }
 
@@ -208,14 +208,16 @@ final class SensorManager: NSObject {
     private func accelDeviceMatched(_ device: IOHIDDevice) {
         print("[SensorManager] Accelerometer device matched")
         self.accelDevice = device
-        stateLock.withCriticalScope {
-            _hasAccelerometer = true
-        }
 
         let result = IOHIDDeviceOpen(device, IOOptionBits(kIOHIDOptionsTypeNone))
         if result != kIOReturnSuccess {
             print("[SensorManager] Failed to open accelerometer device: \(result)")
+            self.accelDevice = nil
             return
+        }
+
+        stateLock.withCriticalScope {
+            _hasAccelerometer = true
         }
 
         // Allocate persistent report buffer (must outlive the callback)
@@ -244,11 +246,7 @@ final class SensorManager: NSObject {
         stateLock.withCriticalScope {
             _hasAccelerometer = false
         }
-
-        if let buffer = accelReportBuffer {
-            buffer.deallocate()
-            accelReportBuffer = nil
-        }
+        // Buffer is freed in stopAccelerometer() to avoid race with in-flight report callbacks.
     }
 
     private func stopAccelerometer() {
@@ -278,7 +276,7 @@ final class SensorManager: NSObject {
     // MARK: - Accelerometer Report Parsing
 
     private func parseAccelReport(report: UnsafePointer<UInt8>, length: Int) {
-        guard length >= 18 else { return }  // Need at least bytes 0-17
+        guard stateLock.withCriticalScope({ isRunning }), length >= 18 else { return }
 
         let x = readInt32LE(from: report, at: HIDConstants.xOffset)
         let y = readInt32LE(from: report, at: HIDConstants.yOffset)

@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import Sparkle
 import SwiftData
 import SwiftUI
 import UserNotifications
@@ -9,11 +10,20 @@ struct GooseNeckApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var viewModel: PostureViewModel
     let modelContainer: ModelContainer
+    let updaterController: SPUStandardUpdaterController
     static let licenseManager = LicenseManager()
     static private(set) var sharedViewModel: PostureViewModel?
+    static private(set) var sharedUpdater: SPUUpdater?
     static private(set) var persistentStoreLaunchIssue: String?
 
     init() {
+        self.updaterController = SPUStandardUpdaterController(
+            startingUpdater: false,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
+        Self.sharedUpdater = updaterController.updater
+
         let bootstrap = Self.makeModelContainer()
         self.modelContainer = bootstrap.container
         Self.persistentStoreLaunchIssue = bootstrap.launchIssue
@@ -85,7 +95,8 @@ struct GooseNeckApp: App {
 
     private static func persistentStoreURL(fileManager: FileManager = .default) -> URL {
         guard let baseURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
-            fatalError("[Storage] Application Support directory unavailable")
+            // Fallback to temp directory — data won't survive reboot but app won't crash
+            return fileManager.temporaryDirectory.appendingPathComponent("posture-desk.store")
         }
         let directoryURL = baseURL.appendingPathComponent("GooseNeck", isDirectory: true)
 
@@ -117,11 +128,14 @@ struct GooseNeckApp: App {
     }
 
     private static func makeInMemoryModelContainer() -> ModelContainer {
-        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         do {
-            return try ModelContainer(for: SessionRecord.self, configurations: configuration)
+            return try ModelContainer(
+                for: SessionRecord.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            )
         } catch {
-            fatalError("[Storage] Cannot create even an in-memory store: \(error)")
+            // Catastrophic: even in-memory store failed. Last resort — default container.
+            return try! ModelContainer(for: SessionRecord.self)
         }
     }
 
@@ -154,7 +168,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         }
 
         if !onboardingComplete, !onboardingSetupComplete {
-            GooseNeckApp.sharedViewModel?.unlockMonitoring()
+            GooseNeckApp.sharedViewModel?.stop(lockMonitoring: true, finalizeSession: false)
             showOnboarding(startAt: .welcome)
         } else if !hasStoredLicense {
             // Onboarding done but license removed — re-show at activate step
@@ -218,7 +232,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             defer: false
         )
         window.title = "GooseNeck Setup"
-        window.contentView = NSHostingView(
+        let onboardingHostingView = NSHostingView(
             rootView: OnboardingView(
                 isComplete: binding,
                 initialStep: startAt
@@ -226,6 +240,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             .environment(viewModel)
             .environment(GooseNeckApp.licenseManager)
         )
+        // Keep the onboarding window at its fixed AppKit size while the
+        // SwiftUI steps animate between states. Letting NSHostingView drive
+        // window resizing here can trigger AppKit constraint exceptions.
+        onboardingHostingView.sizingOptions = []
+        window.contentView = onboardingHostingView
         window.center()
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -269,5 +288,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         default:
             break
         }
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+        // Local notifications are suppressed by default while the app is frontmost.
+        // GooseNeck should still surface posture/break/fatigue alerts in that state.
+        [.banner, .list, .sound]
     }
 }

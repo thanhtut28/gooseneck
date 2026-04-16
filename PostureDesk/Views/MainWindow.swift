@@ -47,6 +47,9 @@ struct MainWindow: View {
             .background(DS.Colors.bg)
         }
         .preferredColorScheme(viewModel.preferredColorScheme)
+        .onDisappear {
+            NSApp.setActivationPolicy(.accessory)
+        }
     }
 
     private func sidebarButton(_ item: SidebarItem) -> some View {

@@ -1,4 +1,5 @@
 import ServiceManagement
+import Sparkle
 import SwiftData
 import SwiftUI
 
@@ -9,10 +10,11 @@ struct SettingsView: View {
 
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var showDeactivateAlert: Bool = false
-    #if DEBUG
-    @State private var seedStatus: String?
-    @State private var showSeedConfirmation: Bool = false
-    #endif
+    @ObservedObject private var checkForUpdatesVM = CheckForUpdatesViewModel(
+        updater: GooseNeckApp.sharedUpdater
+    )
+    @State private var automaticallyChecksForUpdates = GooseNeckApp.sharedUpdater?.automaticallyChecksForUpdates ?? true
+    @State private var automaticallyDownloadsUpdates = GooseNeckApp.sharedUpdater?.automaticallyDownloadsUpdates ?? false
 
     var body: some View {
         @Bindable var vm = viewModel
@@ -42,17 +44,16 @@ struct SettingsView: View {
 
                 sectionDivider
 
+                // --- UPDATES ---
+                sectionHeader("Updates")
+                updatesSection
+
+                sectionDivider
+
                 // --- LICENSE & ABOUT ---
                 sectionHeader("License & About")
                 licenseSection
 
-                #if DEBUG
-                sectionDivider
-
-                // --- DEVELOPER TOOLS ---
-                sectionHeader("Developer Tools")
-                debugSection
-                #endif
             }
             .dsCard()
             .padding(DS.Spacing.pageInset)
@@ -170,6 +171,7 @@ struct SettingsView: View {
     @ViewBuilder
     private var notificationsSection: some View {
         @Bindable var vm = viewModel
+        let systemDenied = NotificationManager.shared.systemAuthorizationDenied
         VStack(spacing: 16) {
             settingRow("Notifications", description: "Send alerts for posture, breaks, and fatigue") {
                 Toggle("Notifications", isOn: $vm.notificationsEnabled)
@@ -179,12 +181,34 @@ struct SettingsView: View {
                     .accessibilityLabel("Enable notifications")
             }
 
-            if vm.notificationsEnabled {
+            if vm.notificationsEnabled && systemDenied {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(DS.Colors.accentWarn)
+                    Text("Blocked by macOS — enable in")
+                        .font(DS.Font.caption())
+                        .foregroundStyle(DS.Colors.textMuted)
+                    Button("System Settings") {
+                        if let url = URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                    .font(DS.Font.caption())
+                    .buttonStyle(.plain)
+                    .foregroundStyle(DS.Colors.accentWarn)
+                    Spacer()
+                }
+            }
+
+            if vm.notificationsEnabled && !systemDenied {
                 settingRow("Posture Alerts", description: "Drift detection warnings") {
                     Toggle("Posture Alerts", isOn: $vm.postureNotificationsEnabled)
                         .toggleStyle(.switch)
                         .tint(DS.Colors.accentGood)
                         .labelsHidden()
+                        .accessibilityLabel("Posture Alerts")
+                        .accessibilityHint("Drift detection warnings")
                 }
 
                 settingRow("Break Reminders", description: "Stand-up suggestions") {
@@ -192,6 +216,8 @@ struct SettingsView: View {
                         .toggleStyle(.switch)
                         .tint(DS.Colors.accentGood)
                         .labelsHidden()
+                        .accessibilityLabel("Break Reminders")
+                        .accessibilityHint("Stand-up suggestions")
                 }
 
                 settingRow("Typing Fatigue", description: "Intensity spike alerts") {
@@ -199,6 +225,8 @@ struct SettingsView: View {
                         .toggleStyle(.switch)
                         .tint(DS.Colors.accentGood)
                         .labelsHidden()
+                        .accessibilityLabel("Typing Fatigue")
+                        .accessibilityHint("Intensity spike alerts")
                 }
             }
         }
@@ -271,6 +299,47 @@ struct SettingsView: View {
         .animation(.easeInOut(duration: 0.2), value: vm.dynamicIslandEnabled)
     }
 
+    // MARK: - Updates
+
+    @ViewBuilder
+    private var updatesSection: some View {
+        VStack(spacing: 16) {
+            settingRow("Check Automatically", description: "Periodically check for new versions") {
+                Toggle("Check Automatically", isOn: $automaticallyChecksForUpdates)
+                    .toggleStyle(.switch)
+                    .tint(DS.Colors.accentGood)
+                    .labelsHidden()
+                    .onChange(of: automaticallyChecksForUpdates) { _, newValue in
+                        GooseNeckApp.sharedUpdater?.automaticallyChecksForUpdates = newValue
+                    }
+                    .accessibilityLabel("Automatically check for updates")
+            }
+
+            settingRow("Download Automatically", description: "Download updates in the background") {
+                Toggle("Download Automatically", isOn: $automaticallyDownloadsUpdates)
+                    .toggleStyle(.switch)
+                    .tint(DS.Colors.accentGood)
+                    .labelsHidden()
+                    .disabled(!automaticallyChecksForUpdates)
+                    .onChange(of: automaticallyDownloadsUpdates) { _, newValue in
+                        GooseNeckApp.sharedUpdater?.automaticallyDownloadsUpdates = newValue
+                    }
+                    .accessibilityLabel("Automatically download updates")
+            }
+
+            HStack {
+                Spacer()
+                Button("Check for Updates\u{2026}") {
+                    GooseNeckApp.sharedUpdater?.checkForUpdates()
+                }
+                .disabled(!checkForUpdatesVM.canCheckForUpdates)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(DS.Colors.accentInfo)
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
     // MARK: - License & About
 
     @ViewBuilder
@@ -316,74 +385,29 @@ struct SettingsView: View {
             Divider()
                 .foregroundStyle(DS.Colors.cardBorder)
 
-            HStack {
-                Text("GooseNeck")
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundStyle(DS.Colors.textPrimary)
-                Spacer()
-                Text("v1.0.0")
-                    .font(DS.Font.caption())
-                    .foregroundStyle(DS.Colors.textMuted)
-            }
+            HStack(spacing: 14) {
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .frame(width: 64, height: 64)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
 
-            Text("Real-time posture monitoring using your MacBook's built-in sensors.")
-                .font(DS.Font.caption())
-                .foregroundStyle(DS.Colors.textMuted)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("GooseNeck")
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundStyle(DS.Colors.textPrimary)
+
+                    Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")")
+                        .font(DS.Font.caption())
+                        .foregroundStyle(DS.Colors.textSecondary)
+
+                    Text("© 2026 GooseNeck")
+                        .font(DS.Font.caption())
+                        .foregroundStyle(DS.Colors.textMuted)
+                }
+            }
         }
     }
 
-    // MARK: - Developer Tools
-
-    #if DEBUG
-    @ViewBuilder
-    private var debugSection: some View {
-        VStack(spacing: 16) {
-            settingRow("Seed Data", description: "Replace all sessions with 1 year of realistic data") {
-                Button("Seed 1 Year") {
-                    showSeedConfirmation = true
-                }
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(DS.Colors.accentInfo)
-                .buttonStyle(.plain)
-            }
-
-            settingRow("Clear Data", description: "Delete all session records") {
-                Button("Clear All") {
-                    do {
-                        try SessionSeeder.clearAll(from: modelContext)
-                        viewModel.historyRefreshToken &+= 1
-                        seedStatus = "Cleared all sessions"
-                    } catch {
-                        seedStatus = "Error: \(error.localizedDescription)"
-                    }
-                }
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(DS.Colors.accentDanger)
-                .buttonStyle(.plain)
-            }
-
-            if let status = seedStatus {
-                Text(status)
-                    .font(DS.Font.caption())
-                    .foregroundStyle(DS.Colors.textMuted)
-            }
-        }
-        .alert("Seed Data", isPresented: $showSeedConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Seed", role: .destructive) {
-                do {
-                    let count = try SessionSeeder.seed(into: modelContext)
-                    viewModel.historyRefreshToken &+= 1
-                    seedStatus = "Seeded \(count) sessions"
-                } catch {
-                    seedStatus = "Error: \(error.localizedDescription)"
-                }
-            }
-        } message: {
-            Text("This will delete all existing sessions and insert ~1 year of sample data.")
-        }
-    }
-    #endif
 
     // MARK: - Helpers
 

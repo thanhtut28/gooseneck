@@ -38,21 +38,22 @@ final class PostureIslandManager {
             defer: false
         )
 
-        panel.contentView = NSHostingView(
+        let hostingView = NSHostingView(
             rootView: PostureIslandView(
                 notchWidth: notchWidth,
                 notchHeight: notchHeight,
                 hasNotch: hasNotch
             ).environment(viewModel)
         )
+        // Prevent the hosting view from auto-resizing the window when
+        // the SwiftUI content changes size (expand / collapse / nudge).
+        // Without this, the resize triggers a constraint update mid-display-cycle
+        // and AppKit throws an exception (SIGABRT in _postWindowNeedsUpdateConstraints).
+        hostingView.sizingOptions = []
+        panel.contentView = hostingView
 
-        // Configure layer for CA shadow rendering
         panel.contentView?.wantsLayer = true
-        panel.contentView?.layer?.masksToBounds = false
-        panel.contentView?.layer?.shadowColor = NSColor.black.cgColor
-        panel.contentView?.layer?.shadowOpacity = 0.3
-        panel.contentView?.layer?.shadowRadius = 16
-        panel.contentView?.layer?.shadowOffset = CGSize(width: 0, height: -3)
+        panel.contentView?.layer?.backgroundColor = NSColor.clear.cgColor
 
         window = panel
         positionOnScreen(panel)
@@ -90,15 +91,8 @@ final class PostureIslandManager {
     }
 
     func updateShadow(radius: CGFloat, opacity: Float, offsetY: CGFloat) {
-        guard let layer = window?.contentView?.layer else { return }
-        CATransaction.begin()
-        CATransaction.setAnimationDuration(0.35)
-        CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeInEaseOut))
-        layer.shadowColor = NSColor.black.cgColor
-        layer.shadowOpacity = opacity
-        layer.shadowRadius = radius
-        layer.shadowOffset = CGSize(width: 0, height: -offsetY)
-        CATransaction.commit()
+        // Shadow is now rendered via SwiftUI .shadow() on the clipped view
+        // so it correctly follows the pill shape instead of the rectangular window.
     }
 
     func hide() {

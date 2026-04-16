@@ -17,6 +17,7 @@ enum NotificationAction: String {
 }
 
 /// Manages all GooseNeck notifications with throttling to prevent spam.
+@MainActor
 final class NotificationManager {
 
     static let shared = NotificationManager()
@@ -28,7 +29,7 @@ final class NotificationManager {
     // Throttle intervals per category
     private let throttleIntervals: [String: TimeInterval] = [
         "posture": 15 * 60,   // Max 1 per 15 min
-        "break": 5 * 60,      // Max 1 per 5 min
+        "break": 30,           // Light guard — cadence managed by BreakTracker
         "fatigue": 30 * 60,   // Max 1 per 30 min
         "surface": 60,        // Max 1 per 1 min
     ]
@@ -52,6 +53,18 @@ final class NotificationManager {
 
     var fatigueEnabled: Bool = UserDefaults.standard.object(forKey: "notif.fatigue") as? Bool ?? true {
         didSet { UserDefaults.standard.set(fatigueEnabled, forKey: "notif.fatigue") }
+    }
+
+    /// Whether macOS system-level notification permission is denied or not yet granted.
+    /// Checked on launch, on app activation, and periodically.
+    var systemAuthorizationDenied: Bool = false
+
+    func checkSystemAuthorization() {
+        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+            DispatchQueue.main.async {
+                self?.systemAuthorizationDenied = settings.authorizationStatus != .authorized
+            }
+        }
     }
 
     private init() {}
@@ -109,7 +122,7 @@ final class NotificationManager {
         content.sound = .default
 
         let request = UNNotificationRequest(
-            identifier: "\(category)-\(Date().timeIntervalSince1970)",
+            identifier: "\(category)-\(UUID().uuidString)",
             content: content,
             trigger: nil  // Immediate
         )

@@ -1,8 +1,11 @@
 import AppKit
 import CoreGraphics
 import Foundation
+import os
 import SwiftData
 import SwiftUI
+
+private let storageLog = Logger(subsystem: "com.gooseneck.app", category: "storage")
 
 /// Central view model that aggregates all services and drives the menu bar UI.
 @MainActor @Observable
@@ -33,7 +36,7 @@ final class PostureViewModel {
     }
 
     // Dynamic Island variant
-    var islandVariant: IslandVariant = IslandVariant(rawValue: UserDefaults.standard.integer(forKey: "islandVariant")) ?? .lidAngle {
+    var islandVariant: IslandVariant = IslandVariant(rawValue: UserDefaults.standard.integer(forKey: "islandVariant")) ?? .sessionTime {
         didSet { UserDefaults.standard.set(islandVariant.rawValue, forKey: "islandVariant") }
     }
 
@@ -61,11 +64,21 @@ final class PostureViewModel {
     }
 
     var breakNotificationsEnabled: Bool = NotificationManager.shared.breakEnabled {
-        didSet { NotificationManager.shared.breakEnabled = breakNotificationsEnabled }
+        didSet {
+            NotificationManager.shared.breakEnabled = breakNotificationsEnabled
+            if breakNotificationsEnabled && breakTracker.isBreakOverdue {
+                breakTracker.resetReminderCadence()
+            }
+        }
     }
 
     var fatigueNotificationsEnabled: Bool = NotificationManager.shared.fatigueEnabled {
         didSet { NotificationManager.shared.fatigueEnabled = fatigueNotificationsEnabled }
+    }
+
+    /// True when in-app notifications are enabled but macOS has blocked them at the system level.
+    var systemNotificationsMuted: Bool {
+        notificationsEnabled && NotificationManager.shared.systemAuthorizationDenied
     }
 
     var driftThreshold: Double = PostureViewModel.loadDriftThreshold() {
@@ -175,8 +188,20 @@ final class PostureViewModel {
         isStarted = true
 
         NotificationManager.shared.notificationsEnabled = notificationsEnabled
+        NotificationManager.shared.checkSystemAuthorization()
         postureAnalyzer.driftThreshold = driftThreshold
         sensorClient.connect()
+
+        // Re-check system notification permission when app becomes active
+        // (user may toggle it in System Settings and return to the app)
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            NotificationManager.shared.checkSystemAuthorization()
+            _ = self  // prevent unused capture warning
+        }
 
         if dynamicIslandEnabled {
             islandManager.show(viewModel: self)
@@ -209,6 +234,10 @@ final class PostureViewModel {
 
         sensorClient.disconnect()
         islandManager.hide()
+        if let appearanceObserver {
+            DistributedNotificationCenter.default().removeObserver(appearanceObserver)
+            self.appearanceObserver = nil
+        }
         fatigueMonitor.resetSession()
         breakTracker.stop()
         showSurfaceNudge = false
@@ -288,6 +317,8 @@ final class PostureViewModel {
 
     /// User confirmed they moved — switch surface and recalibrate.
     func acceptSurfaceNudge(to surface: Surface) {
+        showSurfaceNudge = false
+        nudgeSustainedSince = nil
         nudgeDismissedAt = Date()
         changeSurface(to: surface)
     }
@@ -323,9 +354,11 @@ final class PostureViewModel {
     // MARK: - System Idle Time
 
     private var systemIdleSeconds: Double {
-        activityEventTypes
+        let idle = activityEventTypes
             .map { CGEventSource.secondsSinceLastEventType(.combinedSessionState, eventType: $0) }
             .min() ?? .greatestFiniteMagnitude
+        // Clamp: negative values can occur after system clock adjustments
+        return max(0, idle)
     }
 
     private var isUserPresent: Bool {
@@ -405,12 +438,10 @@ final class PostureViewModel {
             nextState = .away
         } else if breakTracker.state != .active {
             nextState = .away
-        } else if postureAnalyzer.isDrifting || postureAnalyzer.driftMagnitude > postureAnalyzer.driftThreshold {
-            // Respond immediately to current drift, not just sustained drift
-            // (notifications still require sustained drift via PostureAnalyzer.isDrifting)
-            nextState = .drifting
         } else if breakTracker.isBreakOverdue {
             nextState = .breakNeeded
+        } else if postureAnalyzer.isDrifting || postureAnalyzer.driftMagnitude > postureAnalyzer.driftThreshold {
+            nextState = .drifting
         } else {
             nextState = .good
         }
@@ -448,7 +479,7 @@ final class PostureViewModel {
         let minutes = (seconds % 3600) / 60
 
         if hours > 0 {
-            return "\(hours)h \(minutes)m"
+            return minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h"
         }
         return "\(minutes)m"
     }
@@ -476,7 +507,7 @@ final class PostureViewModel {
         session.typingIntensityAvailable = fatigueMonitor.hasSessionTypingMetrics
         session.avgTypingIntensity = fatigueMonitor.hasSessionTypingMetrics ? max(0, fatigueMonitor.sessionAverageIntensity) : 0
         session.peakTypingIntensity = fatigueMonitor.hasSessionTypingMetrics ? max(0, fatigueMonitor.peakIntensityPercent) : 0
-        do { try modelContext.save() } catch { print("[Storage] Save failed: \(error)") }
+        do { try modelContext.save() } catch { storageLog.error("Save failed: \(error.localizedDescription)") }
     }
 
     private func finalizeCurrentSession(
@@ -487,12 +518,12 @@ final class PostureViewModel {
         guard let session = currentSession else { return }
         let finalizedActiveMinutes = (totalActiveSeconds ?? breakTracker.totalActiveSeconds) / 60
 
-        guard finalizedActiveMinutes > 0 else {
+        guard finalizedActiveMinutes >= 2 else {
             modelContext.delete(session)
-            do { try modelContext.save() } catch { print("[Storage] Save failed: \(error)") }
+            do { try modelContext.save() } catch { storageLog.error("Save failed: \(error.localizedDescription)") }
             currentSession = nil
             #if DEBUG
-            print("[Session] Discarded 0m session")
+            print("[Session] Discarded short session (\(finalizedActiveMinutes)m < 2m minimum)")
             #endif
             return
         }
@@ -505,7 +536,7 @@ final class PostureViewModel {
         session.avgTypingIntensity = fatigueMonitor.hasSessionTypingMetrics ? max(0, fatigueMonitor.sessionAverageIntensity) : 0
         session.peakTypingIntensity = fatigueMonitor.hasSessionTypingMetrics ? max(0, fatigueMonitor.peakIntensityPercent) : 0
         fatigueMonitor.persistCurrentBaseline()
-        do { try modelContext.save() } catch { print("[Storage] Save failed: \(error)") }
+        do { try modelContext.save() } catch { storageLog.error("Save failed: \(error.localizedDescription)") }
         historyRefreshToken &+= 1
         currentSession = nil
         #if DEBUG
@@ -516,7 +547,7 @@ final class PostureViewModel {
     private func discardCurrentSession() {
         guard let session = currentSession else { return }
         modelContext.delete(session)
-        do { try modelContext.save() } catch { print("[Storage] Save failed: \(error)") }
+        do { try modelContext.save() } catch { storageLog.error("Save failed: \(error.localizedDescription)") }
         currentSession = nil
     }
 
@@ -527,8 +558,11 @@ final class PostureViewModel {
         guard let orphans = try? modelContext.fetch(descriptor), !orphans.isEmpty else { return }
 
         for session in orphans {
-            if session.totalActiveMinutes > 0 {
-                session.endedAt = session.startedAt.addingTimeInterval(Double(session.totalActiveMinutes) * 60)
+            if session.totalActiveMinutes >= 2 {
+                // Use the later of: estimated end from active minutes, or startedAt + 1min.
+                // totalActiveMinutes can be stale by up to 30s at crash time.
+                let estimatedEnd = session.startedAt.addingTimeInterval(Double(session.totalActiveMinutes + 1) * 60)
+                session.endedAt = min(estimatedEnd, Date())
                 #if DEBUG
                 print("[Session] Recovered orphaned session: \(session.totalActiveMinutes)m from \(session.startedAt)")
                 #endif
@@ -539,7 +573,7 @@ final class PostureViewModel {
                 #endif
             }
         }
-        do { try modelContext.save() } catch { print("[Storage] Save failed: \(error)") }
+        do { try modelContext.save() } catch { storageLog.error("Save failed: \(error.localizedDescription)") }
     }
 
 }

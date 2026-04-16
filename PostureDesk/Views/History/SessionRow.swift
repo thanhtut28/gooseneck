@@ -59,6 +59,7 @@ private struct DSRowGlass: ViewModifier {
                         lineWidth: 1.5
                     )
             )
+            .compositingGroup()
             .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.2 : 0.05), radius: 12, x: 0, y: 4)
     }
 }

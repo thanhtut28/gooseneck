@@ -185,7 +185,7 @@ struct TypingIntensityCard: View {
     }
 
     private func downsample(_ data: [Double], to count: Int) -> [Double] {
-        guard data.count > count else { return data }
+        guard count > 0, data.count > count else { return data }
         let step = Double(data.count) / Double(count)
         return (0..<count).map { i in
             let idx = Int(Double(i) * step)
@@ -261,7 +261,7 @@ struct TypingIntensityCard: View {
     private func barColor(_ threshold: Double) -> Color {
         if threshold >= 80 { return DS.Colors.accentDanger }
         if threshold >= 50 { return DS.Colors.accentWarn }
-        if threshold >= 20 { return DS.Colors.accentWarn.opacity(0.7) }
+        if threshold >= 20 { return DS.Colors.textSecondary }
         return DS.Colors.accentGood
     }
 }

@@ -20,12 +20,18 @@ struct IslandVariantPicker: View {
             spacing: 8
         ) {
             ForEach(IslandVariant.allCases) { variant in
-                IslandVariantCard(variant: variant, isSelected: selection == variant)
-                    .onTapGesture {
+                Button {
+                    if selection != variant {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                             selection = variant
                         }
                     }
+                } label: {
+                    IslandVariantCard(variant: variant, isSelected: selection == variant)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(variant.title)
+                .accessibilityAddTraits(selection == variant ? .isSelected : [])
             }
         }
     }

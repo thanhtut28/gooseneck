@@ -28,5 +28,9 @@
     <string>$(POLAR_ORGANIZATION_ID)</string>
     <key>LSUIElement</key>
     <true/>
+    <key>SUFeedURL</key>
+    <string>https://gooseneck-updates.pages.dev/appcast.xml</string>
+    <key>SUEnableInstallerLauncherService</key>
+    <true/>
 </dict>
 </plist>

@@ -29,6 +29,7 @@ struct LiquidBlob: Shape {
         let angleStep = (2 * Double.pi) / Double(Self.pointCount)
 
         for i in 0..<Self.pointCount {
+            guard i < Self.frequencies.count, i < Self.phaseOffsets.count else { break }
             let f = Self.frequencies[i]
             let po = Self.phaseOffsets[i]
             let wave1 = sin(f.0 * phase + po) * 0.5
