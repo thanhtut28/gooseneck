@@ -29,9 +29,10 @@ final class FFTAnalyzer {
             return (0, 0, 0)
         }
 
-        // Take the last fftLength samples and apply Hann window
+        // Cap input to expected length, sanitize non-finite inputs.
+        let tail = signal.suffix(fftLength).map { $0.isFinite ? $0 : 0 }
         let windowed = vDSP.multiply(
-            Array(signal.suffix(fftLength)),
+            tail,
             vDSP.window(ofType: Double.self, usingSequence: .hanningNormalized, count: fftLength, isHalfWindow: false)
         )
 
@@ -60,8 +61,11 @@ final class FFTAnalyzer {
             }
         }
 
-        // Compute magnitude squared (power spectrum)
-        let magnitudes = zip(realPart, imagPart).map { r, i in r * r + i * i }
+        // Compute magnitude squared (power spectrum), replacing non-finite values with 0.
+        let magnitudes = zip(realPart, imagPart).map { r, i -> Double in
+            let m = r * r + i * i
+            return m.isFinite ? m : 0
+        }
 
         // Bin the frequencies
         let freqResolution = sampleRate / Double(fftLength)  // Hz per bin
@@ -83,6 +87,7 @@ final class FFTAnalyzer {
             }
         }
 
+        if !totalEnergy.isFinite { totalEnergy = 0 }
         guard totalEnergy > 0 else { return (0, 0, 0) }
 
         return (

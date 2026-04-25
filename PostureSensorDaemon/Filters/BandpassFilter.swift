@@ -35,10 +35,13 @@ final class BandpassFilter {
             var d2 = delays[dOffset + 1]
 
             for i in 0..<temp.count {
-                let x = temp[i]
-                let y = b0 * x + d1
+                let x = temp[i].isFinite ? temp[i] : 0
+                var y = b0 * x + d1
+                if !y.isFinite { y = 0 }
                 d1 = b1 * x - a1 * y + d2
+                if !d1.isFinite { d1 = 0 }
                 d2 = b2 * x - a2 * y
+                if !d2.isFinite { d2 = 0 }
                 output[i] = y
             }
 

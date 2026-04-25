@@ -36,6 +36,13 @@ final class SensorManager: NSObject {
     private var _onAccelSample: ((AccelSample) -> Void)?
     private var _onLidAngleUpdate: ((Double) -> Void)?
 
+    // S5 — Hot-plug re-check throttle for lid-angle sensor.
+    // Incremented on each accelerometer sample (~100Hz). Re-enumeration is triggered
+    // every `lidAngleRecheckSampleInterval` samples (~60s @ 100Hz) when the lid-angle
+    // sensor is currently unavailable. Plain Int — no allocations on the hot path.
+    private var lidAngleRecheckCounter: Int = 0
+    private let lidAngleRecheckSampleInterval = 6000  // ~60s at 100Hz
+
     var hasAccelerometer: Bool {
         stateLock.lock()
         defer { stateLock.unlock() }
@@ -300,21 +307,56 @@ final class SensorManager: NSObject {
     // MARK: - Accelerometer Report Parsing
 
     private func parseAccelReport(report: UnsafePointer<UInt8>, length: Int) {
-        guard stateLock.withCriticalScope({ isRunning }), length >= 18 else { return }
+        guard length >= 18 else { return }
 
         let x = readInt32LE(from: report, at: HIDConstants.xOffset)
         let y = readInt32LE(from: report, at: HIDConstants.yOffset)
         let z = readInt32LE(from: report, at: HIDConstants.zOffset)
 
+        let sx = Double(x) / HIDConstants.scaleFactor
+        let sy = Double(y) / HIDConstants.scaleFactor
+        let sz = Double(z) / HIDConstants.scaleFactor
+
+        // S3 — Sanity check: drop NaN or saturated/garbage packets.
+        // A sane MacBook accelerometer never reports >2g sustained; >4g indicates
+        // sensor saturation or a corrupted packet that would poison downstream filters.
+        guard sx.isFinite, sy.isFinite, sz.isFinite else { return }
+        let magnitudeSq = sx * sx + sy * sy + sz * sz
+        guard magnitudeSq.isFinite, magnitudeSq <= 16.0 else { return }  // 4g squared
+
         let sample = AccelSample(
-            x: Double(x) / HIDConstants.scaleFactor,
-            y: Double(y) / HIDConstants.scaleFactor,
-            z: Double(z) / HIDConstants.scaleFactor,
+            x: sx, y: sy, z: sz,
             timestamp: Date.timeIntervalSinceReferenceDate
         )
 
-        let callback = onAccelSample
+        // S1 — Capture callback and running state under stateLock into locals
+        // before invoking. Prevents a concurrent stop() from nulling the closure
+        // between the read and the call (use-after-null risk on the C-callback path).
+        // S5 — Bump hot-plug re-check counter and decide whether to schedule re-enumeration.
+        var callback: ((AccelSample) -> Void)?
+        var shouldRecheckLidAngle = false
+        stateLock.lock()
+        let running = isRunning
+        if running {
+            callback = _onAccelSample
+            if !_hasLidAngle {
+                lidAngleRecheckCounter &+= 1
+                if lidAngleRecheckCounter >= lidAngleRecheckSampleInterval {
+                    lidAngleRecheckCounter = 0
+                    shouldRecheckLidAngle = true
+                }
+            } else {
+                lidAngleRecheckCounter = 0
+            }
+        }
+        stateLock.unlock()
+
+        guard running else { return }
         callback?(sample)
+
+        if shouldRecheckLidAngle {
+            scheduleLidAngleRecheck()
+        }
     }
 
     private func readInt32LE(from ptr: UnsafePointer<UInt8>, at offset: Int) -> Int32 {
@@ -370,8 +412,40 @@ final class SensorManager: NSObject {
                 self?.pollLidAngle()
             }
         } else {
-            print("[SensorManager] Lid angle sensor not found on this device")
+            // S5 — Mark unavailable so the accel-sample-driven re-check can detect a
+            // future hot-plug (e.g. peripheral attach, late driver enumeration).
+            stateLock.withCriticalScope {
+                _hasLidAngle = false
+            }
+            // Tear down the manager we just created — startLidAngleSensor() recreates
+            // a fresh one on every retry.
+            if let manager = lidAngleManager {
+                IOHIDManagerUnscheduleFromRunLoop(manager, CFRunLoopGetCurrent(), CFRunLoopMode.defaultMode.rawValue)
+                IOHIDManagerClose(manager, IOOptionBits(kIOHIDOptionsTypeNone))
+                lidAngleManager = nil
+            }
+            print("[SensorManager] Lid angle sensor not found on this device (will re-check periodically)")
         }
+    }
+
+    /// S5 — Schedule a hot-plug lid-angle re-enumeration on the worker thread.
+    /// Called from the accelerometer hot path (must be cheap) — defers actual work
+    /// to the worker runloop so enumeration is serialized with other IOKit calls.
+    private func scheduleLidAngleRecheck() {
+        let (thread, running): (Thread?, Bool) = stateLock.withCriticalScope { (workerThread, isRunning) }
+        guard let thread, running else { return }
+        perform(#selector(lidAngleRecheckOnWorkerThread), on: thread, with: nil, waitUntilDone: false)
+    }
+
+    @objc private func lidAngleRecheckOnWorkerThread() {
+        // Re-check under lock — another path may have already attached the sensor,
+        // or stop() may have been called since the recheck was scheduled.
+        let (alreadyHave, running): (Bool, Bool) = stateLock.withCriticalScope { (_hasLidAngle, isRunning) }
+        guard !alreadyHave, running else { return }
+        #if DEBUG
+        print("[SensorManager] Lid angle re-enumeration attempt (hot-plug check)")
+        #endif
+        startLidAngleSensor()
     }
 
     private func pollLidAngle() {
@@ -396,10 +470,19 @@ final class SensorManager: NSObject {
         let centidegrees = Int16(bitPattern: low | high)
         let degrees = Double(centidegrees) / 100.0
 
-        stateLock.withCriticalScope {
-            _currentLidAngle = degrees
+        // S1 — Capture closure under stateLock into a local before invoking.
+        // Prevents a concurrent stop() / setter from nulling the closure between
+        // read and call.
+        var callback: ((Double) -> Void)?
+        stateLock.lock()
+        _currentLidAngle = degrees
+        let running = isRunning
+        if running {
+            callback = _onLidAngleUpdate
         }
-        let callback = onLidAngleUpdate
+        stateLock.unlock()
+
+        guard running else { return }
         callback?(degrees)
     }
 

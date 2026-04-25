@@ -17,6 +17,14 @@ struct KalmanFilter {
 
     /// Update with a new measurement, returns the filtered (gravity) estimate.
     mutating func update(_ measurement: Double) -> Double {
+        // Reject non-finite measurements — they would poison the filter state forever.
+        guard measurement.isFinite else { return estimate }
+
+        // Clamp errorEstimate to a small positive epsilon to avoid degenerate gain.
+        if !errorEstimate.isFinite || errorEstimate < 1e-9 {
+            errorEstimate = 1e-9
+        }
+
         // Prediction step
         let predictedErrorEstimate = errorEstimate + processNoise
 
@@ -24,6 +32,9 @@ struct KalmanFilter {
         let kalmanGain = predictedErrorEstimate / (predictedErrorEstimate + measurementNoise)
         estimate = estimate + kalmanGain * (measurement - estimate)
         errorEstimate = (1 - kalmanGain) * predictedErrorEstimate
+
+        if !estimate.isFinite { estimate = 0 }
+        if !errorEstimate.isFinite || errorEstimate < 1e-9 { errorEstimate = 1e-9 }
 
         return estimate
     }

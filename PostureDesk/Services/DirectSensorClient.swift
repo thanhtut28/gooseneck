@@ -17,6 +17,14 @@ final class DirectSensorClient {
     @ObservationIgnored private var wakeObserver: NSObjectProtocol?
     @ObservationIgnored private var wasConnectedBeforeSleep = false
 
+    // S4 — Bounded retry on sleep/wake reconnect.
+    // Backoff schedule: 0.5s, 1s, 2s, 4s. After exhaustion, fall back to 30s polling
+    // until the sensor reappears.
+    @ObservationIgnored private var wakeRetryAttempt = 0
+    @ObservationIgnored private var wakeRetryWorkItem: DispatchWorkItem?
+    @ObservationIgnored private let wakeRetryDelays: [TimeInterval] = [0.5, 1.0, 2.0, 4.0]
+    @ObservationIgnored private let wakeFallbackPollInterval: TimeInterval = 30.0
+
     init() {
         runtime.onAvailabilityResolved = { [weak self] availability, generation in
             Task { @MainActor in
@@ -89,6 +97,7 @@ final class DirectSensorClient {
     }
 
     func suspend() {
+        cancelWakeRetry()
         activeRuntimeGeneration = runtime.suspend()
         if isConnected {
             isConnected = false
@@ -96,6 +105,7 @@ final class DirectSensorClient {
     }
 
     func disconnect() {
+        cancelWakeRetry()
         activeRuntimeGeneration = runtime.disconnect()
         latestSnapshot = nil
         if isConnected {
@@ -110,6 +120,7 @@ final class DirectSensorClient {
     // MARK: - Sleep/Wake
 
     private func handleWillSleep() {
+        cancelWakeRetry()
         wasConnectedBeforeSleep = isConnected ||
             (connectionError == nil && sensorAvailability?.hasAccelerometer == true)
 
@@ -122,11 +133,74 @@ final class DirectSensorClient {
         guard wasConnectedBeforeSleep else { return }
         wasConnectedBeforeSleep = false
 
-        // Delay reconnect to let IOKit re-enumerate HID devices after wake.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self else { return }
-            self.connect(resetPublishedState: false)
+        // S4 — Bounded retry with backoff. IOKit can take variable time to
+        // re-enumerate HID devices after wake; a single retry at 1s frequently fails.
+        cancelWakeRetry()
+        wakeRetryAttempt = 0
+        scheduleWakeRetry()
+    }
+
+    private func scheduleWakeRetry() {
+        let delay: TimeInterval
+        if wakeRetryAttempt < wakeRetryDelays.count {
+            delay = wakeRetryDelays[wakeRetryAttempt]
+        } else {
+            // Bounded retries exhausted — fall back to slow polling so we still
+            // recover if IOKit re-enumeration takes much longer than expected.
+            delay = wakeFallbackPollInterval
         }
+
+        let work = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated { self?.attemptWakeReconnect() }
+        }
+        wakeRetryWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
+
+    private func attemptWakeReconnect() {
+        wakeRetryWorkItem = nil
+        wakeRetryAttempt += 1
+
+        // Initiate connection — runtime serializes wakeSPUDrivers + enumeration on
+        // its worker queue, so we are not racing.
+        connect(resetPublishedState: false)
+
+        // Defer the availability check past the runtime's internal 1.5s
+        // availability resolution window.
+        let checkDelay: TimeInterval = 2.0
+        let work = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated { self?.evaluateWakeReconnect() }
+        }
+        wakeRetryWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + checkDelay, execute: work)
+    }
+
+    private func evaluateWakeReconnect() {
+        wakeRetryWorkItem = nil
+
+        // If we received a snapshot or accelerometer is reported available, success.
+        let availability = runtime.fetchSensorStatus()
+        if availability.hasAccelerometer && (isConnected || sensorAvailability?.hasAccelerometer == true) {
+            wakeRetryAttempt = 0
+            return
+        }
+
+        // Still not back. If we've used the bounded retries, surface a user-visible
+        // reason and continue polling at the slow cadence.
+        if wakeRetryAttempt >= wakeRetryDelays.count {
+            publishConnectionError(
+                "Sensor unavailable after wake. Retrying every \(Int(wakeFallbackPollInterval))s.",
+                clearLatestSnapshot: true
+            )
+        }
+
+        scheduleWakeRetry()
+    }
+
+    private func cancelWakeRetry() {
+        wakeRetryWorkItem?.cancel()
+        wakeRetryWorkItem = nil
+        wakeRetryAttempt = 0
     }
 
     private func publishSensorAvailability(_ availability: SensorAvailability) {

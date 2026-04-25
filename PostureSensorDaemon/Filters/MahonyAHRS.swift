@@ -36,12 +36,18 @@ final class MahonyAHRS {
     /// Update with accelerometer + gyroscope data.
     /// All values in SI units (m/s², rad/s).
     func update(ax: Double, ay: Double, az: Double, gx: Double, gy: Double, gz: Double) {
+        // Reject non-finite inputs — they would corrupt the quaternion irreversibly.
+        guard ax.isFinite, ay.isFinite, az.isFinite,
+              gx.isFinite, gy.isFinite, gz.isFinite else {
+            return
+        }
+
         var ax = ax, ay = ay, az = az
         var gx = gx, gy = gy, gz = gz
 
         // Normalize accelerometer
         let norm = sqrt(ax * ax + ay * ay + az * az)
-        guard norm > 0.01 else { return }
+        guard norm.isFinite, norm > 0.01 else { return }
         ax /= norm; ay /= norm; az /= norm
 
         // Estimated gravity direction from quaternion
@@ -78,10 +84,12 @@ final class MahonyAHRS {
 
         q0 += dq0; q1 += dq1; q2 += dq2; q3 += dq3
 
-        // Normalize quaternion
+        // Normalize quaternion. NaN compares false to everything, so an explicit
+        // finite check is required — `qnorm > 1e-10` does NOT catch NaN.
         let qnorm = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3)
-        guard qnorm > 1e-10 else {
+        guard qnorm.isFinite, qnorm > 1e-10 else {
             q0 = 1.0; q1 = 0.0; q2 = 0.0; q3 = 0.0
+            integralErrorX = 0; integralErrorY = 0; integralErrorZ = 0
             denormResetCount += 1
             #if DEBUG
             if denormResetCount == 1 || denormResetCount % 10 == 0 {
@@ -91,6 +99,18 @@ final class MahonyAHRS {
             return
         }
         q0 /= qnorm; q1 /= qnorm; q2 /= qnorm; q3 /= qnorm
+
+        // Defensive: if normalization still produced non-finite values, reset to identity.
+        if !q0.isFinite || !q1.isFinite || !q2.isFinite || !q3.isFinite {
+            q0 = 1.0; q1 = 0.0; q2 = 0.0; q3 = 0.0
+            integralErrorX = 0; integralErrorY = 0; integralErrorZ = 0
+            denormResetCount += 1
+            #if DEBUG
+            if denormResetCount == 1 || denormResetCount % 10 == 0 {
+                print("[Mahony] quaternion denorm reset #\(denormResetCount)")
+            }
+            #endif
+        }
     }
 
     /// Update with accelerometer only (no gyroscope).
@@ -103,14 +123,18 @@ final class MahonyAHRS {
     /// Current pitch in degrees (rotation around Y axis — forward/backward tilt)
     var pitch: Double {
         let sinp = 2.0 * (q0 * q2 - q3 * q1)
+        guard sinp.isFinite else { return 0 }
         let clamped = max(-1.0, min(1.0, sinp))
-        return asin(clamped) * 180.0 / .pi
+        let result = asin(clamped) * 180.0 / .pi
+        return result.isFinite ? result : 0
     }
 
     /// Current roll in degrees (rotation around X axis — left/right tilt)
     var roll: Double {
         let sinr = 2.0 * (q0 * q1 + q2 * q3)
         let cosr = 1.0 - 2.0 * (q1 * q1 + q2 * q2)
-        return atan2(sinr, cosr) * 180.0 / .pi
+        guard sinr.isFinite, cosr.isFinite else { return 0 }
+        let result = atan2(sinr, cosr) * 180.0 / .pi
+        return result.isFinite ? result : 0
     }
 }
