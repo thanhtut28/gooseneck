@@ -7,13 +7,16 @@ struct HistoryView: View {
     @Environment(PostureViewModel.self) private var viewModel
     @State private var selectedDate: Date?
     @State private var historyData = HistorySnapshot.empty
+    @State private var isLoadingSessions = true
 
     var body: some View {
         let history = historyData
 
         ScrollView(showsIndicators: false) {
             VStack(spacing: DS.Spacing.sectionGap) {
-                if history.recentSessions.isEmpty {
+                if isLoadingSessions {
+                    loadingState
+                } else if history.recentSessions.isEmpty {
                     emptyState
                 } else {
                     weeklySummary(using: history)
@@ -33,14 +36,33 @@ struct HistoryView: View {
     }
 
     private func reloadHistory() {
-        do {
-            historyData = try HistoryStore.load(from: modelContext)
-        } catch {
-            #if DEBUG
-            print("[History] Failed to load history: \(error)")
-            #endif
-            historyData = .empty
+        isLoadingSessions = true
+        Task { @MainActor in
+            do {
+                historyData = try HistoryStore.load(from: modelContext)
+            } catch {
+                #if DEBUG
+                print("[History] Failed to load history: \(error)")
+                #endif
+                historyData = .empty
+            }
+            isLoadingSessions = false
         }
+    }
+
+    // MARK: - Loading State
+
+    private var loadingState: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .controlSize(.regular)
+                .tint(DS.Colors.textMuted)
+            Text("Loading history…")
+                .font(DS.Font.label())
+                .foregroundStyle(DS.Colors.textMuted)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 120)
     }
 
     // MARK: - Empty State

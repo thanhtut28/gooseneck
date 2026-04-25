@@ -1,4 +1,4 @@
-.PHONY: generate build clean run archive export package notarize staple sparkle-sign dmg notarize-dmg staple-dmg release
+.PHONY: generate build build-release clean run run-release archive export package notarize staple sparkle-sign dmg notarize-dmg staple-dmg release
 
 generate:
 	xcodegen generate
@@ -6,12 +6,28 @@ generate:
 build: generate
 	xcodebuild -project GooseNeck.xcodeproj -scheme GooseNeck -configuration Debug build SYMROOT=$(CURDIR)/build
 
+# Release-optimized build for local profiling (ad-hoc signed, no notarization).
+# Use this to measure realistic CPU / energy numbers — Debug builds are 5–10× slower.
+# - Hardened Runtime is disabled so the ad-hoc signed app can load Sparkle.framework.
+# - Polar endpoints are pinned to sandbox so a dev license key still authenticates
+#   (production endpoints are used by `make release`).
+build-release: generate
+	xcodebuild -project GooseNeck.xcodeproj -scheme GooseNeck -configuration Release build SYMROOT=$(CURDIR)/build \
+		CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= ENABLE_HARDENED_RUNTIME=NO \
+		POLAR_API_BASE_URL="https://sandbox-api.polar.sh/v1/customer-portal/license-keys" \
+		POLAR_CHECKOUT_URL="https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_DOGu45YJUcHzeFxGZw5EqT0L9gN3L9Qm2dTQn2Z4xHn/redirect"
+
 clean:
 	xcodebuild -project GooseNeck.xcodeproj -scheme GooseNeck clean 2>/dev/null || true
 	rm -rf build
 
 run: build
 	open build/Debug/GooseNeck.app
+
+# Run the Release-optimized build. Kill any running copy first so the menu bar agent is fresh.
+run-release: build-release
+	-killall GooseNeck 2>/dev/null || true
+	open build/Release/GooseNeck.app
 
 ARCHIVE_PATH ?= $(CURDIR)/build/GooseNeck.xcarchive
 EXPORT_PATH  ?= $(CURDIR)/build/release

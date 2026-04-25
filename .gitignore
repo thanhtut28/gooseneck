@@ -9,3 +9,5 @@ DerivedData/
 *.swp
 skills-lock.json
 references/
+*.profraw
+sensor_test*.swift

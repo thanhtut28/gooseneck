@@ -26,6 +26,9 @@ enum HIDConstants {
     static let zOffset: Int = 14    // bytes 14-17: int32 LE
     static let scaleFactor: Double = 65536.0  // raw / scaleFactor = g-force
 
+    // SPU driver activation (macOS Tahoe 26+ requires explicit wake)
+    static let reportIntervalUS: Int = 8000  // microseconds (8ms = 125Hz)
+
     // Lid angle
     static let lidAngleReportID: CFIndex = 1
     static let lidAngleReportBufferSize: Int = 64

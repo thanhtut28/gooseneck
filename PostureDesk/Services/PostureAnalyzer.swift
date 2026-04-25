@@ -13,6 +13,7 @@ final class PostureAnalyzer {
     private(set) var isDrifting: Bool = false
     private(set) var baselinePitch: Double = 0
     private(set) var baselineLidAngle: Double = 0
+    private(set) var baselineHasLidAngle: Bool = false
 
     private var isCalibrated = false
     private var warmupCount = 0
@@ -40,6 +41,7 @@ final class PostureAnalyzer {
     func calibrate(pitch: Double, lidAngle: Double) {
         baselinePitch = pitch
         baselineLidAngle = lidAngle
+        baselineHasLidAngle = lidAngle >= 0
         isCalibrated = true
         warmupCount = warmupSeconds  // Skip warmup on manual calibrate
         driftHistory.removeAll()
@@ -62,9 +64,11 @@ final class PostureAnalyzer {
             return
         }
 
-        // Separate signed drifts for each axis
+        // Separate signed drifts for each axis.
+        // Lid contribution is skipped when the sensor was absent at calibration (no baseline reference)
+        // OR when the current reading is unavailable (-1 from SensorManager).
         pitchDrift = pitch - baselinePitch
-        lidAngleDrift = lidAngle >= 0 ? (lidAngle - baselineLidAngle) : 0.0
+        lidAngleDrift = (baselineHasLidAngle && lidAngle >= 0) ? (lidAngle - baselineLidAngle) : 0.0
 
         // Combined
         currentDrift = pitchDrift + lidAngleDrift

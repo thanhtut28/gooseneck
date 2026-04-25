@@ -251,8 +251,10 @@ final class FatigueMonitor {
             return
         }
 
-        // Apply time-decay
-        let daysSince = (Date.timeIntervalSinceReferenceDate - storedUpdatedAt) / 86400
+        // Apply time-decay using calendar days so DST / clock adjustments don't inflate the baseline.
+        let stored = Date(timeIntervalSinceReferenceDate: storedUpdatedAt)
+        let rawDays = Calendar.current.dateComponents([.day], from: stored, to: Date()).day ?? 0
+        let daysSince = max(0, Double(rawDays))
         let decayedWeight = max(0.3, 0.8 - 0.1 * daysSince)
 
         persistedBaseline = storedBaseline

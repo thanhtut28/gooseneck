@@ -18,6 +18,7 @@ enum NotificationAction: String {
 
 /// Manages all GooseNeck notifications with throttling to prevent spam.
 @MainActor
+@Observable
 final class NotificationManager {
 
     static let shared = NotificationManager()
@@ -74,7 +75,10 @@ final class NotificationManager {
         guard notificationsEnabled else { return }
 
         let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.alert, .sound]) { granted, error in
+        center.requestAuthorization(options: [.alert, .sound]) { [weak self] granted, error in
+            DispatchQueue.main.async {
+                self?.systemAuthorizationDenied = !granted
+            }
             #if DEBUG
             if let error { print("[Notifications] Auth error: \(error)") }
             print("[Notifications] Permission granted: \(granted)")

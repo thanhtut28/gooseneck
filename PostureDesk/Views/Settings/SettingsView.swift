@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Environment(LicenseManager.self) private var licenseManager
     @Environment(PostureViewModel.self) private var viewModel
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var showDeactivateAlert: Bool = false
@@ -61,6 +62,11 @@ struct SettingsView: View {
         .background(DS.Colors.bg)
         .onAppear {
             launchAtLogin = SMAppService.mainApp.status == .enabled
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                launchAtLogin = SMAppService.mainApp.status == .enabled
+            }
         }
         .alert("Deactivate License", isPresented: $showDeactivateAlert) {
             Button("Cancel", role: .cancel) {}

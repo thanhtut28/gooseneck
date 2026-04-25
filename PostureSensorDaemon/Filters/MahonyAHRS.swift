@@ -24,6 +24,9 @@ final class MahonyAHRS {
     /// Sample period in seconds
     private let samplePeriod: Double
 
+    /// Counts how many times the quaternion had to be reset due to denormalization (observability).
+    private var denormResetCount: Int = 0
+
     init(kp: Double = 0.5, ki: Double = 0.0, sampleRate: Double = 100.0) {
         self.kp = kp
         self.ki = ki
@@ -79,6 +82,12 @@ final class MahonyAHRS {
         let qnorm = sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3)
         guard qnorm > 1e-10 else {
             q0 = 1.0; q1 = 0.0; q2 = 0.0; q3 = 0.0
+            denormResetCount += 1
+            #if DEBUG
+            if denormResetCount == 1 || denormResetCount % 10 == 0 {
+                print("[Mahony] quaternion denorm reset #\(denormResetCount)")
+            }
+            #endif
             return
         }
         q0 /= qnorm; q1 /= qnorm; q2 /= qnorm; q3 /= qnorm

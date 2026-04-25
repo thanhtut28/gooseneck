@@ -20,7 +20,7 @@ struct CenterProgressBar: View {
                     .fill(color)
                     .frame(width: max(barLen, 0), height: 3)
                     .offset(x: value >= 0 ? half : half - barLen)
-                    .animation(.easeInOut(duration: 0.2), value: value)
+                    .animation(.smooth(duration: 0.6), value: value)
             }
             .overlay(alignment: .center) {
                 RoundedRectangle(cornerRadius: 0.5)
@@ -68,7 +68,7 @@ struct LidAngleCard: View {
                     .font(DS.Font.metric(40))
                     .foregroundStyle(accentColor)
                     .contentTransition(.numericText())
-                    .animation(.easeInOut(duration: 0.15), value: drift)
+                    .animation(.easeInOut(duration: 0.4), value: drift)
 
                 Text("°")
                     .font(.system(size: 18, weight: .medium, design: .rounded))
@@ -125,7 +125,7 @@ struct TiltCard: View {
                     .font(DS.Font.metric(40))
                     .foregroundStyle(accentColor)
                     .contentTransition(.numericText())
-                    .animation(.easeInOut(duration: 0.15), value: drift)
+                    .animation(.easeInOut(duration: 0.4), value: drift)
 
                 Text("°")
                     .font(.system(size: 18, weight: .medium, design: .rounded))

@@ -134,8 +134,15 @@ struct GooseNeckApp: App {
                 configurations: ModelConfiguration(isStoredInMemoryOnly: true)
             )
         } catch {
-            // Catastrophic: even in-memory store failed. Last resort — default container.
-            return try! ModelContainer(for: SessionRecord.self)
+            // Catastrophic: even in-memory store failed. Surface a user-facing alert, then quit.
+            let alert = NSAlert()
+            alert.alertStyle = .critical
+            alert.messageText = "GooseNeck cannot start"
+            alert.informativeText = "History storage could not be initialized. Try reinstalling GooseNeck or contact support."
+            alert.addButton(withTitle: "Quit")
+            _ = alert.runModal()
+            NSApp.terminate(nil)
+            fatalError("Catastrophic storage failure: \(error)")
         }
     }
 

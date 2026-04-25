@@ -6,6 +6,10 @@ struct DashboardView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: DS.Spacing.sectionGap) {
+                if case .failing = viewModel.storageHealth {
+                    storageWarningBanner
+                }
+
                 if viewModel.systemNotificationsMuted {
                     notificationWarningBanner
                 }
@@ -156,6 +160,34 @@ struct DashboardView: View {
 
     private var sensorError: String? {
         viewModel.sensorClient.connectionError
+    }
+
+    // MARK: - Storage Warning
+
+    private var storageWarningBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "externaldrive.trianglebadge.exclamationmark")
+                .font(.system(size: 16))
+                .foregroundStyle(DS.Colors.accentDanger)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("History isn't saving")
+                    .font(DS.Font.label())
+                    .foregroundStyle(DS.Colors.textPrimary)
+                Text("GooseNeck couldn't save your recent session. Try restarting the app — recent data may be lost.")
+                    .font(DS.Font.caption())
+                    .foregroundStyle(DS.Colors.textSecondary)
+            }
+
+            Spacer()
+        }
+        .padding(16)
+        .background(DS.Colors.accentDanger.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: DS.Spacing.cardRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.Spacing.cardRadius, style: .continuous)
+                .strokeBorder(DS.Colors.accentDanger.opacity(0.2), lineWidth: 1)
+        )
     }
 
     // MARK: - Notification Warning

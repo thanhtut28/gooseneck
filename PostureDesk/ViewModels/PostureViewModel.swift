@@ -7,6 +7,12 @@ import SwiftUI
 
 private let storageLog = Logger(subsystem: "com.gooseneck.app", category: "storage")
 
+/// Storage health. Flips to `.failing` after repeated save failures so the UI can surface a banner.
+enum StorageHealth: Equatable {
+    case ok
+    case failing(consecutiveCount: Int, lastError: String)
+}
+
 /// Central view model that aggregates all services and drives the menu bar UI.
 @MainActor @Observable
 final class PostureViewModel {
@@ -23,6 +29,10 @@ final class PostureViewModel {
     var historyRefreshToken = 0
     var isPaused = false
     private var logCounter = 0
+
+    private(set) var storageHealth: StorageHealth = .ok
+    @ObservationIgnored private var consecutiveStorageFailures = 0
+    private let storageFailureThreshold = 3
 
     @ObservationIgnored private var processTimer: Timer?
     @ObservationIgnored private var autoResumeWorkItem: DispatchWorkItem?
@@ -486,6 +496,29 @@ final class PostureViewModel {
 
     // MARK: - Session Persistence
 
+    /// Save the model context. Tracks consecutive failures and surfaces storage health so the UI can react.
+    private func trySave(tag: String) {
+        do {
+            try modelContext.save()
+            consecutiveStorageFailures = 0
+            if storageHealth != .ok {
+                storageHealth = .ok
+            }
+        } catch {
+            consecutiveStorageFailures += 1
+            storageLog.error("Save failed [\(tag, privacy: .public)] attempt \(self.consecutiveStorageFailures): \(error.localizedDescription)")
+            if consecutiveStorageFailures >= storageFailureThreshold {
+                let newHealth: StorageHealth = .failing(
+                    consecutiveCount: consecutiveStorageFailures,
+                    lastError: error.localizedDescription
+                )
+                if storageHealth != newHealth {
+                    storageHealth = newHealth
+                }
+            }
+        }
+    }
+
     private func startNewSession(at time: Date = Date()) {
         let session = SessionRecord()
         session.startedAt = time
@@ -507,7 +540,7 @@ final class PostureViewModel {
         session.typingIntensityAvailable = fatigueMonitor.hasSessionTypingMetrics
         session.avgTypingIntensity = fatigueMonitor.hasSessionTypingMetrics ? max(0, fatigueMonitor.sessionAverageIntensity) : 0
         session.peakTypingIntensity = fatigueMonitor.hasSessionTypingMetrics ? max(0, fatigueMonitor.peakIntensityPercent) : 0
-        do { try modelContext.save() } catch { storageLog.error("Save failed: \(error.localizedDescription)") }
+        trySave(tag: "updateCurrentSession")
     }
 
     private func finalizeCurrentSession(
@@ -520,7 +553,7 @@ final class PostureViewModel {
 
         guard finalizedActiveMinutes >= 2 else {
             modelContext.delete(session)
-            do { try modelContext.save() } catch { storageLog.error("Save failed: \(error.localizedDescription)") }
+            trySave(tag: "discardShortSession")
             currentSession = nil
             #if DEBUG
             print("[Session] Discarded short session (\(finalizedActiveMinutes)m < 2m minimum)")
@@ -536,7 +569,7 @@ final class PostureViewModel {
         session.avgTypingIntensity = fatigueMonitor.hasSessionTypingMetrics ? max(0, fatigueMonitor.sessionAverageIntensity) : 0
         session.peakTypingIntensity = fatigueMonitor.hasSessionTypingMetrics ? max(0, fatigueMonitor.peakIntensityPercent) : 0
         fatigueMonitor.persistCurrentBaseline()
-        do { try modelContext.save() } catch { storageLog.error("Save failed: \(error.localizedDescription)") }
+        trySave(tag: "finalizeSession")
         historyRefreshToken &+= 1
         currentSession = nil
         #if DEBUG
@@ -547,7 +580,7 @@ final class PostureViewModel {
     private func discardCurrentSession() {
         guard let session = currentSession else { return }
         modelContext.delete(session)
-        do { try modelContext.save() } catch { storageLog.error("Save failed: \(error.localizedDescription)") }
+        trySave(tag: "discardCurrentSession")
         currentSession = nil
     }
 
@@ -555,7 +588,14 @@ final class PostureViewModel {
         let descriptor = FetchDescriptor<SessionRecord>(
             predicate: #Predicate<SessionRecord> { $0.endedAt == nil }
         )
-        guard let orphans = try? modelContext.fetch(descriptor), !orphans.isEmpty else { return }
+        let orphans: [SessionRecord]
+        do {
+            orphans = try modelContext.fetch(descriptor)
+        } catch {
+            storageLog.error("Orphan fetch failed: \(error.localizedDescription)")
+            return
+        }
+        guard !orphans.isEmpty else { return }
 
         for session in orphans {
             if session.totalActiveMinutes >= 2 {
@@ -573,7 +613,7 @@ final class PostureViewModel {
                 #endif
             }
         }
-        do { try modelContext.save() } catch { storageLog.error("Save failed: \(error.localizedDescription)") }
+        trySave(tag: "cleanUpOrphans")
     }
 
 }

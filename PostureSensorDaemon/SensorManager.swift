@@ -159,8 +159,32 @@ final class SensorManager: NSObject {
     }
 
     @objc private func startOnWorkerThread() {
+        wakeSPUDrivers()
         startAccelerometer()
         startLidAngleSensor()
+    }
+
+    /// macOS Tahoe (26+) defaults SPU sensors to powered-down state.
+    /// Set reporting and power properties on all AppleSPUHIDDriver services
+    /// so the hardware actually starts delivering reports.
+    private func wakeSPUDrivers() {
+        var iterator: io_iterator_t = 0
+        let result = IOServiceGetMatchingServices(
+            kIOMainPortDefault,
+            IOServiceMatching("AppleSPUHIDDriver"),
+            &iterator
+        )
+        guard result == kIOReturnSuccess else { return }
+
+        var service = IOIteratorNext(iterator)
+        while service != 0 {
+            IORegistryEntrySetCFProperty(service, "SensorPropertyReportingState" as CFString, 1 as CFNumber)
+            IORegistryEntrySetCFProperty(service, "SensorPropertyPowerState" as CFString, 1 as CFNumber)
+            IORegistryEntrySetCFProperty(service, "ReportInterval" as CFString, HIDConstants.reportIntervalUS as CFNumber)
+            IOObjectRelease(service)
+            service = IOIteratorNext(iterator)
+        }
+        IOObjectRelease(iterator)
     }
 
     @objc private func stopOnWorkerThread() {

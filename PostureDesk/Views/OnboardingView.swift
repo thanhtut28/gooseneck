@@ -704,11 +704,33 @@ struct OnboardingView: View {
             Spacer()
 
             if calibrationDone {
+                if viewModel.systemNotificationsMuted {
+                    notificationDenialHint
+                        .padding(.bottom, 12)
+                        .transition(.opacity)
+                }
+
                 primaryButton("Continue", hint: "Continues to the Posture Island preview.") {
                     advance()
                 }
             }
         }
+    }
+
+    private var notificationDenialHint: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "bell.slash")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(DS.Colors.textMuted)
+            Text("Notifications are off — you can enable them in System Settings anytime")
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundStyle(DS.Colors.textMuted)
+                .multilineTextAlignment(.center)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(DS.Colors.cardBg.opacity(0.6))
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     // MARK: - Step 6: Island Preview
