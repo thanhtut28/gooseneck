@@ -174,30 +174,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             UserDefaults.standard.set(true, forKey: Self.onboardingSetupCompleteDefaultsKey)
         }
 
+        // Track whether onboarding is taking over the launch — if so we must
+        // not race a background license refresh against the user's flow.
+        var willShowOnboarding = false
+
         if !onboardingComplete, !onboardingSetupComplete {
             GooseNeckApp.sharedViewModel?.stop(lockMonitoring: true, finalizeSession: false)
             showOnboarding(startAt: .welcome)
+            willShowOnboarding = true
         } else if !hasStoredLicense {
             // Onboarding done but license removed — re-show at activate step
             GooseNeckApp.sharedViewModel?.stop(lockMonitoring: true, finalizeSession: false)
             showOnboarding(startAt: .activate)
+            willShowOnboarding = true
         }
 
-        licenseRefreshTask = Task { [weak self] in
-            guard onboardingComplete, hasStoredLicense else { return }
+        // Skip the background refresh entirely while onboarding is owning
+        // the launch. The onboarding flow drives its own activation/refresh
+        // and we don't want this task interleaving with it.
+        guard !willShowOnboarding, onboardingComplete, hasStoredLicense else { return }
 
+        licenseRefreshTask = Task { [weak self] in
+            // Run the network call off the main actor, then collapse the
+            // entire decision path into a single MainActor.run hop so it
+            // can't interleave with an in-flight start() from another path.
+            // PostureViewModel.start() / stop() are already idempotent under
+            // the @ObservationIgnored `monitoringLocked` + `isStarted`
+            // guards, so re-issuing them on this hop is safe.
             await GooseNeckApp.licenseManager.refreshStatus()
             await MainActor.run {
+                guard let self else { return }
+                let viewModel = GooseNeckApp.sharedViewModel
                 switch GooseNeckApp.licenseManager.licenseState {
                 case .active, .gracePeriod:
-                    GooseNeckApp.sharedViewModel?.unlockMonitoring()
-                    GooseNeckApp.sharedViewModel?.start()
+                    viewModel?.unlockMonitoring()
+                    viewModel?.start()
                 case .unlicensed, .invalid:
-                    GooseNeckApp.sharedViewModel?.stop(lockMonitoring: true, finalizeSession: false)
-                    self?.showOnboarding(startAt: .activate)
+                    viewModel?.stop(lockMonitoring: true, finalizeSession: false)
+                    self.showOnboarding(startAt: .activate)
                 default:
-                    GooseNeckApp.sharedViewModel?.stop(lockMonitoring: true, finalizeSession: false)
-                    break
+                    viewModel?.stop(lockMonitoring: true, finalizeSession: false)
                 }
             }
         }

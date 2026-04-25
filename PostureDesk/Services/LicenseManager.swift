@@ -48,9 +48,17 @@ final class LicenseManager {
 
         let hasStoredLicense = keychain.string(for: Self.licenseKeyAccount) != nil
             && keychain.string(for: Self.activationIdAccount) != nil
-        isLicensed = hasStoredLicense
         licenseStatus = UserDefaults.standard.string(forKey: Self.cachedStatusDefaultsKey)
-        licenseState = hasStoredLicense ? Self.cachedLicenseState() : .unlicensed
+        let initialState: LicenseState = hasStoredLicense ? Self.cachedLicenseState() : .unlicensed
+        licenseState = initialState
+        // Keep `isLicensed` consistent with `licenseState`: only true while we
+        // either know the license is active or the offline-grace window covers us.
+        switch initialState {
+        case .active, .gracePeriod:
+            isLicensed = true
+        default:
+            isLicensed = false
+        }
     }
 
     // MARK: - Public
@@ -94,6 +102,14 @@ final class LicenseManager {
         } catch let LicenseError.network(message) {
             error = message
             licenseState = .networkError
+        } catch let LicenseError.serverTransient(message) {
+            // Server reachable but unhealthy / parse failure. Surface a
+            // network-error so the user can retry without losing input.
+            error = message
+            licenseState = .networkError
+        } catch let urlError as URLError where Self.isOfflineURLError(urlError) {
+            self.error = "Network error. Please check your connection and try again."
+            licenseState = .networkError
         } catch {
             self.error = "Network error. Please check your connection and try again."
             licenseState = .networkError
@@ -124,6 +140,10 @@ final class LicenseManager {
             let result = try await validateKey(key, activationId: activationId)
 
             guard Self.isAccepted(status: result.status) else {
+                // Order matters: drop `isLicensed` *before* invalidating
+                // storage so observers never see a window where
+                // `isLicensed == true && licenseState == .invalid`.
+                isLicensed = false
                 invalidateStoredLicense(message: "License is \(result.status).")
                 isValidating = false
                 return
@@ -135,8 +155,15 @@ final class LicenseManager {
             isLicensed = true
         } catch let failure as LicenseError {
             applyValidationFailure(failure)
+        } catch let urlError as URLError where Self.isOfflineURLError(urlError) {
+            // No network at all — let the offline-grace path keep the user
+            // productive if it can.
+            applyValidationFailure(.network("Unable to reach the license server right now."))
         } catch {
-            applyValidationFailure(.network("Unable to validate your license right now."))
+            // Some other transport error (TLS handshake, malformed response,
+            // etc.). Treat as transient: do *not* extend offline grace and
+            // do *not* invalidate credentials.
+            applyValidationFailure(.serverTransient("Unable to validate your license right now."))
         }
 
         isValidating = false
@@ -149,15 +176,70 @@ final class LicenseManager {
             return
         }
 
-        if config.validationError == nil {
-            do {
-                try await deactivateKey(key, activationId: activationId)
-            } catch {
-                // Local deactivation still wins.
-            }
+        // If we can't even build a valid request (config error), wipe locally
+        // — there is no server to confirm against from this build.
+        guard config.validationError == nil else {
+            clearLicense()
+            return
         }
 
-        clearLicense()
+        let outcome = await performDeactivation(key: key, activationId: activationId)
+        switch outcome {
+        case .confirmed:
+            clearLicense()
+        case .clientErrorClearedLocally(let statusCode):
+            #if DEBUG
+            print("[LicenseManager] deactivate received unexpected client status \(statusCode); clearing local credentials anyway.")
+            #endif
+            clearLicense()
+        case .retryable(let message):
+            // Server didn't confirm — keep credentials so the user can retry.
+            isValidating = false
+            error = message
+        }
+    }
+
+    private enum DeactivationOutcome {
+        /// 2xx — server confirmed, or 404 — server says creds are gone.
+        case confirmed
+        /// Other 4xx. Server says creds are gone but in an unexpected way;
+        /// we still clear locally but log so support can investigate.
+        case clientErrorClearedLocally(Int)
+        /// 5xx, transport failure, malformed response. Keep local creds so
+        /// the user can retry once the server recovers.
+        case retryable(String)
+    }
+
+    private func performDeactivation(key: String, activationId: String) async -> DeactivationOutcome {
+        do {
+            let request = try makeRequest(
+                path: "deactivate",
+                body: [
+                    "key": key,
+                    "organization_id": config.organizationId,
+                    "activation_id": activationId
+                ]
+            )
+
+            let (_, response) = try await session.data(for: request)
+            let httpResponse = try requireHTTPResponse(response)
+            let status = httpResponse.statusCode
+
+            switch status {
+            case 200...299, 404:
+                return .confirmed
+            case 500...599:
+                return .retryable("License server is temporarily unavailable. Please try again.")
+            case 400...499:
+                return .clientErrorClearedLocally(status)
+            default:
+                return .retryable("Unexpected response from license server (\(status)). Please try again.")
+            }
+        } catch let urlError as URLError where Self.isOfflineURLError(urlError) {
+            return .retryable("You appear to be offline. Connect and try again to deactivate.")
+        } catch {
+            return .retryable("Unable to reach the license server right now. Please try again.")
+        }
     }
 
     func openCheckout() {
@@ -344,8 +426,17 @@ final class LicenseManager {
     }
 
     private enum LicenseError: Error {
+        /// Server definitively rejected the request (4xx that's not 404 on
+        /// deactivate). Causes the stored license to be invalidated locally.
         case api(String)
+        /// True "no network" — URLSession failed before we ever reached the
+        /// server. Lets the offline-grace window keep the user productive.
         case network(String)
+        /// Server is reachable but transient (5xx, or 200 with malformed
+        /// body). Surfaces a `.networkError` lock immediately and does *not*
+        /// let the user lean on offline grace, but preserves credentials so
+        /// the next `refreshStatus()` can recover.
+        case serverTransient(String)
         case configuration(String)
     }
 
@@ -368,7 +459,9 @@ final class LicenseManager {
 
         let json = try decodeJSON(from: data)
         guard let id = json["id"] as? String else {
-            throw LicenseError.api("Invalid response from server.")
+            // Treat as transient: server returned 200 but a body shape we
+            // don't understand. Don't invalidate any stored credentials.
+            throw LicenseError.serverTransient("Invalid response from server.")
         }
 
         let status = Self.extractStatus(from: json) ?? "granted"
@@ -394,28 +487,13 @@ final class LicenseManager {
 
         let json = try decodeJSON(from: data)
         guard let status = Self.extractStatus(from: json) else {
-            throw LicenseError.api("Invalid response from server.")
+            // Treat as transient: a malformed body on a 200 must not knock
+            // the user out. Preserve credentials and let the next refresh
+            // recover.
+            throw LicenseError.serverTransient("Invalid response from server.")
         }
 
         return ValidationResult(status: status)
-    }
-
-    private func deactivateKey(_ key: String, activationId: String) async throws {
-        let request = try makeRequest(
-            path: "deactivate",
-            body: [
-                "key": key,
-                "organization_id": config.organizationId,
-                "activation_id": activationId
-            ]
-        )
-
-        let (_, response) = try await session.data(for: request)
-        let httpResponse = try requireHTTPResponse(response)
-
-        if httpResponse.statusCode != 204 {
-            throw LicenseError.api("Failed to deactivate license.")
-        }
     }
 
     private func makeRequest(path: String, body: [String: Any]) throws -> URLRequest {
@@ -442,14 +520,17 @@ final class LicenseManager {
     }
 
     private func decodeJSON(from data: Data) throws -> [String: Any] {
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw LicenseError.api("Invalid response from server.")
+        // Called only on the 200 success path. A body that won't parse is a
+        // transient server / network condition, not a license rejection.
+        let raw = try? JSONSerialization.jsonObject(with: data)
+        guard let json = raw as? [String: Any] else {
+            throw LicenseError.serverTransient("Invalid response from server.")
         }
         return json
     }
 
     private func mapAPIError(data: Data, statusCode: Int, fallback: String) -> LicenseError {
-        let detail = (try? decodeJSON(from: data))?["detail"] as? String
+        let detail = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["detail"] as? String
 
         switch statusCode {
         case 403:
@@ -457,7 +538,9 @@ final class LicenseManager {
         case 404:
             return .api("License key not found. Please check and try again.")
         case 500...599:
-            return .network(detail ?? "License server unavailable.")
+            // Treat as transient: server is reachable but unhealthy. Don't
+            // lean on offline-grace and don't invalidate credentials.
+            return .serverTransient(detail ?? "License server unavailable.")
         default:
             return .api(detail ?? fallback)
         }
@@ -487,8 +570,14 @@ final class LicenseManager {
     private func applyValidationFailure(_ failure: LicenseError) {
         switch failure {
         case .api(let message):
+            // Server definitively rejected. Drop `isLicensed` *before*
+            // invalidating storage so observers never see a window where
+            // `isLicensed == true && licenseState == .invalid`.
+            isLicensed = false
             invalidateStoredLicense(message: message)
         case .network(let message):
+            // Pure no-network. Lean on the offline-grace cache if it's still
+            // valid; otherwise lock the app behind a `.networkError`.
             if let graceExpiry = Self.cachedGraceExpiry(), graceExpiry > Date() {
                 isLicensed = true
                 licenseState = .gracePeriod(until: graceExpiry)
@@ -498,6 +587,14 @@ final class LicenseManager {
                 licenseState = .networkError
                 error = message
             }
+        case .serverTransient(let message):
+            // Server is reachable but unhealthy (5xx) or returned a body we
+            // can't parse. Surface a `.networkError` lock immediately —
+            // *without* extending or relying on offline grace, and without
+            // touching stored credentials. Next refresh can recover.
+            isLicensed = false
+            licenseState = .networkError
+            error = message
         case .configuration(let message):
             if let graceExpiry = Self.cachedGraceExpiry(), graceExpiry > Date() {
                 isLicensed = true
@@ -512,10 +609,17 @@ final class LicenseManager {
     }
 
     private static func cachedLicenseState() -> LicenseState {
-        if let graceExpiry = cachedGraceExpiry(), graceExpiry > Date(), lastValidatedAt() != nil {
-            return .active
+        // We have stored credentials but have not yet re-validated since launch.
+        // If the offline-grace window is still open and we have a recorded
+        // last-validation timestamp, surface `.gracePeriod` so the UI reflects
+        // the cached state; otherwise force a `.networkError` lock until the
+        // next `refreshStatus()` either succeeds or definitively rejects.
+        guard let graceExpiry = cachedGraceExpiry(),
+              graceExpiry > Date(),
+              lastValidatedAt() != nil else {
+            return .networkError
         }
-        return .active
+        return .gracePeriod(until: graceExpiry)
     }
 
     private static func lastValidatedAt() -> Date? {
@@ -588,8 +692,18 @@ final class LicenseManager {
             return
         }
 
-        let graceExpiry = Date().addingTimeInterval(offlineGracePeriod)
-        UserDefaults.standard.set(graceExpiry.timeIntervalSinceReferenceDate, forKey: graceExpiresAtDefaultsKey)
+        // Treat the migration moment as the implicit last-validation time so
+        // that `cachedLicenseState()` (which requires both a future grace
+        // expiry *and* a non-nil last-validated timestamp per L1) can lift
+        // the user into `.gracePeriod` immediately. The next `refreshStatus`
+        // will overwrite both with real values.
+        let now = Date()
+        let graceExpiry = now.addingTimeInterval(offlineGracePeriod)
+        let defaults = UserDefaults.standard
+        defaults.set(graceExpiry.timeIntervalSinceReferenceDate, forKey: graceExpiresAtDefaultsKey)
+        if defaults.double(forKey: lastValidatedAtDefaultsKey) <= 0 {
+            defaults.set(now.timeIntervalSinceReferenceDate, forKey: lastValidatedAtDefaultsKey)
+        }
     }
 
     private static func extractStatus(from json: [String: Any]) -> String? {
@@ -607,5 +721,20 @@ final class LicenseManager {
 
     private static func isAccepted(status: String) -> Bool {
         !["blocked", "disabled", "expired", "revoked"].contains(status.lowercased())
+    }
+
+    /// `URLError` codes that indicate the request never reached a healthy
+    /// server, so leaning on the offline-grace cache is appropriate.
+    /// Anything else (TLS errors, bad responses, etc.) is treated as a
+    /// transient server failure and bypasses the grace path.
+    private static func isOfflineURLError(_ error: URLError) -> Bool {
+        switch error.code {
+        case .notConnectedToInternet,
+             .networkConnectionLost,
+             .timedOut:
+            return true
+        default:
+            return false
+        }
     }
 }

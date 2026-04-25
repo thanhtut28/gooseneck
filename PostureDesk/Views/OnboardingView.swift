@@ -29,6 +29,7 @@ struct OnboardingView: View {
     @State private var consecutiveTypingSamples = 0
     @State private var showPrivacySheet = false
     @State private var showTermsSheet = false
+    @State private var isActivating = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -871,13 +872,17 @@ struct OnboardingView: View {
                     .font(.system(size: 13, design: .monospaced))
                     .accessibilityLabel("License key")
 
-                if licenseManager.isValidating {
+                if licenseManager.isValidating || isActivating {
                     ProgressView()
                         .controlSize(.small)
                         .frame(width: 70)
                 } else {
                     Button("Activate") {
+                        // Debounce: ignore taps while a request is in flight.
+                        guard !isActivating else { return }
+                        isActivating = true
                         Task {
+                            defer { isActivating = false }
                             await licenseManager.activate(key: licenseKey)
                             if licenseManager.isLicensed {
                                 await MainActor.run {
@@ -890,7 +895,10 @@ struct OnboardingView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(DS.Colors.accentGood)
-                    .disabled(licenseKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(
+                        isActivating
+                            || licenseKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    )
                     .accessibilityHint(
                         licenseKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                             ? "Paste a license key before activating."

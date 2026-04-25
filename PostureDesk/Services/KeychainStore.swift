@@ -7,7 +7,7 @@ import Security
 struct KeychainStore {
     private let service: String
 
-    init(service: String = "\(Bundle.main.bundleIdentifier ?? "com.posturedesk.app").license") {
+    init(service: String = "\(Bundle.main.bundleIdentifier ?? "com.gooseneck.app").license") {
         self.service = service
     }
 
