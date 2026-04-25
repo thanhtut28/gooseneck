@@ -78,6 +78,10 @@ final class NotificationManager {
         center.requestAuthorization(options: [.alert, .sound]) { [weak self] granted, error in
             DispatchQueue.main.async {
                 self?.systemAuthorizationDenied = !granted
+                // Re-read the canonical authorization status so the dashboard
+                // banner reflects the actual system state (handles .denied,
+                // .notDetermined, and provisional cases consistently).
+                self?.checkSystemAuthorization()
             }
             #if DEBUG
             if let error { print("[Notifications] Auth error: \(error)") }

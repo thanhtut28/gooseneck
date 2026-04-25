@@ -3,6 +3,14 @@ import SwiftUI
 struct DashboardView: View {
     @Environment(PostureViewModel.self) private var viewModel
 
+    /// Read NotificationManager directly so SwiftUI observes its @Observable
+    /// state (systemAuthorizationDenied flips reactively after requestPermission()
+    /// resolves to a denial — without this, the banner would only update after
+    /// some other viewModel property changed).
+    private var systemNotificationsMuted: Bool {
+        viewModel.notificationsEnabled && NotificationManager.shared.systemAuthorizationDenied
+    }
+
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: DS.Spacing.sectionGap) {
@@ -10,7 +18,7 @@ struct DashboardView: View {
                     storageWarningBanner
                 }
 
-                if viewModel.systemNotificationsMuted {
+                if systemNotificationsMuted {
                     notificationWarningBanner
                 }
 

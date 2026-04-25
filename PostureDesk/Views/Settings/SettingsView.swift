@@ -10,6 +10,7 @@ struct SettingsView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var launchAtLoginError: String?
     @State private var showDeactivateAlert: Bool = false
     @ObservedObject private var checkForUpdatesVM = CheckForUpdatesViewModel(
         updater: GooseNeckApp.sharedUpdater
@@ -62,6 +63,7 @@ struct SettingsView: View {
         .background(DS.Colors.bg)
         .onAppear {
             launchAtLogin = SMAppService.mainApp.status == .enabled
+            launchAtLoginError = nil
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
@@ -261,15 +263,26 @@ struct SettingsView: View {
                 Toggle("Launch at Login", isOn: Binding(
                     get: { launchAtLogin },
                     set: { newValue in
+                        let previous = launchAtLogin
                         do {
                             if newValue {
                                 try SMAppService.mainApp.register()
                             } else {
                                 try SMAppService.mainApp.unregister()
                             }
-                            launchAtLogin = newValue
+                            // Re-read the actual status — don't trust the
+                            // optimistic toggle value.
+                            launchAtLogin = SMAppService.mainApp.status == .enabled
+                            launchAtLoginError = nil
                         } catch {
-                            // Registration failed — toggle stays at current state
+                            // Registration failed — revert toggle and surface error.
+                            launchAtLogin = SMAppService.mainApp.status == .enabled
+                            // If status read also disagrees with `previous`, fall back
+                            // to the previous user-visible state to avoid a flicker.
+                            if launchAtLogin != previous && launchAtLogin == newValue {
+                                launchAtLogin = previous
+                            }
+                            launchAtLoginError = error.localizedDescription
                         }
                     }
                 ))
@@ -277,6 +290,18 @@ struct SettingsView: View {
                 .tint(DS.Colors.accentGood)
                 .labelsHidden()
                 .accessibilityLabel("Launch at Login")
+            }
+
+            if let launchAtLoginError {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(DS.Colors.accentWarn)
+                    Text("Couldn\u{2019}t update Launch at Login: \(launchAtLoginError)")
+                        .font(DS.Font.caption())
+                        .foregroundStyle(DS.Colors.textMuted)
+                    Spacer()
+                }
             }
 
             settingRow("Posture Island", description: "Floating overlay on your desktop") {

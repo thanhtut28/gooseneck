@@ -38,6 +38,7 @@ final class PostureViewModel {
     @ObservationIgnored private var autoResumeWorkItem: DispatchWorkItem?
     @ObservationIgnored private var isStarted = false
     @ObservationIgnored private var appearanceObserver: NSObjectProtocol?
+    @ObservationIgnored private var didBecomeActiveObserver: NSObjectProtocol?
     @ObservationIgnored private var monitoringLocked = false
 
     // Theme: 0 = system, 1 = light, 2 = dark
@@ -166,6 +167,19 @@ final class PostureViewModel {
                 self?.appearanceTick += 1
             }
         }
+        // Re-check system notification permission when app becomes active
+        // (user may toggle it in System Settings and return to the app).
+        // Installed once here — checkSystemAuthorization() is idempotent.
+        didBecomeActiveObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            MainActor.assumeIsolated { [weak self] in
+                _ = self
+                NotificationManager.shared.checkSystemAuthorization()
+            }
+        }
         cleanUpOrphanedSessions()
     }
 
@@ -178,6 +192,9 @@ final class PostureViewModel {
             islandManager.hide()
             if let appearanceObserver {
                 DistributedNotificationCenter.default().removeObserver(appearanceObserver)
+            }
+            if let didBecomeActiveObserver {
+                NotificationCenter.default.removeObserver(didBecomeActiveObserver)
             }
         }
     }
@@ -201,17 +218,6 @@ final class PostureViewModel {
         NotificationManager.shared.checkSystemAuthorization()
         postureAnalyzer.driftThreshold = driftThreshold
         sensorClient.connect()
-
-        // Re-check system notification permission when app becomes active
-        // (user may toggle it in System Settings and return to the app)
-        NotificationCenter.default.addObserver(
-            forName: NSApplication.didBecomeActiveNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            NotificationManager.shared.checkSystemAuthorization()
-            _ = self  // prevent unused capture warning
-        }
 
         if dynamicIslandEnabled {
             islandManager.show(viewModel: self)
@@ -244,10 +250,8 @@ final class PostureViewModel {
 
         sensorClient.disconnect()
         islandManager.hide()
-        if let appearanceObserver {
-            DistributedNotificationCenter.default().removeObserver(appearanceObserver)
-            self.appearanceObserver = nil
-        }
+        // Note: appearanceObserver and didBecomeActiveObserver are installed once
+        // in init() and removed only in deinit — they should survive stop/start cycles.
         fatigueMonitor.resetSession()
         breakTracker.stop()
         showSurfaceNudge = false
