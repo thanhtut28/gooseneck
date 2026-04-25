@@ -705,7 +705,7 @@ struct OnboardingView: View {
             Spacer()
 
             if calibrationDone {
-                if viewModel.systemNotificationsMuted {
+                if NotificationManager.shared.systemAuthorizationDenied {
                     notificationDenialHint
                         .padding(.bottom, 12)
                         .transition(.opacity)

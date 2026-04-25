@@ -87,11 +87,6 @@ final class PostureViewModel {
         didSet { NotificationManager.shared.fatigueEnabled = fatigueNotificationsEnabled }
     }
 
-    /// True when in-app notifications are enabled but macOS has blocked them at the system level.
-    var systemNotificationsMuted: Bool {
-        notificationsEnabled && NotificationManager.shared.systemAuthorizationDenied
-    }
-
     var driftThreshold: Double = PostureViewModel.loadDriftThreshold() {
         didSet {
             UserDefaults.standard.set(driftThreshold, forKey: Self.driftThresholdDefaultsKey)
@@ -175,10 +170,7 @@ final class PostureViewModel {
             object: nil,
             queue: .main
         ) { _ in
-            MainActor.assumeIsolated { [weak self] in
-                _ = self
-                NotificationManager.shared.checkSystemAuthorization()
-            }
+            NotificationManager.shared.checkSystemAuthorization()
         }
         cleanUpOrphanedSessions()
     }
