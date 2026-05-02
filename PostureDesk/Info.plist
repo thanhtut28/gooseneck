@@ -4,6 +4,8 @@
 <dict>
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.healthcare-fitness</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -29,7 +31,9 @@
     <key>LSUIElement</key>
     <true/>
     <key>SUFeedURL</key>
-    <string>https://gooseneck-updates.pages.dev/appcast.xml</string>
+    <string>https://updates.gooseneck.app/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>zuPk2n/CxH18tx0kHLb0flEMlXdDImNEDU1+Qq0rZjw=</string>
     <key>SUEnableInstallerLauncherService</key>
     <true/>
 </dict>

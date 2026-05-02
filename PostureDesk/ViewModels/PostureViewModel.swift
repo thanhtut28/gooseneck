@@ -371,6 +371,20 @@ final class PostureViewModel {
         systemIdleSeconds < 30
     }
 
+    /// True when the user actually pressed a key recently. Used to gate typing-
+    /// intensity measurement so that fan vibration / trackpad clicks / music
+    /// coupling through the chassis do not register as "typing" just because
+    /// `isUserPresent` is true. 5-second hysteresis covers brief inter-word
+    /// pauses without resetting the recent-window average.
+    private var isTyping: Bool {
+        let secondsSinceKeyDown = CGEventSource.secondsSinceLastEventType(
+            .combinedSessionState,
+            eventType: .keyDown
+        )
+        guard secondsSinceKeyDown >= 0 else { return false }
+        return secondsSinceKeyDown < 5
+    }
+
     // MARK: - Processing
 
     private func processLatestSnapshot() {
@@ -383,10 +397,12 @@ final class PostureViewModel {
         let now = Date()
         let present = isUserPresent
 
-        // Feed to all analyzers
+        // Feed to all analyzers. Break tracking treats any input (mouse, trackpad,
+        // keys) as presence; fatigue monitoring requires an actual keyDown so
+        // chassis vibration during cursor-only activity is not misread as typing.
         postureAnalyzer.update(pitch: snapshot.pitch, lidAngle: snapshot.lidAngle)
         let breakUpdate = breakTracker.update(isActive: present, at: now)
-        fatigueMonitor.update(typingRMS: snapshot.typingRMS, isActive: present)
+        fatigueMonitor.update(typingRMS: snapshot.typingRMS, isTyping: isTyping)
         checkLidAngleNudge(at: now)
 
         // Track posture alerts (drift transitions)

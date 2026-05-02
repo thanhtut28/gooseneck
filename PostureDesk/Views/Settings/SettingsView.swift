@@ -78,9 +78,7 @@ struct SettingsView: View {
                     await MainActor.run {
                         viewModel.stop(lockMonitoring: true)
                         UserDefaults.standard.set(false, forKey: "onboardingComplete")
-                        if let delegate = NSApp.delegate as? AppDelegate {
-                            delegate.showOnboarding(startAt: .activate)
-                        }
+                        AppDelegate.shared?.showOnboarding(startAt: .activate)
                     }
                 }
             }
@@ -405,12 +403,7 @@ struct SettingsView: View {
 
             HStack {
                 Spacer()
-                Button("Deactivate License") {
-                    showDeactivateAlert = true
-                }
-                .foregroundStyle(DS.Colors.accentDanger)
-                .buttonStyle(.plain)
-                .font(.system(size: 12, weight: .medium))
+                licenseActionButton
             }
 
             Divider()
@@ -495,6 +488,42 @@ struct SettingsView: View {
             return DS.Colors.accentInfo
         default:
             return DS.Colors.accentDanger
+        }
+    }
+
+    /// Switches between Deactivate (for licensed users) and Activate (for
+    /// unlicensed users who closed the onboarding window before re-activating
+    /// or whose license expired/was revoked). Without this, the Settings view
+    /// previously showed "Deactivate License" even with no license to deactivate.
+    @ViewBuilder
+    private var licenseActionButton: some View {
+        if licenseManager.isLicensed {
+            Button("Deactivate License") {
+                showDeactivateAlert = true
+            }
+            .foregroundStyle(DS.Colors.accentDanger)
+            .buttonStyle(.plain)
+            .font(.system(size: 12, weight: .medium))
+        } else if case .validating = licenseManager.licenseState {
+            HStack(spacing: 6) {
+                ProgressView().controlSize(.small)
+                Text("Validating\u{2026}")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(DS.Colors.textMuted)
+            }
+        } else {
+            Button("Activate License") {
+                // Defer past the current SwiftUI tick so window mutation
+                // happens after the click event has finished propagating.
+                DispatchQueue.main.async {
+                    viewModel.stop(lockMonitoring: true)
+                    UserDefaults.standard.set(false, forKey: "onboardingComplete")
+                    AppDelegate.shared?.showOnboarding(startAt: .activate)
+                }
+            }
+            .foregroundStyle(DS.Colors.accentInfo)
+            .buttonStyle(.plain)
+            .font(.system(size: 12, weight: .medium))
         }
     }
 }

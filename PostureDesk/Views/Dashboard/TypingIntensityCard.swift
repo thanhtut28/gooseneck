@@ -9,6 +9,7 @@ struct TypingIntensityCard: View {
     private var isFatigued: Bool { viewModel.fatigueMonitor.isFatigued }
     private var history: [Double] { viewModel.fatigueMonitor.intensityHistory }
     private var bootstrapProgress: Double { viewModel.fatigueMonitor.bootstrapProgress }
+    private var isCurrentlyTyping: Bool { viewModel.fatigueMonitor.isCurrentlyTyping }
 
     private var accentColor: Color {
         if isFatigued { return DS.Colors.accentDanger }
@@ -45,7 +46,7 @@ struct TypingIntensityCard: View {
                         .textCase(.uppercase)
                         .tracking(1.5)
 
-                    if hasBaseline && intensity > 0 {
+                    if hasBaseline && isCurrentlyTyping && intensity > 0 {
                         HStack(alignment: .firstTextBaseline, spacing: 2) {
                             Text("+")
                                 .font(.system(size: 18, weight: .medium, design: .rounded))
@@ -63,7 +64,7 @@ struct TypingIntensityCard: View {
                                 .foregroundStyle(qualitativeColor)
                                 .padding(.leading, 6)
                         }
-                    } else if hasBaseline {
+                    } else if hasBaseline && isCurrentlyTyping {
                         HStack(alignment: .firstTextBaseline, spacing: 2) {
                             Text("0")
                                 .font(DS.Font.metric(36))
@@ -75,6 +76,18 @@ struct TypingIntensityCard: View {
                                 .font(.system(size: 14, weight: .semibold, design: .rounded))
                                 .foregroundStyle(DS.Colors.accentGood)
                                 .padding(.leading, 6)
+                        }
+                    } else if hasBaseline {
+                        // Not currently typing — show idle state, not "0% normal".
+                        // "0%" while idle reads as a misleading green "all good" badge.
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Text("—")
+                                .font(DS.Font.metric(36))
+                                .foregroundStyle(DS.Colors.textMuted)
+                            Text("idle")
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundStyle(DS.Colors.textMuted)
+                                .padding(.leading, 2)
                         }
                     } else {
                         HStack(spacing: 12) {

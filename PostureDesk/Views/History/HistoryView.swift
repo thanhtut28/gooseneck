@@ -382,31 +382,33 @@ struct HistoryView: View {
         let today = cal.startOfDay(for: Date())
         let yesterday = cal.date(byAdding: .day, value: -1, to: today) ?? today
         let weekAgo = cal.date(byAdding: .day, value: -7, to: today) ?? today
+        let currentYear = cal.component(.year, from: today)
 
-        var todaySessions: [SessionRecord] = []
-        var yesterdaySessions: [SessionRecord] = []
-        var thisWeekSessions: [SessionRecord] = []
-        var earlierSessions: [SessionRecord] = []
-
+        // Bucket each session into its own day. Sessions arrive sorted by
+        // startedAt descending, so dayOrder preserves recency.
+        var byDay: [Date: [SessionRecord]] = [:]
+        var dayOrder: [Date] = []
         for session in sessions {
             let day = cal.startOfDay(for: session.startedAt)
-            if day == today {
-                todaySessions.append(session)
-            } else if day == yesterday {
-                yesterdaySessions.append(session)
-            } else if day >= weekAgo {
-                thisWeekSessions.append(session)
-            } else {
-                earlierSessions.append(session)
-            }
+            if byDay[day] == nil { dayOrder.append(day) }
+            byDay[day, default: []].append(session)
         }
 
-        var groups: [SessionGroup] = []
-        if !todaySessions.isEmpty { groups.append(SessionGroup(label: "Today", sessions: todaySessions)) }
-        if !yesterdaySessions.isEmpty { groups.append(SessionGroup(label: "Yesterday", sessions: yesterdaySessions)) }
-        if !thisWeekSessions.isEmpty { groups.append(SessionGroup(label: "This Week", sessions: thisWeekSessions)) }
-        if !earlierSessions.isEmpty { groups.append(SessionGroup(label: "Earlier", sessions: earlierSessions)) }
-        return groups
+        return dayOrder.map { day in
+            let label: String
+            if day == today {
+                label = "Today"
+            } else if day == yesterday {
+                label = "Yesterday"
+            } else if day >= weekAgo {
+                label = day.formatted(.dateTime.weekday(.wide))
+            } else if cal.component(.year, from: day) == currentYear {
+                label = day.formatted(.dateTime.month(.abbreviated).day())
+            } else {
+                label = day.formatted(.dateTime.month(.abbreviated).day().year())
+            }
+            return SessionGroup(label: label, sessions: byDay[day] ?? [])
+        }
     }
 }
 

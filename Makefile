@@ -34,6 +34,7 @@ EXPORT_PATH  ?= $(CURDIR)/build/release
 APP_PATH     ?= $(EXPORT_PATH)/GooseNeck.app
 ZIP_PATH     ?= $(EXPORT_PATH)/GooseNeck.zip
 DMG_PATH     ?= $(EXPORT_PATH)/GooseNeck.dmg
+EXPORT_OPTIONS_PLIST := $(EXPORT_PATH)/ExportOptions.plist
 NOTARY_PROFILE ?=
 
 archive: generate
@@ -42,10 +43,19 @@ archive: generate
 		archive -archivePath $(ARCHIVE_PATH) \
 		DEVELOPMENT_TEAM="$(DEVELOPMENT_TEAM)"
 
+# Canonical Developer ID export: re-signs the archive's .app with the
+# Developer ID Application identity, validates entitlements, and embeds
+# the signing certificate. Generates a fresh ExportOptions.plist each
+# time so DEVELOPMENT_TEAM stays out of the repo.
 export: archive
+	@test -n "$(DEVELOPMENT_TEAM)" || (echo "Error: DEVELOPMENT_TEAM env var is required" >&2 && exit 1)
 	rm -rf $(EXPORT_PATH)
 	mkdir -p $(EXPORT_PATH)
-	cp -R "$(ARCHIVE_PATH)/Products/Applications/GooseNeck.app" "$(APP_PATH)"
+	@printf '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n  <key>method</key><string>developer-id</string>\n  <key>signingStyle</key><string>automatic</string>\n  <key>teamID</key><string>$(DEVELOPMENT_TEAM)</string>\n</dict>\n</plist>\n' > "$(EXPORT_OPTIONS_PLIST)"
+	xcodebuild -exportArchive \
+		-archivePath "$(ARCHIVE_PATH)" \
+		-exportPath "$(EXPORT_PATH)" \
+		-exportOptionsPlist "$(EXPORT_OPTIONS_PLIST)"
 
 notarize:
 	@test -n "$(NOTARY_PROFILE)" || (echo "Error: NOTARY_PROFILE is required" >&2 && exit 1)

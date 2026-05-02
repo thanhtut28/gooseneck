@@ -17,7 +17,12 @@ struct OnboardingView: View {
     @Environment(LicenseManager.self) private var licenseManager
     @Environment(PostureViewModel.self) private var viewModel
 
-    @Binding var isComplete: Bool
+    /// Called when the user finishes onboarding (Done button on the final
+    /// screen). Replaces the prior `@Binding<Bool> isComplete` because the
+    /// binding's SwiftUI re-evaluation racing against AppKit window close
+    /// caused autorelease-pool over-release crashes on macOS 26 (1.0.6 –
+    /// 1.0.10). A plain closure removes that lifecycle entanglement.
+    let onComplete: () -> Void
     var initialStep: OnboardingStep = .welcome
     @State private var step: OnboardingStep = .welcome
     @State private var calibrationDone = false
@@ -981,29 +986,49 @@ struct OnboardingView: View {
 
     private var completeStep: some View {
         VStack(spacing: 0) {
+            // Coach-mark arrow pointing UP toward the menu bar. This is the
+            // strongest signal we can give in-window for where the app lives.
+            VStack(spacing: 8) {
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 56, weight: .semibold))
+                    .foregroundStyle(DS.Colors.accentInfo)
+                    // No symbolEffect — an in-flight CoreAnimation transform
+                    // here while the user clicks Done caused a use-after-free
+                    // during window close in v1.0.8/v1.0.9 (SIGSEGV in
+                    // -[_NSWindowTransformAnimation dealloc]).
+
+                Text("GooseNeck lives up there")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(DS.Colors.textSecondary)
+                    .textCase(.uppercase)
+                    .tracking(0.6)
+            }
+            .padding(.top, 8)
+
             Spacer()
 
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 56))
+                .font(.system(size: 48))
                 .foregroundStyle(DS.Colors.accentGood)
-                .padding(.bottom, 16)
+                .padding(.bottom, 12)
 
             VStack(spacing: 10) {
                 Text("You're all set!")
-                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
                     .foregroundStyle(DS.Colors.textPrimary)
 
-                Text("GooseNeck is now monitoring from your menu bar.\nLook for the goose icon at the top of your screen.")
+                Text("Click the goose icon in your menu bar (top-right of your screen) to open the popover, change settings, or pause monitoring. The app keeps running in the background — it doesn't close when you close this window.")
                     .font(DS.Font.body())
                     .foregroundStyle(DS.Colors.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
+                    .padding(.horizontal, 24)
             }
 
             Spacer()
 
-            primaryButton("Get Started", hint: "Closes setup and starts monitoring.") {
-                isComplete = true
+            primaryButton("Done", hint: "Closes this window. GooseNeck stays in your menu bar.") {
+                onComplete()
             }
         }
     }

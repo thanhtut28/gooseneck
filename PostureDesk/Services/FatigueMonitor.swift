@@ -19,6 +19,11 @@ final class FatigueMonitor {
     private(set) var calibrationState: TypingCalibrationState = .unavailable
     private(set) var bootstrapProgress: Double = 0       // 0.0–1.0 during bootstrapping
     private(set) var hasSessionTypingMetrics = false
+    /// True iff the user is actively typing (last keyDown within the gating
+    /// window). Use this in the UI to distinguish "intensity is 0% because the
+    /// user is at-baseline while typing" from "intensity is 0% because the
+    /// user isn't typing at all". The two reads are semantically very different.
+    private(set) var isCurrentlyTyping: Bool = false
 
     /// True session average intensity (not a point-in-time snapshot).
     var sessionAverageIntensity: Double {
@@ -52,8 +57,8 @@ final class FatigueMonitor {
     private var sessionIntensitySum: Double = 0
     private var sessionIntensitySampleCount: Int = 0
 
-    // Internal state — break detection
-    private var wasActive = false
+    // Internal state — typing-burst detection
+    private var wasTyping = false
 
     // Constants
     private let minimumTypingRMS = 0.0001
@@ -72,15 +77,22 @@ final class FatigueMonitor {
     }
 
     /// Process typing RMS from sensor snapshot (called at 1Hz).
-    /// Only process when user is actively typing.
-    func update(typingRMS: Double, isActive: Bool) {
-        // Break return detection: clear recent window when user comes back
-        if isActive && !wasActive {
+    ///
+    /// `isTyping` must be true only when an actual keyDown event was generated
+    /// recently — passing `isUserPresent` (any input) here would conflate
+    /// fan / trackpad / environmental vibration with typing intensity.
+    func update(typingRMS: Double, isTyping: Bool) {
+        // Typing-burst return detection: clear recent window when typing resumes
+        // after a pause, so the average reflects current activity not stale data.
+        if isTyping && !wasTyping {
             recentSamples.removeAll()
         }
-        wasActive = isActive
+        wasTyping = isTyping
+        if isCurrentlyTyping != isTyping {
+            isCurrentlyTyping = isTyping
+        }
 
-        guard isActive, typingRMS > minimumTypingRMS else {
+        guard isTyping, typingRMS > minimumTypingRMS else {
             if currentIntensityPercent != 0 {
                 currentIntensityPercent = 0
             }
@@ -191,7 +203,10 @@ final class FatigueMonitor {
         }
         sessionIntensitySum = 0
         sessionIntensitySampleCount = 0
-        wasActive = false
+        wasTyping = false
+        if isCurrentlyTyping {
+            isCurrentlyTyping = false
+        }
         if bootstrapProgress != 0 {
             bootstrapProgress = 0
         }

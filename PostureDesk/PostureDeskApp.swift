@@ -18,7 +18,7 @@ struct GooseNeckApp: App {
 
     init() {
         self.updaterController = SPUStandardUpdaterController(
-            startingUpdater: false,
+            startingUpdater: true,
             updaterDelegate: nil,
             userDriverDelegate: nil
         )
@@ -155,11 +155,19 @@ struct GooseNeckApp: App {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+    /// Static back-reference. `NSApp.delegate as? AppDelegate` is unreliable
+    /// from some SwiftUI contexts (the delegate wrapper @NSApplicationDelegateAdaptor
+    /// installs sometimes hides the underlying instance) — particularly when
+    /// called directly from a SwiftUI Button action outside an alert. Always
+    /// reach for `AppDelegate.shared` instead from view code.
+    static private(set) weak var shared: AppDelegate?
+
     private static let onboardingSetupCompleteDefaultsKey = "onboardingSetupComplete"
     private var onboardingWindow: NSWindow?
     private var licenseRefreshTask: Task<Void, Never>?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        Self.shared = self
         UNUserNotificationCenter.current().delegate = self
 
         if let launchIssue = GooseNeckApp.persistentStoreLaunchIssue {
@@ -224,6 +232,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         GooseNeckApp.sharedViewModel?.stop(finalizeSession: true)
     }
 
+    /// Fires when the user clicks the Dock icon. If no windows are visible,
+    /// open the dashboard so the user has a reliable path back into the app
+    /// after completing onboarding (when Sparkle / SwiftUI haven't yet
+    /// auto-opened any window for them).
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            // Look for the dashboard NSWindow SwiftUI registered for the
+            // Window scene with id "dashboard". If found, just bring it
+            // forward. Otherwise let SwiftUI's default reopen behavior fire.
+            if let dashboard = NSApp.windows.first(where: { window in
+                window.identifier?.rawValue == "dashboard"
+                    || window.title == "GooseNeck"
+            }) {
+                dashboard.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
+            }
+        }
+        return true
+    }
+
     func showOnboarding(startAt: OnboardingStep = .welcome) {
         guard let viewModel = GooseNeckApp.sharedViewModel else { return }
 
@@ -235,18 +263,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         onboardingWindow?.close()
         onboardingWindow = nil
 
-        let binding = Binding<Bool>(
-            get: { UserDefaults.standard.bool(forKey: "onboardingComplete") },
-            set: { [weak self] newValue in
-                UserDefaults.standard.set(newValue, forKey: "onboardingComplete")
-                if newValue {
-                    UserDefaults.standard.set(true, forKey: Self.onboardingSetupCompleteDefaultsKey)
-                    self?.onboardingWindow?.close()
-                    self?.onboardingWindow = nil
-                    NSApp.setActivationPolicy(.accessory)
-                }
+        let setupCompleteKey = Self.onboardingSetupCompleteDefaultsKey
+        let onComplete: () -> Void = { [weak self] in
+            // Defer to the next runloop tick so SwiftUI finishes its current
+            // view-tree pass before we tear down the AppKit window.
+            DispatchQueue.main.async { [weak self] in
+                UserDefaults.standard.set(true, forKey: "onboardingComplete")
+                UserDefaults.standard.set(true, forKey: setupCompleteKey)
+                guard let window = self?.onboardingWindow else { return }
+                // Drop the SwiftUI hosting controller first so its retain on
+                // the view tree is released before AppKit tears the window
+                // down. Closing with the contentViewController still attached
+                // lets a SwiftUI-owned object slip into the next autorelease
+                // pool drain — the v1.0.10/11 over-release crash.
+                window.contentViewController = nil
+                window.close()
+                self?.onboardingWindow = nil
+                // Restore the menu-bar-agent baseline (LSUIElement = true in
+                // Info.plist). showOnboarding() flips to .regular so the
+                // window joins the Dock — without this reset the Dock icon
+                // lingers after Done. Lost in the v1.0.11 closure rewrite,
+                // restored here.
+                NSApp.setActivationPolicy(.accessory)
             }
-        )
+        }
 
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 580, height: 520),
@@ -255,19 +295,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             defer: false
         )
         window.title = "GooseNeck Setup"
-        let onboardingHostingView = NSHostingView(
+        // CRITICAL: programmatically-created NSWindows default to
+        // isReleasedWhenClosed = true. Combined with our strong
+        // `onboardingWindow` reference, close() releases once and ARC
+        // releases again on `onboardingWindow = nil` → over-release →
+        // SIGSEGV in objc_release during the next autorelease pool drain.
+        // This was the v1.0.6–v1.0.11 "Done click" crash. ARC owns lifetime.
+        window.isReleasedWhenClosed = false
+        // Animations disabled — the default .documentWindow transform
+        // animation crashes on dealloc with SwiftUI content.
+        window.animationBehavior = .none
+
+        // NSHostingController is the canonical container for SwiftUI views
+        // hosted as an NSWindow contentViewController. Apple's docs note
+        // it manages the SwiftUI lifecycle (environment, scene, layout)
+        // more correctly than NSHostingView, which is intended for
+        // embedding SwiftUI inside an existing AppKit view hierarchy.
+        // Using NSHostingController eliminates a class of autorelease
+        // pool over-release crashes on macOS 26.
+        let onboardingViewController = NSHostingController(
             rootView: OnboardingView(
-                isComplete: binding,
+                onComplete: onComplete,
                 initialStep: startAt
             )
             .environment(viewModel)
             .environment(GooseNeckApp.licenseManager)
         )
-        // Keep the onboarding window at its fixed AppKit size while the
-        // SwiftUI steps animate between states. Letting NSHostingView drive
-        // window resizing here can trigger AppKit constraint exceptions.
-        onboardingHostingView.sizingOptions = []
-        window.contentView = onboardingHostingView
+        window.contentViewController = onboardingViewController
         window.center()
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
