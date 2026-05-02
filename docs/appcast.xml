@@ -3,24 +3,270 @@
     <channel>
         <title>GooseNeck</title>
         <item>
+            <title>1.0.14</title>
+            <pubDate>Sat, 02 May 2026 06:00:00 +0000</pubDate>
+            <sparkle:version>15</sparkle:version>
+            <sparkle:shortVersionString>1.0.14</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h3>Fixes unreadable popover text in dark mode</h3>
+                <p>Two pieces of secondary status text — the <strong>"Away"</strong> status (popover and floating island) and the <strong>"Idle"</strong> typing-intensity value — were rendered in our muted-text color, which was nearly invisible on dark mode and too faint on light. Both now use the secondary-text color used by surrounding labels, so they have proper contrast in both appearances.</p>
+            ]]></description>
+            <enclosure
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.14/GooseNeck.zip"
+                length="2360043"
+                type="application/octet-stream"
+                sparkle:edSignature="3b6EDWFrzx3GqN3NfzBNCDo/g0sE93COAWuMXCIxpOPOveJmyGpSV2tlwtuYn28ioFsWIOjWgqkFfXBriXm8Ag=="/>
+        </item>
+        <item>
+            <title>1.0.13</title>
+            <pubDate>Wed, 29 Apr 2026 14:00:00 +0000</pubDate>
+            <sparkle:version>14</sparkle:version>
+            <sparkle:shortVersionString>1.0.13</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h3>Fixes leftover Dock icon after onboarding completes</h3>
+                <p>One-line follow-up to v1.0.12. After clicking Done, the app was staying as a regular Dock-icon app instead of returning to menu-bar-agent state. <code>NSApp.setActivationPolicy(.accessory)</code> was lost in the v1.0.11 closure rewrite and v1.0.12 didn't catch it. Restored.</p>
+            ]]></description>
+            <enclosure
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.13/GooseNeck.zip"
+                length="2360050"
+                type="application/octet-stream"
+                sparkle:edSignature="IgxRYc1U0u3JDHpTUxpH+fkg7xI3FHmBjya4wtWjFN9U31xS9ThQamivomT8Ol886q+yiKaMhljFunW9RetoDw=="/>
+        </item>
+        <item>
+            <title>1.0.12</title>
+            <pubDate>Wed, 29 Apr 2026 13:00:00 +0000</pubDate>
+            <sparkle:version>13</sparkle:version>
+            <sparkle:shortVersionString>1.0.12</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h3>Fixes the onboarding "Done" crash for real (one-line fix)</h3>
+                <p>Six previous releases chased the wrong cause: animation behavior, view-tree races, NSHostingView vs NSHostingController, <code>@Binding</code> vs closure callbacks. None of those were the bug.</p>
+                <p>The real cause: <code>NSWindow.isReleasedWhenClosed</code> defaults to <code>true</code> on programmatically-created windows. Combined with our strong AppDelegate reference, every Done click released the window twice — once by AppKit on close, once by ARC on nil-out — crashing the autorelease pool drain on the next runloop tick. Setting <code>isReleasedWhenClosed = false</code> fixes it.</p>
+            ]]></description>
+            <enclosure
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.12/GooseNeck.zip"
+                length="2360156"
+                type="application/octet-stream"
+                sparkle:edSignature="Vy345d4SYFIDm2y0F+jmisuYAoklo+mshGIsErWnQGfDRr6gtKA+6dyC9bwpmf0rSQwbyZ4OEntB6EGoGEuOBA=="/>
+        </item>
+        <item>
+            <title>1.0.11</title>
+            <pubDate>Wed, 29 Apr 2026 11:00:00 +0000</pubDate>
+            <sparkle:version>12</sparkle:version>
+            <sparkle:shortVersionString>1.0.11</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h3>Onboarding window architecture rewrite (Done crash, hopefully final)</h3>
+                <p>Replaces NSHostingView with NSHostingController and replaces the SwiftUI <code>@Binding&lt;Bool&gt;</code> completion signal with a plain closure callback. Both changes target the same root cause: SwiftUI lifecycle racing AppKit dealloc on macOS 26 when the user clicks Done on the final onboarding screen. v1.0.10 disabled the window animation (which fixed the first crash signature) but a different over-release was lurking; v1.0.11 removes the entanglement entirely.</p>
+            ]]></description>
+            <enclosure
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.11/GooseNeck.zip"
+                length="2360006"
+                type="application/octet-stream"
+                sparkle:edSignature="hAIhD7KzlUd+TD40fiQjftPdlaX4/Q0lnjZNHH70Ds4ggpydSJsI9jp0+CX+dnVm5xLLDnQxGPGydceS+SpSBQ=="/>
+        </item>
+        <item>
+            <title>1.0.10</title>
+            <pubDate>Wed, 29 Apr 2026 10:00:00 +0000</pubDate>
+            <sparkle:version>11</sparkle:version>
+            <sparkle:shortVersionString>1.0.10</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h3>Critical: definitively fixes Done crash</h3>
+                <p>v1.0.9 still crashed when clicking Done — root cause was an AppKit window-close animation use-after-free in <code>-[_NSWindowTransformAnimation dealloc]</code>, triggered by SwiftUI view tear-down racing the AppKit close on the same runloop tick. Three layered fixes: (1) onboarding window animations are disabled at creation; (2) the close call is deferred to the next runloop; (3) the symbol-effect on the up-arrow was removed.</p>
+                <p>If you're stuck on a crashing v1.0.9: install this from the menu bar popover, or download the DMG manually from this Releases page and drag-replace.</p>
+            ]]></description>
+            <enclosure
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.10/GooseNeck.zip"
+                length="2360929"
+                type="application/octet-stream"
+                sparkle:edSignature="KbHpZ642Cdk+SVzSfUxFxm7Z6M2QmKvwW6dY2ESmFzO6iNha4Ge+Qk5F3bZNod2HfQcizpYL0HN98YAJnILHBA=="/>
+        </item>
+        <item>
+            <title>1.0.9</title>
+            <pubDate>Wed, 29 Apr 2026 09:55:00 +0000</pubDate>
+            <sparkle:version>10</sparkle:version>
+            <sparkle:shortVersionString>1.0.9</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h3>Critical: fixes Get Started crash from 1.0.8</h3>
+                <p>v1.0.8 had a regression where clicking <strong>Done</strong> on the final onboarding screen crashed the app. Root cause: an <code>openWindow</code> call from inside the onboarding view, which is hosted outside any SwiftUI scene. The call was a leftover best-effort attempt to auto-open the dashboard; this release removes it. Dock icon stays visible after onboarding so the app is clearly still running.</p>
+                <p>If you're already on 1.0.8 and the app crashed: install this update via the menu bar popover (Settings → Check for Updates), or download the DMG manually from this Releases page.</p>
+            ]]></description>
+            <enclosure
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.9/GooseNeck.zip"
+                length="2361551"
+                type="application/octet-stream"
+                sparkle:edSignature="F3NzIeJBdiFTF03H1Tb5yTc0YMX+rMNrmdtGdrlDu8x4bk4j1gzj96sPeXpuFDxHN3IT+uunq6BptbNzlwRjCw=="/>
+        </item>
+        <item>
+            <title>1.0.8</title>
+            <pubDate>Wed, 29 Apr 2026 09:50:00 +0000</pubDate>
+            <sparkle:version>9</sparkle:version>
+            <sparkle:shortVersionString>1.0.8</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h3>Onboarding completion no longer feels like a quit</h3>
+                <ul>
+                    <li>Stronger menu-bar coach mark on the final onboarding screen, with an animated up-arrow and clearer copy.</li>
+                    <li>Dock icon stays visible after onboarding so the app is obviously still running. The natural transition to menu-bar-only happens when you close the dashboard.</li>
+                    <li>Clicking the Dock icon now reliably brings up the dashboard if no windows are visible.</li>
+                </ul>
+            ]]></description>
+            <enclosure
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.8/GooseNeck.zip"
+                length="2366500"
+                type="application/octet-stream"
+                sparkle:edSignature="+OPWoXfkTsS+x7pbFK2AblNAZmzdOpC0FY08F5K3n9UqawTridP+qGNGXOHdTI5BYTzKl6JD61HkmALObkl5Aw=="/>
+        </item>
+        <item>
+            <title>1.0.7</title>
+            <pubDate>Wed, 29 Apr 2026 09:25:00 +0000</pubDate>
+            <sparkle:version>8</sparkle:version>
+            <sparkle:shortVersionString>1.0.7</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h3>Activate License + onboarding Get Started fixes</h3>
+                <ul>
+                    <li><strong>Activate License (Settings)</strong> now opens the activation flow reliably from the License &amp; About section. The previous fallback alert no longer appears.</li>
+                    <li><strong>Get Started</strong> on the final onboarding screen now opens the dashboard, so you can clearly see the app is running. Previously the onboarding window closed and the app silently dropped to menu-bar-only, which looked like the app had quit.</li>
+                </ul>
+            ]]></description>
+            <enclosure
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.7/GooseNeck.zip"
+                length="2359782"
+                type="application/octet-stream"
+                sparkle:edSignature="OhLdQ9eBQ1LBSSuYTGJ0BO4nZDRz7Jg35Q0x2M6iB+WMjRI8/S15maW9HCguxJbkM6+AMf3sr6M3JFaNyijrDw=="/>
+        </item>
+        <item>
+            <title>1.0.6</title>
+            <pubDate>Wed, 29 Apr 2026 08:55:00 +0000</pubDate>
+            <sparkle:version>7</sparkle:version>
+            <sparkle:shortVersionString>1.0.6</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h3>Activate License button — really fixed this time</h3>
+                <p>v1.0.5 attempted to fix the unresponsive Activate License button via Swift concurrency adjustments; that wasn't the right fix. v1.0.6 defers window creation past the current SwiftUI runloop tick using <code>DispatchQueue.main.async</code>, which is the canonical macOS pattern for window mutation triggered from a SwiftUI button. If anything in the call chain ever fails, you'll now see a visible error alert instead of silent inaction.</p>
+            ]]></description>
+            <enclosure
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.6/GooseNeck.zip"
+                length="2355424"
+                type="application/octet-stream"
+                sparkle:edSignature="n+SIgR7K7f6bsOuf2PHD/xQQxz9YHB+9mXEhax04id5KdOkiNIEpeE83Z+xwCKRzWX0ZtYDyaJdCmdoY8i+FDA=="/>
+        </item>
+        <item>
+            <title>1.0.5</title>
+            <pubDate>Wed, 29 Apr 2026 05:10:00 +0000</pubDate>
+            <sparkle:version>6</sparkle:version>
+            <sparkle:shortVersionString>1.0.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h3>Fix Activate License button</h3>
+                <p>The new Activate License button in Settings now correctly opens the activation flow. In v1.0.4 it didn't fire because the Button action wasn't isolated to the main actor properly.</p>
+            ]]></description>
+            <enclosure
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.5/GooseNeck.zip"
+                length="2354694"
+                type="application/octet-stream"
+                sparkle:edSignature="DGT+gNA5oX5Ap01NyxnGVjrxwtCNBXSNFjIdeTsNT1N6QpUspMacDDLTYok6MIzzS5jPia5QSwweBhFpMWbMBQ=="/>
+        </item>
+        <item>
+            <title>1.0.4</title>
+            <pubDate>Wed, 29 Apr 2026 04:55:00 +0000</pubDate>
+            <sparkle:version>5</sparkle:version>
+            <sparkle:shortVersionString>1.0.4</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h3>Auto-updates now actually work</h3>
+                <p>The in-app updater was created but never started in v1.0.0&ndash;v1.0.3, so the &ldquo;Check for Updates&rdquo; button was permanently disabled and automatic checks never ran. This release fixes that. From v1.0.4 onward, updates install in-app the way they should.</p>
+                <p>Also includes the Settings re-activation flow originally shipped in v1.0.3.</p>
+                <p><strong>Note:</strong> users on v1.0.0&ndash;v1.0.3 must install v1.0.4 manually once (Sparkle on those versions cannot reach this update). After that, all future updates flow automatically.</p>
+            ]]></description>
+            <enclosure
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.4/GooseNeck.zip"
+                length="2354161"
+                type="application/octet-stream"
+                sparkle:edSignature="epyQeuhi74ZkYS5avGojfYAyYRdYONQ0eGGxRD5VtW3T7GaSsFOYBaNuK1wZN5+tEkYZ4PkkLOqeGehxm3r3DQ=="/>
+        </item>
+        <item>
+            <title>1.0.3</title>
+            <pubDate>Wed, 29 Apr 2026 04:50:00 +0000</pubDate>
+            <sparkle:version>4</sparkle:version>
+            <sparkle:shortVersionString>1.0.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h3>Settings re-activation flow</h3>
+                <p>The License section in Settings now shows an <strong>Activate License</strong> button when your license is inactive, so you can re-trigger activation without quitting and relaunching. Previously the button always read &ldquo;Deactivate License&rdquo; even when there was nothing to deactivate.</p>
+            ]]></description>
+            <enclosure
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.3/GooseNeck.zip"
+                length="2354181"
+                type="application/octet-stream"
+                sparkle:edSignature="w6Ez8XJHCAM29BYlVeKs13cMV9ReNvQeM0awWn4ibMj1EFTh/5lHqNd93l7pR67i+3z3paqJji1H6tbYrSzhCA=="/>
+        </item>
+        <item>
+            <title>1.0.2</title>
+            <pubDate>Wed, 29 Apr 2026 04:05:00 +0000</pubDate>
+            <sparkle:version>3</sparkle:version>
+            <sparkle:shortVersionString>1.0.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h3>Production licensing is live</h3>
+                <p>This update wires GooseNeck to its live licensing backend. License keys purchased through <a href="https://gooseneck.app">gooseneck.app</a> now activate normally; earlier 1.0.x builds were pointed at the sandbox environment so activation would fail.</p>
+                <p>If you've already bought a license, no action needed &mdash; this update will pick it up on next launch and activate against production.</p>
+            ]]></description>
+            <enclosure
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.2/GooseNeck.zip"
+                length="2349937"
+                type="application/octet-stream"
+                sparkle:edSignature="VpvB0L2yz0+UMoeqpa9GOvUfEL542m8oMueH/MD0BpxcVGUVjQR9HxkXjtTLsus1XrXgi/mP3BFB21nUkf9sAA=="/>
+        </item>
+        <item>
+            <title>1.0.1</title>
+            <pubDate>Wed, 29 Apr 2026 03:10:00 +0000</pubDate>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h3>Refinements and bug fixes</h3>
+                <ul>
+                    <li><strong>More accurate typing intensity.</strong> The intensity bar only registers when keys are actually being pressed &mdash; chassis vibration from fans, trackpad clicks, or environmental sources no longer reads as typing.</li>
+                    <li><strong>Cleaner idle state.</strong> The typing card now shows &ldquo;idle&rdquo; in muted grey when you stop typing, instead of a misleading &ldquo;0% normal&rdquo; green badge.</li>
+                    <li>Internal: branded update channel moved to <code>updates.gooseneck.app</code>. Existing installs continue to receive updates seamlessly.</li>
+                </ul>
+            ]]></description>
+            <enclosure
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.1/GooseNeck.zip"
+                length="2349959"
+                type="application/octet-stream"
+                sparkle:edSignature="l6ydVYuMz7AzZ1xJh9pt29DYGPEKcE5dILUQ9B0KaOKjq90RH+Tqlll1mNvV52QT8EqYT7LOQn4pcz5Gfi0cDg=="/>
+        </item>
+        <item>
             <title>1.0.0</title>
-            <pubDate>Fri, 04 Apr 2026 00:00:00 +0000</pubDate>
+            <pubDate>Wed, 29 Apr 2026 02:00:00 +0000</pubDate>
             <sparkle:version>1</sparkle:version>
             <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <description><![CDATA[
+                <h2>Welcome to GooseNeck 1.0.0</h2>
+                <p>The first public release. GooseNeck is a privacy-first posture coach that lives in your menu bar and uses your MacBook's built-in sensors to keep you honest about how you're sitting.</p>
+                <h3>What you get</h3>
                 <ul>
-                    <li>Initial release</li>
-                    <li>Real-time posture monitoring using built-in MacBook sensors</li>
-                    <li>Break tracking and typing fatigue detection</li>
-                    <li>Adaptive surface calibration (desk, lap, couch)</li>
+                    <li><strong>Real-time posture drift detection</strong> &mdash; a calibrate-once-then-forget baseline, with surface-aware thresholds for desk, lap, or couch.</li>
+                    <li><strong>Break tracking</strong> with gentle nudges when you've been heads-down too long.</li>
+                    <li><strong>Typing fatigue detection</strong> &mdash; flags sustained high-intensity typing that correlates with strain.</li>
+                    <li><strong>Live status</strong> in the menu bar, plus an optional floating status pill near the notch.</li>
+                    <li><strong>Fully local</strong> &mdash; no webcam, no cloud, no telemetry.</li>
                 </ul>
+                <p>Requires macOS 14 Sonoma or later on Apple Silicon.</p>
             ]]></description>
             <enclosure
-                url="https://github.com/thanhtutaung/gooseneck/releases/download/v1.0.0/GooseNeck.zip"
-                length="REPLACE_WITH_FILE_SIZE"
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.0/GooseNeck.zip"
+                length="2346256"
                 type="application/octet-stream"
-                sparkle:edSignature="REPLACE_WITH_SPARKLE_SIGNATURE"/>
+                sparkle:edSignature="YE4wUgogUF1Va7M9y+zCD8hAV36RjV5Vh1YFCbmDY78HkKlYO/A7bJbAQeRYx/VOkIzU0cYoKArxcuHBVPidAQ=="/>
         </item>
     </channel>
 </rss>

@@ -151,7 +151,7 @@ struct MenuBarPopover: View {
         case .drifting: return DS.Colors.accentWarn
         case .breakNeeded: return DS.Colors.accentDanger
         case .unavailable: return DS.Colors.accentDanger
-        case .away: return DS.Colors.textMuted
+        case .away: return DS.Colors.textSecondary
         }
     }
 
@@ -183,6 +183,9 @@ struct MenuBarPopover: View {
         guard viewModel.fatigueMonitor.calibrationState == .ready else {
             return "Calibrating"
         }
+        guard viewModel.fatigueMonitor.isCurrentlyTyping else {
+            return "Idle"
+        }
         let pct = viewModel.fatigueMonitor.currentIntensityPercent
         if pct > 0 {
             return String(format: "↑ %.0f%% from baseline", pct)
@@ -193,6 +196,9 @@ struct MenuBarPopover: View {
     private var typingColor: Color {
         guard viewModel.fatigueMonitor.calibrationState == .ready else {
             return .secondary
+        }
+        guard viewModel.fatigueMonitor.isCurrentlyTyping else {
+            return DS.Colors.textSecondary
         }
         return viewModel.fatigueMonitor.isFatigued ? DS.Colors.accentWarn : DS.Colors.accentGood
     }

@@ -36,8 +36,8 @@ targets:
         CODE_SIGN_ENTITLEMENTS: PostureDesk/PostureDesk.entitlements
         ENABLE_HARDENED_RUNTIME: YES
         PRODUCT_BUNDLE_IDENTIFIER: com.gooseneck.app
-        MARKETING_VERSION: "1.0.0"
-        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0.14"
+        CURRENT_PROJECT_VERSION: "15"
         COMBINE_HIDPI_IMAGES: YES
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
       configs:
@@ -49,8 +49,8 @@ targets:
           CODE_SIGN_IDENTITY: "Developer ID Application"
           DEVELOPMENT_TEAM: $(DEVELOPMENT_TEAM)
           POLAR_API_BASE_URL: "https://api.polar.sh/v1/customer-portal/license-keys"
-          POLAR_CHECKOUT_URL: "https://api.polar.sh/v1/checkout-links/polar_cl_DOGu45YJUcHzeFxGZw5EqT0L9gN3L9Qm2dTQn2Z4xHn/redirect"
-          POLAR_ORGANIZATION_ID: "322cca40-cd2e-4d58-83e9-ec08ee2b0c19"
+          POLAR_CHECKOUT_URL: "https://buy.polar.sh/polar_cl_GZsKqlm3DUSh31ibWoVHnKOdpmyuCHYQoBceU2zgywh"
+          POLAR_ORGANIZATION_ID: "8e1ae0f6-a16b-474c-9a19-7efb724334ff"
   GooseNeckTests:
     type: bundle.unit-test
     platform: macOS

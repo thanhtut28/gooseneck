@@ -13,6 +13,10 @@ struct PostureIslandView: View {
     @State private var hoverTask: Task<Void, Never>?
     @State private var contentVisible = false
     @State private var hoverScale: CGFloat = 1.0
+    // True from the moment the collapse animation starts until it visually
+    // settles. Used so a re-entry mid-exit can restore the expanded state
+    // without replaying the pill-breathe (which would dip 1.06 → 1.04 → 1.06).
+    @State private var isCollapsing = false
 
     @State private var surfaceBadgeScale: CGFloat = 1.0
 
@@ -506,11 +510,32 @@ struct PostureIslandView: View {
 
         if hovering {
             isHovering = true
-            // Phase 1: smooth pill breathe
+
+            // Re-entry before the previous exit fully wound down. The island
+            // is still visually expanded (linger / fade-out window) or mid
+            // collapse-spring. Skip the pill-breathe entry and restore the
+            // expanded state directly — replaying the entry would force a
+            // visible 1.06 → 1.04 → 1.06 dip that reads as broken.
+            if isExpanded || isCollapsing {
+                isCollapsing = false
+                withAnimation(expandSpring) {
+                    isExpanded = true
+                    hoverScale = 1.06
+                }
+                hoverTask = Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(80))
+                    guard !Task.isCancelled, isHovering else { return }
+                    contentVisible = true
+                }
+                return
+            }
+
+            // Fresh entry from a fully idle state.
+            // Phase 1: smooth pill breathe.
             withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
                 hoverScale = 1.04
             }
-            // Phase 2: delayed expand — scale grows further
+            // Phase 2: delayed expand — scale grows further.
             hoverTask = Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(320))
                 guard !Task.isCancelled, isHovering else { return }
@@ -532,11 +557,18 @@ struct PostureIslandView: View {
                     try? await Task.sleep(for: .milliseconds(100))
                     guard !Task.isCancelled else { return }
                 }
+                isCollapsing = true
                 withAnimation(collapseSpring) {
                     contentVisible = false
                     isExpanded = false
                     hoverScale = 1.0
                 }
+                // collapseSpring response is 0.32; allow a generous settle
+                // window so a re-entry during the spring tail still routes
+                // through the expanded-restore branch above (no scale dip).
+                try? await Task.sleep(for: .milliseconds(400))
+                guard !Task.isCancelled else { return }
+                isCollapsing = false
             }
         }
     }
@@ -550,7 +582,7 @@ struct PostureIslandView: View {
         case .drifting: return DS.Colors.accentWarn
         case .breakNeeded: return DS.Colors.accentDanger
         case .unavailable: return DS.Colors.accentDanger
-        case .away: return DS.Colors.textMuted
+        case .away: return DS.Colors.textSecondary
         }
     }
 
