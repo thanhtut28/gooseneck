@@ -38,6 +38,7 @@ final class LicenseManager {
     private let config: Config
     private let keychain: KeychainStore
     private let session: URLSession
+    private var trialExpiryTask: Task<Void, Never>?
 
     init(
         bundle: Bundle = .main,
@@ -113,6 +114,7 @@ final class LicenseManager {
             if let expiry = result.expiresAt, expiry > Date() {
                 markTrialUsedIfNeeded()
                 licenseState = .trialActive(until: expiry)
+                scheduleLocalTrialExpiry(at: expiry)
             } else {
                 licenseState = .active
             }
@@ -181,6 +183,7 @@ final class LicenseManager {
             licenseStatus = result.status
             if let expiry = result.expiresAt, expiry > Date() {
                 licenseState = .trialActive(until: expiry)
+                scheduleLocalTrialExpiry(at: expiry)
             } else {
                 licenseState = .active
             }
@@ -385,6 +388,26 @@ final class LicenseManager {
         let isoFormatter = ISO8601DateFormatter()
         let stamp = isoFormatter.string(from: Date())
         _ = keychain.set(stamp, for: Self.trialUsedAccount)
+    }
+
+    private func scheduleLocalTrialExpiry(at deadline: Date) {
+        trialExpiryTask?.cancel()
+        let interval = deadline.timeIntervalSinceNow
+        if interval <= 0 {
+            applyLocalTrialExpiryIfDue()
+            return
+        }
+        trialExpiryTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            self?.applyLocalTrialExpiryIfDue()
+        }
+    }
+
+    private func applyLocalTrialExpiryIfDue() {
+        guard case .trialActive(let until) = licenseState, until <= Date() else { return }
+        isLicensed = false
+        invalidateStoredLicense(message: "Your free trial has ended.", finalState: .trialExpired)
     }
 
     private func clearLicense() {

@@ -187,6 +187,39 @@ final class LicenseManagerTests: XCTestCase {
         XCTAssertNil(UserDefaults.standard.string(forKey: activationKey))
     }
 
+    func testTrialActiveTransitionsToTrialExpiredAfterLocalDeadline() async throws {
+        // Trial expires 200ms in the future — we wait long enough to cross
+        // that boundary locally without any second Polar call.
+        let nearExpiry = Date().addingTimeInterval(0.2)
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let (manager, keychain) = makeManager { request in
+            return (
+                self.httpResponse(url: request.url!, statusCode: 200),
+                self.json([
+                    "id": "act_trial",
+                    "status": "granted",
+                    "expires_at": isoFormatter.string(from: nearExpiry)
+                ])
+            )
+        }
+
+        await manager.activate(key: "trial-key")
+
+        guard case .trialActive = manager.licenseState else {
+            return XCTFail("Expected .trialActive, got \(manager.licenseState)")
+        }
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        XCTAssertEqual(manager.licenseState, .trialExpired)
+        XCTAssertFalse(manager.isLicensed)
+        XCTAssertNil(keychain.string(for: "license-key"))
+        XCTAssertNil(keychain.string(for: "license-activation-id"))
+        // Trial-used marker stays — it persists past expiry.
+        XCTAssertNotNil(keychain.string(for: "trial-used-marker"))
+    }
+
     func testInitDoesNotOverrideExistingKeychainValuesDuringShimMigration() {
         let (keychain, service) = makeStandaloneKeychain()
         XCTAssertTrue(keychain.set("keychain-license", for: "license-key"))
