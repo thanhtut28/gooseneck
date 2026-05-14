@@ -271,6 +271,32 @@ final class LicenseManagerTests: XCTestCase {
         }
     }
 
+    func testActivateWithExpiresAtTransitionsToTrialActive() async {
+        let expectedExpiry = Date().addingTimeInterval(7 * 24 * 60 * 60)
+        let isoFormatter = ISO8601DateFormatter()
+        let (manager, _) = makeManager { request in
+            return (
+                self.httpResponse(url: request.url!, statusCode: 200),
+                self.json([
+                    "id": "act_trial",
+                    "status": "granted",
+                    "expires_at": isoFormatter.string(from: expectedExpiry)
+                ])
+            )
+        }
+
+        await manager.activate(key: "trial-key")
+
+        XCTAssertTrue(manager.isLicensed)
+        switch manager.licenseState {
+        case .trialActive(let until):
+            // ±5 sec tolerance for ISO8601 rounding.
+            XCTAssertEqual(until.timeIntervalSince1970, expectedExpiry.timeIntervalSince1970, accuracy: 5)
+        default:
+            XCTFail("Expected .trialActive, got \(manager.licenseState)")
+        }
+    }
+
     func testConfigRejectsSandboxTrialCheckoutInReleaseBuild() {
         let config = LicenseManager.Config(
             organizationId: "org_123",

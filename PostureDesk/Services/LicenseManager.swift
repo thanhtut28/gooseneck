@@ -93,7 +93,11 @@ final class LicenseManager {
             }
             recordSuccessfulValidation(status: result.status)
             licenseStatus = result.status
-            licenseState = .active
+            if let expiry = result.expiresAt, expiry > Date() {
+                licenseState = .trialActive(until: expiry)
+            } else {
+                licenseState = .active
+            }
             isLicensed = true
         } catch let LicenseError.api(message) {
             error = message
@@ -153,7 +157,11 @@ final class LicenseManager {
 
             recordSuccessfulValidation(status: result.status)
             licenseStatus = result.status
-            licenseState = .active
+            if let expiry = result.expiresAt, expiry > Date() {
+                licenseState = .trialActive(until: expiry)
+            } else {
+                licenseState = .active
+            }
             isLicensed = true
         } catch let failure as LicenseError {
             applyValidationFailure(failure)
@@ -442,10 +450,12 @@ final class LicenseManager {
     private struct ActivationResult {
         let activationId: String
         let status: String
+        let expiresAt: Date?
     }
 
     private struct ValidationResult {
         let status: String
+        let expiresAt: Date?
     }
 
     private enum LicenseError: Error {
@@ -488,7 +498,8 @@ final class LicenseManager {
         }
 
         let status = Self.extractStatus(from: json) ?? "granted"
-        return ActivationResult(activationId: id, status: status)
+        let expiresAt = Self.extractExpiresAt(from: json)
+        return ActivationResult(activationId: id, status: status, expiresAt: expiresAt)
     }
 
     private func validateKey(_ key: String, activationId: String) async throws -> ValidationResult {
@@ -516,7 +527,8 @@ final class LicenseManager {
             throw LicenseError.serverTransient("Invalid response from server.")
         }
 
-        return ValidationResult(status: status)
+        let expiresAt = Self.extractExpiresAt(from: json)
+        return ValidationResult(status: status, expiresAt: expiresAt)
     }
 
     private func activationLabel() -> String {
@@ -747,6 +759,28 @@ final class LicenseManager {
             return status
         }
 
+        return nil
+    }
+
+    private static func extractExpiresAt(from json: [String: Any]) -> Date? {
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let fallbackFormatter = ISO8601DateFormatter()
+        fallbackFormatter.formatOptions = [.withInternetDateTime]
+
+        func parse(_ raw: String) -> Date? {
+            isoFormatter.date(from: raw) ?? fallbackFormatter.date(from: raw)
+        }
+
+        if let raw = json["expires_at"] as? String,
+           let date = parse(raw) {
+            return date
+        }
+        if let licenseKey = json["license_key"] as? [String: Any],
+           let raw = licenseKey["expires_at"] as? String,
+           let date = parse(raw) {
+            return date
+        }
         return nil
     }
 
