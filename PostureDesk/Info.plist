@@ -28,6 +28,8 @@
     <string>$(POLAR_CHECKOUT_URL)</string>
     <key>PolarOrganizationID</key>
     <string>$(POLAR_ORGANIZATION_ID)</string>
+    <key>PolarTrialCheckoutURL</key>
+    <string>$(POLAR_TRIAL_CHECKOUT_URL)</string>
     <key>LSUIElement</key>
     <true/>
     <key>SUFeedURL</key>
