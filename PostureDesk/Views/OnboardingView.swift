@@ -824,35 +824,93 @@ struct OnboardingView: View {
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(DS.Colors.textPrimary)
 
-                Text("Enter your license key to start monitoring")
+                Text(licenseManager.hasUsedTrialOnDevice
+                     ? "Enter your license key to start monitoring."
+                     : "Try free for 7 days, or enter your license key.")
                     .font(DS.Font.body())
                     .foregroundStyle(DS.Colors.textSecondary)
+                    .multilineTextAlignment(.center)
             }
 
-            Spacer().frame(height: 28)
+            Spacer().frame(height: 24)
 
-            // Buy button
-            Button {
-                licenseManager.openCheckout()
-            } label: {
-                VStack(spacing: 4) {
+            if !licenseManager.hasUsedTrialOnDevice {
+                // Trial CTA — primary, only when device hasn't burned its trial.
+                Button {
+                    licenseManager.openTrialCheckout()
+                } label: {
+                    VStack(spacing: 4) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 13))
+                            Text("Start 7-day Free Trial")
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        }
+                        Text("No card required")
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .opacity(0.7)
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: 280)
+                    .padding(.vertical, 12)
+                    .background(DS.Colors.accentInfo, in: RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Opens the Polar checkout page to start a 7-day free trial.")
+
+                Spacer().frame(height: 12)
+
+                // Buy — secondary when trial is available.
+                Button {
+                    licenseManager.openCheckout()
+                } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "cart")
-                            .font(.system(size: 13))
+                            .font(.system(size: 12))
                         Text("Buy a License — $14.99")
-                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
                     }
-                    Text("One-time purchase · Unlimited updates")
-                        .font(.system(size: 10, weight: .medium, design: .rounded))
-                        .opacity(0.7)
+                    .foregroundStyle(DS.Colors.textPrimary)
+                    .frame(maxWidth: 280)
+                    .padding(.vertical, 10)
+                    .background(DS.Colors.cardBg, in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(DS.Colors.cardBorder, lineWidth: 1)
+                    )
                 }
-                .foregroundStyle(.white)
-                .frame(maxWidth: 280)
-                .padding(.vertical, 12)
-                .background(DS.Colors.accentInfo, in: RoundedRectangle(cornerRadius: 12))
+                .buttonStyle(.plain)
+                .accessibilityHint("Opens the Polar checkout page to buy a GooseNeck license for $14.99.")
+            } else {
+                // Trial used — promote Buy to primary, surface caption.
+                Button {
+                    licenseManager.openCheckout()
+                } label: {
+                    VStack(spacing: 4) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "cart")
+                                .font(.system(size: 13))
+                            Text("Buy a License — $14.99")
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        }
+                        Text("One-time purchase · Unlimited updates")
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .opacity(0.7)
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: 280)
+                    .padding(.vertical, 12)
+                    .background(DS.Colors.accentInfo, in: RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Opens the Polar checkout page to buy a GooseNeck license for $14.99.")
+
+                Spacer().frame(height: 8)
+
+                Text("Free trial already used on this Mac")
+                    .font(DS.Font.caption())
+                    .foregroundStyle(DS.Colors.textMuted)
             }
-            .buttonStyle(.plain)
-            .accessibilityHint("Opens the Polar checkout page to buy a GooseNeck license for $14.99.")
 
             // Divider
             HStack(spacing: 12) {
