@@ -291,6 +291,16 @@ final class LicenseManager {
         NSWorkspace.shared.open(url)
     }
 
+    func openTrialCheckout() {
+        guard config.validationError == nil, let url = config.trialCheckoutPageURL else {
+            error = config.validationError ?? "Free trial is not configured."
+            licenseState = .configurationError
+            return
+        }
+
+        NSWorkspace.shared.open(url)
+    }
+
     var maskedKey: String? {
         guard let key = storedLicenseKey() else { return nil }
         if key.count > 8 {

@@ -417,6 +417,24 @@ final class LicenseManagerTests: XCTestCase {
         XCTAssertEqual(manager.licenseState, .active)
     }
 
+    func testOpenTrialCheckoutSetsConfigurationErrorWhenURLMissing() {
+        let config = LicenseManager.Config(
+            organizationId: "org_123",
+            checkoutURL: "https://polar.sh/checkout",
+            trialCheckoutURL: "",
+            baseURL: "https://api.polar.sh/v1/customer-portal/license-keys"
+        )
+        let (manager, _) = makeManager(config: config) { _ in
+            XCTFail("Network should not be called.")
+            throw URLError(.badURL)
+        }
+
+        manager.openTrialCheckout()
+
+        XCTAssertEqual(manager.licenseState, .configurationError)
+        XCTAssertNotNil(manager.error)
+    }
+
     func testConfigRejectsSandboxTrialCheckoutInReleaseBuild() {
         let config = LicenseManager.Config(
             organizationId: "org_123",
