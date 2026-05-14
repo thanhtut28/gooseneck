@@ -47,13 +47,13 @@ final class FormattingAndFatigueTests: XCTestCase {
 
         // Feed 59 samples — should still be bootstrapping
         for _ in 0..<59 {
-            monitor.update(typingRMS: 0.001, isActive: true)
+            monitor.update(typingRMS: 0.001, isTyping: true)
         }
         XCTAssertEqual(monitor.calibrationState, .bootstrapping)
         XCTAssertEqual(monitor.baselineRMS, 0)
 
         // 60th sample tips it to ready
-        monitor.update(typingRMS: 0.001, isActive: true)
+        monitor.update(typingRMS: 0.001, isTyping: true)
         XCTAssertEqual(monitor.calibrationState, .ready)
         XCTAssertGreaterThan(monitor.baselineRMS, 0)
     }
@@ -68,13 +68,13 @@ final class FormattingAndFatigueTests: XCTestCase {
 
         // Bootstrap with 60 samples at 0.001
         for _ in 0..<60 {
-            monitor.update(typingRMS: 0.001, isActive: true)
+            monitor.update(typingRMS: 0.001, isTyping: true)
         }
         let baselineAfter60 = monitor.baselineRMS
 
         // Feed 200 more samples at 0.002 — baseline should shift
         for _ in 0..<200 {
-            monitor.update(typingRMS: 0.002, isActive: true)
+            monitor.update(typingRMS: 0.002, isTyping: true)
         }
         let baselineAfter260 = monitor.baselineRMS
 
@@ -98,7 +98,7 @@ final class FormattingAndFatigueTests: XCTestCase {
 
         // Feed 600 samples at 0.003 (very different from persisted 0.001)
         for _ in 0..<600 {
-            monitor.update(typingRMS: 0.003, isActive: true)
+            monitor.update(typingRMS: 0.003, isTyping: true)
         }
 
         // After 5 days decay + 600 session samples, baseline should be close to 0.003
@@ -119,22 +119,22 @@ final class FormattingAndFatigueTests: XCTestCase {
 
         // Bootstrap
         for _ in 0..<60 {
-            monitor.update(typingRMS: 0.001, isActive: true)
+            monitor.update(typingRMS: 0.001, isTyping: true)
         }
 
         // Type at elevated intensity to build up recent window
         for _ in 0..<120 {
-            monitor.update(typingRMS: 0.005, isActive: true)
+            monitor.update(typingRMS: 0.005, isTyping: true)
         }
         let intensityBeforeBreak = monitor.currentIntensityPercent
         XCTAssertGreaterThan(intensityBeforeBreak, 0)
 
         // Go idle
-        monitor.update(typingRMS: 0.0, isActive: false)
+        monitor.update(typingRMS: 0.0, isTyping: false)
         XCTAssertEqual(monitor.currentIntensityPercent, 0)
 
         // Return — first sample should not carry stale window data
-        monitor.update(typingRMS: 0.001, isActive: true)
+        monitor.update(typingRMS: 0.001, isTyping: true)
 
         // Intensity should be based only on the single new sample vs baseline,
         // not mixed with pre-break elevated data
@@ -151,12 +151,12 @@ final class FormattingAndFatigueTests: XCTestCase {
 
         // Bootstrap with 60 samples
         for _ in 0..<60 {
-            monitor.update(typingRMS: 0.001, isActive: true)
+            monitor.update(typingRMS: 0.001, isTyping: true)
         }
 
         // Type 60 samples at moderate intensity
         for _ in 0..<60 {
-            monitor.update(typingRMS: 0.002, isActive: true)
+            monitor.update(typingRMS: 0.002, isTyping: true)
         }
 
         // sessionAverageIntensity should be a stable average, not a snapshot
@@ -165,7 +165,7 @@ final class FormattingAndFatigueTests: XCTestCase {
 
         // Type 60 more at baseline level
         for _ in 0..<60 {
-            monitor.update(typingRMS: 0.001, isActive: true)
+            monitor.update(typingRMS: 0.001, isTyping: true)
         }
 
         // Average should have decreased (diluted by normal typing)
@@ -183,13 +183,13 @@ final class FormattingAndFatigueTests: XCTestCase {
         XCTAssertEqual(monitor.bootstrapProgress, 0)
 
         for i in 1...30 {
-            monitor.update(typingRMS: 0.001, isActive: true)
+            monitor.update(typingRMS: 0.001, isTyping: true)
             XCTAssertEqual(monitor.bootstrapProgress, Double(i) / 60.0, accuracy: 0.01)
         }
 
         // After bootstrap complete, progress should be 1.0
         for _ in 31...60 {
-            monitor.update(typingRMS: 0.001, isActive: true)
+            monitor.update(typingRMS: 0.001, isTyping: true)
         }
         XCTAssertEqual(monitor.bootstrapProgress, 1.0)
     }

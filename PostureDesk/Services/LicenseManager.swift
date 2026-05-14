@@ -347,17 +347,20 @@ final class LicenseManager {
     struct Config {
         let organizationId: String
         let checkoutURL: String
+        let trialCheckoutURL: String
         let baseURL: String
         let requiresProductionConfiguration: Bool
 
         init(
             organizationId: String,
             checkoutURL: String,
+            trialCheckoutURL: String = "",
             baseURL: String,
             requiresProductionConfiguration: Bool = false
         ) {
             self.organizationId = organizationId
             self.checkoutURL = checkoutURL
+            self.trialCheckoutURL = trialCheckoutURL
             self.baseURL = baseURL
             self.requiresProductionConfiguration = requiresProductionConfiguration
         }
@@ -366,6 +369,7 @@ final class LicenseManager {
             self.init(
                 organizationId: Self.value(for: "PolarOrganizationID", in: bundle) ?? "322cca40-cd2e-4d58-83e9-ec08ee2b0c19",
                 checkoutURL: Self.value(for: "PolarCheckoutURL", in: bundle) ?? "https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_DOGu45YJUcHzeFxGZw5EqT0L9gN3L9Qm2dTQn2Z4xHn/redirect",
+                trialCheckoutURL: Self.value(for: "PolarTrialCheckoutURL", in: bundle) ?? "",
                 baseURL: Self.value(for: "PolarAPIBaseURL", in: bundle) ?? "https://sandbox-api.polar.sh/v1/customer-portal/license-keys",
                 requiresProductionConfiguration: Self.defaultRequiresProductionConfiguration
             )
@@ -373,6 +377,10 @@ final class LicenseManager {
 
         var checkoutPageURL: URL? {
             URL(string: checkoutURL)
+        }
+
+        var trialCheckoutPageURL: URL? {
+            trialCheckoutURL.isEmpty ? nil : URL(string: trialCheckoutURL)
         }
 
         var validationError: String? {
@@ -392,6 +400,10 @@ final class LicenseManager {
 
                 if Self.isSandboxHost(checkoutPageURL.host) {
                     return "Release build cannot use a sandbox Polar checkout URL."
+                }
+
+                if let trialURL = trialCheckoutPageURL, Self.isSandboxHost(trialURL.host) {
+                    return "Release build cannot use a sandbox Polar trial checkout URL."
                 }
             }
 
