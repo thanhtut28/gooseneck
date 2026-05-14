@@ -356,6 +356,67 @@ final class LicenseManagerTests: XCTestCase {
         XCTAssertNil(keychain.string(for: "trial-used-marker"))
     }
 
+    func testActivateBlocksTrialReactivationWhenDeviceMarkerExists() async {
+        let isoFormatter = ISO8601DateFormatter()
+        let futureExpiry = Date().addingTimeInterval(7 * 24 * 60 * 60)
+
+        var deactivateCalled = false
+        let (manager, keychain) = makeManager { request in
+            switch request.url?.lastPathComponent {
+            case "activate":
+                return (
+                    self.httpResponse(url: request.url!, statusCode: 200),
+                    self.json([
+                        "id": "act_new_trial",
+                        "status": "granted",
+                        "expires_at": isoFormatter.string(from: futureExpiry)
+                    ])
+                )
+            case "deactivate":
+                deactivateCalled = true
+                return (
+                    self.httpResponse(url: request.url!, statusCode: 200),
+                    Data()
+                )
+            default:
+                XCTFail("Unexpected request to \(request.url?.absoluteString ?? "?")")
+                throw URLError(.badURL)
+            }
+        }
+
+        // Pre-seed the marker as if the user had already used a trial.
+        keychain.set("2026-01-01T00:00:00Z", for: "trial-used-marker")
+
+        await manager.activate(key: "another-trial-key")
+
+        XCTAssertFalse(manager.isLicensed)
+        XCTAssertEqual(manager.licenseState, .unlicensed)
+        XCTAssertNotNil(manager.error)
+        XCTAssertTrue(manager.error?.contains("already used") ?? false)
+        XCTAssertNil(keychain.string(for: "license-key"))
+        XCTAssertNil(keychain.string(for: "license-activation-id"))
+        // Marker stays put.
+        XCTAssertNotNil(keychain.string(for: "trial-used-marker"))
+        // We freed the wasted Polar slot.
+        XCTAssertTrue(deactivateCalled)
+    }
+
+    func testActivateAllowsPaidKeyEvenWhenTrialMarkerExists() async {
+        let (manager, keychain) = makeManager { request in
+            XCTAssertEqual(request.url?.lastPathComponent, "activate")
+            return (
+                self.httpResponse(url: request.url!, statusCode: 200),
+                self.json(["id": "act_paid", "status": "granted"])
+            )
+        }
+        keychain.set("2026-01-01T00:00:00Z", for: "trial-used-marker")
+
+        await manager.activate(key: "paid-key")
+
+        XCTAssertTrue(manager.isLicensed)
+        XCTAssertEqual(manager.licenseState, .active)
+    }
+
     func testConfigRejectsSandboxTrialCheckoutInReleaseBuild() {
         let config = LicenseManager.Config(
             organizationId: "org_123",

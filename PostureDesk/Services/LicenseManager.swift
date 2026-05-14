@@ -89,6 +89,18 @@ final class LicenseManager {
 
         do {
             let result = try await activateKey(trimmed)
+
+            if let expiry = result.expiresAt, expiry > Date(), hasUsedTrialOnDevice {
+                // Trial key, but this device has already burned its trial.
+                // Free Polar's slot, surface the error, do NOT persist creds.
+                await deactivateSilently(key: trimmed, activationId: result.activationId)
+                error = "You've already used your free trial on this Mac. Subscribe to keep using GooseNeck."
+                licenseState = .unlicensed
+                isLicensed = false
+                isValidating = false
+                return
+            }
+
             guard storeLicense(key: trimmed, activationId: result.activationId) else {
                 error = "Unable to persist the license on this Mac."
                 licenseState = .configurationError
@@ -228,6 +240,13 @@ final class LicenseManager {
         /// 5xx, transport failure, malformed response. Keep local creds so
         /// the user can retry once the server recovers.
         case retryable(String)
+    }
+
+    private func deactivateSilently(key: String, activationId: String) async {
+        // Fire-and-forget. Outcome doesn't matter for the user: they're
+        // blocked locally regardless. We try once; if Polar is unreachable
+        // the activation slot is wasted but the user is still blocked.
+        _ = await performDeactivation(key: key, activationId: activationId)
     }
 
     private func performDeactivation(key: String, activationId: String) async -> DeactivationOutcome {
