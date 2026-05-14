@@ -297,6 +297,31 @@ final class LicenseManagerTests: XCTestCase {
         }
     }
 
+    func testRefreshStatusWithExpiredTrialKeyTransitionsToTrialExpired() async {
+        let pastDate = Date().addingTimeInterval(-3600)
+        let isoFormatter = ISO8601DateFormatter()
+        let (manager, keychain) = makeManager { request in
+            XCTAssertEqual(request.url?.lastPathComponent, "validate")
+            return (
+                self.httpResponse(url: request.url!, statusCode: 200),
+                self.json([
+                    "status": "expired",
+                    "expires_at": isoFormatter.string(from: pastDate)
+                ])
+            )
+        }
+        keychain.set("stored-license", for: "license-key")
+        keychain.set("act_999", for: "license-activation-id")
+
+        await manager.refreshStatus()
+
+        XCTAssertFalse(manager.isLicensed)
+        XCTAssertEqual(manager.licenseState, .trialExpired)
+        // Credentials should be cleared, same as .invalid.
+        XCTAssertNil(keychain.string(for: "license-key"))
+        XCTAssertNil(keychain.string(for: "license-activation-id"))
+    }
+
     func testConfigRejectsSandboxTrialCheckoutInReleaseBuild() {
         let config = LicenseManager.Config(
             organizationId: "org_123",

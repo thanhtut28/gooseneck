@@ -150,7 +150,11 @@ final class LicenseManager {
                 // storage so observers never see a window where
                 // `isLicensed == true && licenseState == .invalid`.
                 isLicensed = false
-                invalidateStoredLicense(message: "License is \(result.status).")
+                if result.status.lowercased() == "expired", result.expiresAt != nil {
+                    invalidateStoredLicense(message: "Your free trial has ended.", finalState: .trialExpired)
+                } else {
+                    invalidateStoredLicense(message: "License is \(result.status).")
+                }
                 isValidating = false
                 return
             }
@@ -604,10 +608,10 @@ final class LicenseManager {
         licenseStatus = status
     }
 
-    private func invalidateStoredLicense(message: String) {
+    private func invalidateStoredLicense(message: String, finalState: LicenseState = .invalid) {
         clearLicense()
         error = message
-        licenseState = .invalid
+        licenseState = finalState
     }
 
     private func applyValidationFailure(_ failure: LicenseError) {
