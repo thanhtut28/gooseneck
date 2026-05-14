@@ -3,6 +3,23 @@
     <channel>
         <title>GooseNeck</title>
         <item>
+            <title>1.0.15</title>
+            <pubDate>Thu, 14 May 2026 07:30:20 +0000</pubDate>
+            <sparkle:version>16</sparkle:version>
+            <sparkle:shortVersionString>1.0.15</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h3>7-day free trial</h3>
+                <p>The onboarding screen now offers a <strong>Start 7-day Free Trial</strong> button alongside the existing Buy option. Tap it, complete a $0 checkout on Polar with your email, and you get a trial license key that activates the full app for a week &mdash; no card required.</p>
+                <p>The trial is gated to <strong>one per Mac</strong>. Once a trial has been used on this Mac, the trial CTA disappears and only the Buy option remains. While the trial is active, the menu bar popover shows days remaining with a Subscribe link; the color shifts when &le;1 day is left. When the trial ends, the popover replaces its content with a lock card and a Subscribe button. Settings &rarr; License gains matching CTAs.</p>
+            ]]></description>
+            <enclosure
+                url="https://github.com/thanhtut28/gooseneck/releases/download/v1.0.15/GooseNeck.zip"
+                length="2408654"
+                type="application/octet-stream"
+                sparkle:edSignature="jgnbBVMks3ANy/KyPO1pCT9W8iPXG4de9B9xUKlugGbcUd5HtRpE6sKCXLhna+N5pxROz8FRV9r/UYJJMl5cDg=="/>
+        </item>
+        <item>
             <title>1.0.14</title>
             <pubDate>Sat, 02 May 2026 06:00:00 +0000</pubDate>
             <sparkle:version>15</sparkle:version>
