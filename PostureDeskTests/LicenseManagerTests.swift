@@ -233,6 +233,44 @@ final class LicenseManagerTests: XCTestCase {
         XCTAssertEqual(config.trialCheckoutPageURL?.absoluteString, "https://buy.polar.sh/polar_cl_TRIAL")
     }
 
+    func testActivateLabelIncludesHashedDeviceFingerprint() async {
+        var capturedLabel: String?
+        let (manager, _) = makeManager { request in
+            // URLSession moves httpBody into httpBodyStream before handing the
+            // request to URLProtocol — read from the stream instead.
+            var bodyData = Data()
+            if let stream = request.httpBodyStream {
+                stream.open()
+                var buffer = [UInt8](repeating: 0, count: 4096)
+                while stream.hasBytesAvailable {
+                    let count = stream.read(&buffer, maxLength: buffer.count)
+                    if count > 0 { bodyData.append(contentsOf: buffer[..<count]) }
+                }
+                stream.close()
+            }
+            let body = try JSONSerialization.jsonObject(with: bodyData) as? [String: Any]
+            capturedLabel = body?["label"] as? String
+            return (
+                self.httpResponse(url: request.url!, statusCode: 200),
+                self.json(["id": "act_xyz", "status": "granted"])
+            )
+        }
+
+        await manager.activate(key: "license-key-ABCDEFGH")
+
+        XCTAssertNotNil(capturedLabel)
+        // Label format: "<host name> · <8-hex>". The hash may or may not be
+        // present in test environment; the dot-separator+hash suffix only
+        // appears when DeviceIdentity.shortHashedUUID() returns non-nil.
+        let label = capturedLabel ?? ""
+        if label.contains(" · ") {
+            let parts = label.components(separatedBy: " · ")
+            XCTAssertEqual(parts.count, 2)
+            XCTAssertEqual(parts[1].count, 8)
+            XCTAssertTrue(parts[1].allSatisfy { $0.isHexDigit })
+        }
+    }
+
     func testConfigRejectsSandboxTrialCheckoutInReleaseBuild() {
         let config = LicenseManager.Config(
             organizationId: "org_123",

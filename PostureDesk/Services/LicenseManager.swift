@@ -458,7 +458,7 @@ final class LicenseManager {
             body: [
                 "key": key,
                 "organization_id": config.organizationId,
-                "label": Host.current().localizedName ?? "Mac"
+                "label": activationLabel()
             ]
         )
 
@@ -506,6 +506,14 @@ final class LicenseManager {
         }
 
         return ValidationResult(status: status)
+    }
+
+    private func activationLabel() -> String {
+        let host = Host.current().localizedName ?? "Mac"
+        if let fingerprint = DeviceIdentity.shortHashedUUID() {
+            return "\(host) · \(fingerprint)"
+        }
+        return host
     }
 
     private func makeRequest(path: String, body: [String: Any]) throws -> URLRequest {
