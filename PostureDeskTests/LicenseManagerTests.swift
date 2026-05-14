@@ -213,15 +213,24 @@ final class LicenseManagerTests: XCTestCase {
         XCTAssertEqual(UserDefaults.standard.string(forKey: activationKey), "shim-activation")
     }
 
-    func testConfigSurfacesTrialCheckoutURLFromBundleKeys() {
-        let bundle = Bundle.main
-        // We don't assert exact contents — just that the Config picks up the
-        // key from the bundle without erroring. The actual value is wired via
-        // build settings.
-        let config = LicenseManager.Config(bundle: bundle)
-        if let url = config.trialCheckoutPageURL {
-            XCTAssertTrue(url.absoluteString.contains("polar.sh"))
-        }
+    func testConfigTrialCheckoutPageURLIsNilWhenStringEmpty() {
+        let config = LicenseManager.Config(
+            organizationId: "org_123",
+            checkoutURL: "https://polar.sh/checkout",
+            trialCheckoutURL: "",
+            baseURL: "https://api.polar.sh/v1/customer-portal/license-keys"
+        )
+        XCTAssertNil(config.trialCheckoutPageURL)
+    }
+
+    func testConfigTrialCheckoutPageURLParsesNonEmptyString() {
+        let config = LicenseManager.Config(
+            organizationId: "org_123",
+            checkoutURL: "https://polar.sh/checkout",
+            trialCheckoutURL: "https://buy.polar.sh/polar_cl_TRIAL",
+            baseURL: "https://api.polar.sh/v1/customer-portal/license-keys"
+        )
+        XCTAssertEqual(config.trialCheckoutPageURL?.absoluteString, "https://buy.polar.sh/polar_cl_TRIAL")
     }
 
     func testConfigRejectsSandboxTrialCheckoutInReleaseBuild() {
