@@ -541,6 +541,8 @@ struct SettingsView: View {
 
         default:
             Button("Activate License") {
+                // Defer past the current SwiftUI tick so window mutation
+                // happens after the click event has finished propagating.
                 DispatchQueue.main.async {
                     viewModel.stop(lockMonitoring: true)
                     UserDefaults.standard.set(false, forKey: "onboardingComplete")
