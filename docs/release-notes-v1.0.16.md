@@ -1,6 +1,6 @@
-# GooseNeck 1.0.15 — 7-day free trial
+# GooseNeck 1.0.16 — 7-day free trial
 
-A new way to try GooseNeck before you buy.
+Introduces a free trial, with a local cutoff so it ends on time even if the app never restarts.
 
 ## What's new
 
@@ -9,6 +9,8 @@ A new way to try GooseNeck before you buy.
 The trial is gated to **one per Mac**. Once a trial has been used on this Mac (tracked via a Keychain marker and the hardware ID), the trial CTA disappears and only the Buy option remains. This closes the obvious "new email = new trial" loop without needing any backend infrastructure.
 
 While the trial is active, the menu bar popover shows a thin banner with days remaining and a Subscribe link; the urgency color shifts when ≤1 day is left. When the trial ends, the popover replaces its content with a lock card and a prominent Subscribe button. Settings → License gains matching Subscribe CTAs.
+
+**Hard local cutoff.** MacBooks frequently sleep rather than restart, so the trial-ended state is now driven by a local timer in addition to the Polar status check. The app transitions to the trial-expired UI the moment your trial deadline passes, even if you've kept the app running continuously since activation.
 
 ## Under the hood
 

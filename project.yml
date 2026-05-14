@@ -36,8 +36,8 @@ targets:
         CODE_SIGN_ENTITLEMENTS: PostureDesk/PostureDesk.entitlements
         ENABLE_HARDENED_RUNTIME: YES
         PRODUCT_BUNDLE_IDENTIFIER: com.gooseneck.app
-        MARKETING_VERSION: "1.0.15"
-        CURRENT_PROJECT_VERSION: "16"
+        MARKETING_VERSION: "1.0.16"
+        CURRENT_PROJECT_VERSION: "17"
         COMBINE_HIDPI_IMAGES: YES
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
       configs:
