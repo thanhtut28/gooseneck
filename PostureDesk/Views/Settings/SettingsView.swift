@@ -482,7 +482,11 @@ struct SettingsView: View {
         switch licenseManager.licenseState {
         case .active:
             return DS.Colors.accentGood
+        case .trialActive:
+            return DS.Colors.accentInfo
         case .gracePeriod:
+            return DS.Colors.accentWarn
+        case .trialExpired:
             return DS.Colors.accentWarn
         case .validating:
             return DS.Colors.accentInfo
@@ -491,30 +495,52 @@ struct SettingsView: View {
         }
     }
 
-    /// Switches between Deactivate (for licensed users) and Activate (for
-    /// unlicensed users who closed the onboarding window before re-activating
-    /// or whose license expired/was revoked). Without this, the Settings view
-    /// previously showed "Deactivate License" even with no license to deactivate.
     @ViewBuilder
     private var licenseActionButton: some View {
-        if licenseManager.isLicensed {
+        switch licenseManager.licenseState {
+        case .active, .gracePeriod:
             Button("Deactivate License") {
                 showDeactivateAlert = true
             }
             .foregroundStyle(DS.Colors.accentDanger)
             .buttonStyle(.plain)
             .font(.system(size: 12, weight: .medium))
-        } else if case .validating = licenseManager.licenseState {
+
+        case .trialActive:
+            HStack(spacing: 12) {
+                Button("Subscribe") {
+                    licenseManager.openCheckout()
+                }
+                .foregroundStyle(DS.Colors.accentInfo)
+                .buttonStyle(.plain)
+                .font(.system(size: 12, weight: .semibold))
+
+                Button("Deactivate") {
+                    showDeactivateAlert = true
+                }
+                .foregroundStyle(DS.Colors.accentDanger)
+                .buttonStyle(.plain)
+                .font(.system(size: 12, weight: .medium))
+            }
+
+        case .trialExpired:
+            Button("Subscribe") {
+                licenseManager.openCheckout()
+            }
+            .foregroundStyle(DS.Colors.accentInfo)
+            .buttonStyle(.plain)
+            .font(.system(size: 12, weight: .semibold))
+
+        case .validating:
             HStack(spacing: 6) {
                 ProgressView().controlSize(.small)
                 Text("Validating\u{2026}")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(DS.Colors.textMuted)
             }
-        } else {
+
+        default:
             Button("Activate License") {
-                // Defer past the current SwiftUI tick so window mutation
-                // happens after the click event has finished propagating.
                 DispatchQueue.main.async {
                     viewModel.stop(lockMonitoring: true)
                     UserDefaults.standard.set(false, forKey: "onboardingComplete")
