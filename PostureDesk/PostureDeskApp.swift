@@ -214,10 +214,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 guard let self else { return }
                 let viewModel = GooseNeckApp.sharedViewModel
                 switch GooseNeckApp.licenseManager.licenseState {
-                case .active, .gracePeriod:
+                case .active, .trialActive, .gracePeriod:
                     viewModel?.unlockMonitoring()
                     viewModel?.start()
-                case .unlicensed, .invalid:
+                case .unlicensed, .invalid, .trialExpired:
                     viewModel?.stop(lockMonitoring: true, finalizeSession: false)
                     self.showOnboarding(startAt: .activate)
                 default:
