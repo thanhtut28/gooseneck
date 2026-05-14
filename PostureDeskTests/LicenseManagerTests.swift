@@ -19,6 +19,7 @@ final class LicenseManagerTests: XCTestCase {
         for keychain in keychains {
             keychain.removeValue(for: "license-key")
             keychain.removeValue(for: "license-activation-id")
+            keychain.removeValue(for: "trial-used-marker")
         }
         keychains.removeAll()
 
@@ -320,6 +321,39 @@ final class LicenseManagerTests: XCTestCase {
         // Credentials should be cleared, same as .invalid.
         XCTAssertNil(keychain.string(for: "license-key"))
         XCTAssertNil(keychain.string(for: "license-activation-id"))
+    }
+
+    func testSuccessfulTrialActivationWritesDeviceMarker() async {
+        let expectedExpiry = Date().addingTimeInterval(7 * 24 * 60 * 60)
+        let isoFormatter = ISO8601DateFormatter()
+        let (manager, keychain) = makeManager { request in
+            return (
+                self.httpResponse(url: request.url!, statusCode: 200),
+                self.json([
+                    "id": "act_trial",
+                    "status": "granted",
+                    "expires_at": isoFormatter.string(from: expectedExpiry)
+                ])
+            )
+        }
+
+        XCTAssertFalse(manager.hasUsedTrialOnDevice)
+        await manager.activate(key: "trial-key")
+        XCTAssertTrue(manager.hasUsedTrialOnDevice)
+        XCTAssertNotNil(keychain.string(for: "trial-used-marker"))
+    }
+
+    func testSuccessfulPaidActivationDoesNotWriteDeviceMarker() async {
+        let (manager, keychain) = makeManager { request in
+            return (
+                self.httpResponse(url: request.url!, statusCode: 200),
+                self.json(["id": "act_paid", "status": "granted"])
+            )
+        }
+
+        await manager.activate(key: "paid-key")
+        XCTAssertFalse(manager.hasUsedTrialOnDevice)
+        XCTAssertNil(keychain.string(for: "trial-used-marker"))
     }
 
     func testConfigRejectsSandboxTrialCheckoutInReleaseBuild() {

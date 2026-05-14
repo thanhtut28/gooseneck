@@ -18,6 +18,7 @@ final class LicenseManager {
     private static let offlineGracePeriod: TimeInterval = 7 * 24 * 60 * 60
     private static let licenseKeyAccount = "license-key"
     private static let activationIdAccount = "license-activation-id"
+    private static let trialUsedAccount = "trial-used-marker"
     private static let legacyLicenseKeyDefaultsKey = "licenseKey"
     private static let legacyActivationIdDefaultsKey = "licenseActivationId"
     private static let lastValidatedAtDefaultsKey = "licenseLastValidatedAt"
@@ -29,6 +30,10 @@ final class LicenseManager {
     private(set) var error: String?
     private(set) var licenseStatus: String?
     private(set) var licenseState: LicenseState
+
+    var hasUsedTrialOnDevice: Bool {
+        keychain.string(for: Self.trialUsedAccount) != nil
+    }
 
     private let config: Config
     private let keychain: KeychainStore
@@ -94,6 +99,7 @@ final class LicenseManager {
             recordSuccessfulValidation(status: result.status)
             licenseStatus = result.status
             if let expiry = result.expiresAt, expiry > Date() {
+                markTrialUsedIfNeeded()
                 licenseState = .trialActive(until: expiry)
             } else {
                 licenseState = .active
@@ -343,6 +349,13 @@ final class LicenseManager {
         keychain.removeLegacyUserDefaultsValue(for: Self.licenseKeyAccount)
         keychain.removeLegacyUserDefaultsValue(for: Self.activationIdAccount)
         return true
+    }
+
+    private func markTrialUsedIfNeeded() {
+        guard keychain.string(for: Self.trialUsedAccount) == nil else { return }
+        let isoFormatter = ISO8601DateFormatter()
+        let stamp = isoFormatter.string(from: Date())
+        _ = keychain.set(stamp, for: Self.trialUsedAccount)
     }
 
     private func clearLicense() {
