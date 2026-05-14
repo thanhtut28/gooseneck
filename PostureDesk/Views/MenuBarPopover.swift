@@ -3,8 +3,12 @@ import SwiftUI
 struct MenuBarPopover: View {
     @Environment(PostureViewModel.self) private var viewModel
     @Environment(\.openWindow) private var openWindow
+    @Environment(LicenseManager.self) private var licenseManager
 
     var body: some View {
+        if case .trialExpired = licenseManager.licenseState {
+            trialExpiredLockCard
+        } else {
         VStack(alignment: .leading, spacing: 0) {
             // Header
             HStack {
@@ -30,6 +34,11 @@ struct MenuBarPopover: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Current posture")
             .accessibilityValue("\(statusText), session \(sessionDuration)")
+
+            if case .trialActive(let until) = licenseManager.licenseState {
+                trialBanner(until: until)
+                Divider()
+            }
 
             if let sensorError {
                 Divider()
@@ -129,6 +138,7 @@ struct MenuBarPopover: View {
             .padding(12)
         }
         .frame(width: 280)
+        } // end else
     }
 
     // MARK: - Computed Properties
@@ -251,5 +261,61 @@ struct MenuBarPopover: View {
 
     private var sensorError: String? {
         viewModel.sensorClient.connectionError
+    }
+
+    private func trialBanner(until: Date) -> some View {
+        let daysLeft = max(0, Calendar.current.dateComponents([.day], from: Date(), to: until).day ?? 0)
+        let urgent = daysLeft <= 1
+        return HStack(spacing: 8) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(urgent ? DS.Colors.accentWarn : DS.Colors.accentInfo)
+            Text(daysLeft <= 0 ? "Trial · last day" : "Trial · \(daysLeft) day\(daysLeft == 1 ? "" : "s") left")
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(DS.Colors.textPrimary)
+            Spacer()
+            Button("Subscribe") {
+                licenseManager.openCheckout()
+            }
+            .buttonStyle(.plain)
+            .font(.system(size: 11, weight: .semibold, design: .rounded))
+            .foregroundStyle(DS.Colors.accentInfo)
+            .accessibilityHint("Opens the GooseNeck purchase page in your browser.")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background((urgent ? DS.Colors.accentWarn : DS.Colors.accentInfo).opacity(0.08))
+    }
+
+    private var trialExpiredLockCard: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "lock.fill")
+                .font(.system(size: 28))
+                .foregroundStyle(DS.Colors.accentWarn)
+
+            Text("Your free trial has ended")
+                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .foregroundStyle(DS.Colors.textPrimary)
+
+            Text("Subscribe to keep monitoring your posture.")
+                .font(DS.Font.caption())
+                .foregroundStyle(DS.Colors.textSecondary)
+                .multilineTextAlignment(.center)
+
+            Button {
+                licenseManager.openCheckout()
+            } label: {
+                Text("Subscribe — $14.99")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(DS.Colors.accentInfo, in: RoundedRectangle(cornerRadius: 10))
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Opens the GooseNeck purchase page in your browser.")
+        }
+        .padding(16)
+        .frame(width: 260)
     }
 }
