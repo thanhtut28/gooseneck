@@ -5,6 +5,8 @@ enum LicenseState: Equatable {
     case unlicensed
     case validating
     case active
+    case trialActive(until: Date)
+    case trialExpired
     case gracePeriod(until: Date)
     case invalid
     case networkError
@@ -54,7 +56,7 @@ final class LicenseManager {
         // Keep `isLicensed` consistent with `licenseState`: only true while we
         // either know the license is active or the offline-grace window covers us.
         switch initialState {
-        case .active, .gracePeriod:
+        case .active, .trialActive, .gracePeriod:
             isLicensed = true
         default:
             isLicensed = false
@@ -269,6 +271,11 @@ final class LicenseManager {
             return "Checking"
         case .active:
             return "Active"
+        case .trialActive(let until):
+            let daysLeft = max(0, Calendar.current.dateComponents([.day], from: Date(), to: until).day ?? 0)
+            return daysLeft <= 0 ? "Trial · last day" : "Trial · \(daysLeft) day\(daysLeft == 1 ? "" : "s") left"
+        case .trialExpired:
+            return "Trial Ended"
         case .gracePeriod:
             return "Offline Grace"
         case .invalid:
@@ -282,6 +289,10 @@ final class LicenseManager {
 
     var stateDetail: String? {
         switch licenseState {
+        case .trialActive(let until):
+            return "Free trial · ends \(until.formatted(date: .abbreviated, time: .shortened))."
+        case .trialExpired:
+            return "Your free trial has ended. Subscribe to keep using GooseNeck."
         case .gracePeriod(let until):
             return "Using the last validated license until \(until.formatted(date: .abbreviated, time: .shortened))."
         case .networkError:
